@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,7 +47,7 @@ public class TestResourceFilter extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestResourceFilter(String arg0) {
@@ -57,7 +57,7 @@ public class TestResourceFilter extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -89,11 +89,11 @@ public class TestResourceFilter extends OpenCmsTestCase {
 
     /**
      * Tests the given filter if it only returns folders.<p>
-     * 
+     *
      * @param folderFilter the filter that is excpected to only let through folders.
-     * 
+     *
      * @throws CmsException if access to test resources from VFS fails.
-     * 
+     *
      */
     public void assertFilterFolderOnly(CmsResourceFilter folderFilter) throws CmsException {
 
@@ -107,10 +107,12 @@ public class TestResourceFilter extends OpenCmsTestCase {
         Iterator itResources = folders.iterator();
         while (itResources.hasNext()) {
             resource = (CmsResource)itResources.next();
-            assertTrue("Filter let a resource of type "
-                + OpenCms.getResourceManager().getResourceType(resource.getTypeId()).getTypeName()
-                + " pass: "
-                + resource.getRootPath(), resourceTypeFolder == resource.getTypeId());
+            assertTrue(
+                "Filter let a resource of type "
+                    + OpenCms.getResourceManager().getResourceType(resource.getTypeId()).getTypeName()
+                    + " pass: "
+                    + resource.getRootPath(),
+                resourceTypeFolder == resource.getTypeId());
         }
 
     }
@@ -118,7 +120,7 @@ public class TestResourceFilter extends OpenCmsTestCase {
     /**
      * Tests filters that should only allow folders (obtained by
      * {@link CmsResourceFilter#addRequireFolder()}).<p>
-     * 
+     *
      * @throws Exception if the test fails
      */
     public void testAddRequireFolder() throws Exception {
@@ -130,7 +132,8 @@ public class TestResourceFilter extends OpenCmsTestCase {
 
         filterFolder = CmsResourceFilter.ALL.addRequireFolder().addExcludeState(CmsResource.STATE_DELETED);
 
-        echo("Testing if only folders pass the resource filter CmsResourceFilter.ALL.addRequireFolder().addExcludeState(CmsResourceState.STATE_DELETED)");
+        echo(
+            "Testing if only folders pass the resource filter CmsResourceFilter.ALL.addRequireFolder().addExcludeState(CmsResourceState.STATE_DELETED)");
         assertFilterFolderOnly(filterFolder);
     }
 }

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,9 +32,11 @@ import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
 import org.opencms.i18n.CmsMessageContainer;
+import org.opencms.site.CmsSite;
 import org.opencms.staticexport.CmsStaticExportData;
 import org.opencms.staticexport.CmsStaticExportRequest;
 import org.opencms.util.CmsRequestUtil;
+import org.opencms.util.CmsStringUtil;
 
 import java.io.IOException;
 
@@ -48,38 +50,44 @@ import org.apache.commons.logging.Log;
 
 /**
  * This the main servlet of the OpenCms system.<p>
- * 
+ *
  * From here, all operations that are results of HTTP requests are invoked.
  * Any incoming request is handled in multiple steps:
- * 
- * <ol><li>The requesting <code>{@link org.opencms.file.CmsUser}</code> is authenticated 
+ *
+ * <ol><li>The requesting <code>{@link org.opencms.file.CmsUser}</code> is authenticated
  * and a <code>{@link org.opencms.file.CmsObject}</code> with this users context information
  * is created. This <code>{@link org.opencms.file.CmsObject}</code> is used to access all functions of OpenCms, limited by
  * the authenticated users permissions. If the user is not identified, it is set to the default user, usually named "Guest".</li>
- * 
- * <li>The requested <code>{@link org.opencms.file.CmsResource}</code> is loaded into OpenCms and depending on its type 
- * (and the users persmissions to display or modify it), 
+ *
+ * <li>The requested <code>{@link org.opencms.file.CmsResource}</code> is loaded into OpenCms and depending on its type
+ * (and the users persmissions to display or modify it),
  * it is send to one of the OpenCms <code>{@link org.opencms.loader.I_CmsResourceLoader}</code> implementations
  * do be processed.</li>
- * 
+ *
  * <li>
- * The <code>{@link org.opencms.loader.I_CmsResourceLoader}</code> will then decide what to do with the 
- * contents of the requested <code>{@link org.opencms.file.CmsResource}</code>. 
- * In case of a JSP resource the JSP handling mechanism is invoked with the <code>{@link org.opencms.loader.CmsJspLoader}</code>, 
+ * The <code>{@link org.opencms.loader.I_CmsResourceLoader}</code> will then decide what to do with the
+ * contents of the requested <code>{@link org.opencms.file.CmsResource}</code>.
+ * In case of a JSP resource the JSP handling mechanism is invoked with the <code>{@link org.opencms.loader.CmsJspLoader}</code>,
  * in case of an image (or another static resource) this will be returned by the <code>{@link org.opencms.loader.CmsDumpLoader}</code>
  * etc.
  * </li></ol>
- * 
- * @since 6.0.0 
- * 
+ *
+ * @since 6.0.0
+ *
  * @see org.opencms.main.CmsShell
  * @see org.opencms.file.CmsObject
  * @see org.opencms.main.OpenCms
  */
 public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
 
+    /** The current request in a threadlocal. */
+    public static final ThreadLocal<HttpServletRequest> currentRequest = new ThreadLocal<HttpServletRequest>();
+
     /** GWT RPC services suffix. */
     public static final String HANDLE_GWT = ".gwt";
+
+    /** Handler prefix. */
+    public static final String HANDLE_PATH = "/handle";
 
     /** Name of the <code>DefaultWebApplication</code> parameter in the <code>web.xml</code> OpenCms servlet configuration. */
     public static final String SERVLET_PARAM_DEFAULT_WEB_APPLICATION = "DefaultWebApplication";
@@ -92,9 +100,6 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
 
     /** Name of the <code>WebApplicationContext</code> parameter in the <code>web.xml</code> OpenCms servlet configuration. */
     public static final String SERVLET_PARAM_WEB_APPLICATION_CONTEXT = "WebApplicationContext";
-
-    /** Handler prefix. */
-    private static final String HANDLE_PATH = "/handle";
 
     /** Path to handler "error page" files in the VFS. */
     private static final String HANDLE_VFS_PATH = "/system/handler" + HANDLE_PATH;
@@ -113,51 +118,57 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
 
     /**
      * OpenCms servlet main request handling method.<p>
-     * 
+     *
      * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
 
-        // check to OpenCms runlevel
-        int runlevel = OpenCmsCore.getInstance().getRunLevel();
+        currentRequest.set(req);
+        try {
 
-        // write OpenCms server identification in the response header
-        res.setHeader(CmsRequestUtil.HEADER_SERVER, OpenCmsCore.getInstance().getSystemInfo().getVersion());
+            // check to OpenCms runlevel
+            int runlevel = OpenCmsCore.getInstance().getRunLevel();
 
-        if (runlevel != OpenCms.RUNLEVEL_4_SERVLET_ACCESS) {
-            // not the "normal" servlet runlevel
-            if (runlevel == OpenCms.RUNLEVEL_3_SHELL_ACCESS) {
-                // we have shell runlevel only, upgrade to servlet runlevel (required after setup wizard)
-                init(getServletConfig());
-            } else {
-                // illegal runlevel, we can't process requests
-                // sending status code 403, indicating the server understood the request but refused to fulfill it
-                res.sendError(HttpServletResponse.SC_FORBIDDEN);
-                // goodbye
-                return;
+            // write OpenCms server identification in the response header
+            res.setHeader(CmsRequestUtil.HEADER_SERVER, OpenCmsCore.getInstance().getSystemInfo().getVersion());
+
+            if (runlevel != OpenCms.RUNLEVEL_4_SERVLET_ACCESS) {
+                // not the "normal" servlet runlevel
+                if (runlevel == OpenCms.RUNLEVEL_3_SHELL_ACCESS) {
+                    // we have shell runlevel only, upgrade to servlet runlevel (required after setup wizard)
+                    init(getServletConfig());
+                } else {
+                    // illegal runlevel, we can't process requests
+                    // sending status code 403, indicating the server understood the request but refused to fulfill it
+                    res.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    // goodbye
+                    return;
+                }
             }
-        }
 
-        String path = OpenCmsCore.getInstance().getPathInfo(req);
-        if (path.startsWith(HANDLE_PATH)) {
-            // this is a request to an OpenCms handler URI
-            invokeHandler(req, res);
-        } else if (path.endsWith(HANDLE_GWT)) {
-            // handle GWT rpc services  
-            String serviceName = CmsResource.getName(path);
-            serviceName = serviceName.substring(0, serviceName.length() - HANDLE_GWT.length());
-            OpenCmsCore.getInstance().invokeGwtService(serviceName, req, res, getServletConfig());
-        } else {
-            // standard request to a URI in the OpenCms VFS 
-            OpenCmsCore.getInstance().showResource(req, res);
+            String path = OpenCmsCore.getInstance().getPathInfo(req);
+            if (path.startsWith(HANDLE_PATH)) {
+                // this is a request to an OpenCms handler URI
+                invokeHandler(req, res);
+            } else if (path.endsWith(HANDLE_GWT)) {
+                // handle GWT rpc services
+                String serviceName = CmsResource.getName(path);
+                serviceName = serviceName.substring(0, serviceName.length() - HANDLE_GWT.length());
+                OpenCmsCore.getInstance().invokeGwtService(serviceName, req, res, getServletConfig());
+            } else {
+                // standard request to a URI in the OpenCms VFS
+                OpenCmsCore.getInstance().showResource(req, res);
+            }
+        } finally {
+            currentRequest.remove();
         }
     }
 
     /**
-     * OpenCms servlet POST request handling method, 
+     * OpenCms servlet POST request handling method,
      * will just call {@link #doGet(HttpServletRequest, HttpServletResponse)}.<p>
-     * 
+     *
      * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
     @Override
@@ -185,6 +196,7 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
             errorCode = Integer.valueOf(name).intValue();
         } catch (NumberFormatException nf) {
             res.sendError(HttpServletResponse.SC_FORBIDDEN);
+            LOG.debug("Error parsing handler name.", nf);
             return;
         }
         switch (errorCode) {
@@ -196,7 +208,7 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
                     cms = OpenCms.initCmsObject(OpenCms.getDefaultUsers().getUserExport());
                     exportData = OpenCms.getStaticExportManager().getExportData(req, cms);
                 } catch (CmsException e) {
-                    // unlikely to happen 
+                    // unlikely to happen
                     if (LOG.isWarnEnabled()) {
                         LOG.warn(
                             Messages.get().getBundle().key(
@@ -235,7 +247,7 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
 
         super.init(config);
         try {
-            // upgrade the runlevel 
+            // upgrade the runlevel
             // usually this should have already been done by the context listener
             // however, after a fresh install / setup this will be done from here
             OpenCmsCore.getInstance().upgradeRunlevel(config.getServletContext());
@@ -248,7 +260,7 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
                 if (CmsServletContainerSettings.isServletThrowsException()) {
                     throw new ServletException(e.getMessage());
                 } else {
-                    // this is needed since some servlet containers does not like the servlet to throw exceptions, 
+                    // this is needed since some servlet containers does not like the servlet to throw exceptions,
                     // like BEA WLS 9.x and Resin
                     LOG.error(Messages.get().getBundle().key(Messages.LOG_ERROR_GENERIC_0), e);
                 }
@@ -260,9 +272,9 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
 
     /**
      * Manages requests to internal OpenCms request handlers.<p>
-     * 
+     *
      * @param req the current request
-     * @param res the current response 
+     * @param res the current response
      * @throws ServletException in case an error occurs
      * @throws ServletException in case an error occurs
      * @throws IOException in case an error occurs
@@ -271,6 +283,11 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
 
         String name = OpenCmsCore.getInstance().getPathInfo(req).substring(HANDLE_PATH.length());
         I_CmsRequestHandler handler = OpenCmsCore.getInstance().getRequestHandler(name);
+        if ((handler == null) && name.contains("/")) {
+            // if the name contains a '/', also check for handlers matching the first path fragment only
+            name = name.substring(0, name.indexOf("/"));
+            handler = OpenCmsCore.getInstance().getRequestHandler(name);
+        }
         if (handler != null) {
             handler.handle(req, res, name);
         } else {
@@ -279,10 +296,10 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
     }
 
     /**
-     * Displays an error code handler loaded from the OpenCms VFS, 
+     * Displays an error code handler loaded from the OpenCms VFS,
      * or if such a page does not exist,
      * displays the default servlet container error code.<p>
-     *  
+     *
      * @param req the current request
      * @param res the current response
      * @param errorCode the error code to display
@@ -292,15 +309,16 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
     protected void openErrorHandler(HttpServletRequest req, HttpServletResponse res, int errorCode)
     throws IOException, ServletException {
 
-        String handlerUri = (new StringBuffer(64)).append(HANDLE_VFS_PATH).append(errorCode).append(HANDLE_VFS_SUFFIX).toString();
+        String handlerUri = (new StringBuffer(64)).append(HANDLE_VFS_PATH).append(errorCode).append(
+            HANDLE_VFS_SUFFIX).toString();
+        // provide the original error code in a request attribute
+        req.setAttribute(CmsRequestUtil.ATTRIBUTE_ERRORCODE, new Integer(errorCode));
         CmsObject cms;
         CmsFile file;
         try {
-            // create OpenCms context, this will be set in the root site            
+            // create OpenCms context, this will be set in the root site
             cms = OpenCms.initCmsObject(OpenCms.getDefaultUsers().getUserGuest());
-            cms.getRequestContext().setUri(handlerUri);
-            // read the error handler file
-            file = cms.readFile(handlerUri, CmsResourceFilter.IGNORE_EXPIRATION);
+            cms.getRequestContext().setSecureRequest(OpenCms.getSiteManager().usesSecureSite(req));
         } catch (CmsException e) {
             // unlikely to happen as the OpenCms "Guest" context can always be initialized
             CmsMessageContainer container = Messages.get().container(
@@ -318,9 +336,13 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
             return;
         }
         try {
-            // provide the original error code in a request attribute
-            req.setAttribute(CmsRequestUtil.ATTRIBUTE_ERRORCODE, new Integer(errorCode));
-            OpenCms.getResourceManager().loadResource(cms, file, req, res);
+            if (!tryCustomErrorPage(cms, req, res, errorCode)) {
+                cms.getRequestContext().setUri(handlerUri);
+                cms.getRequestContext().setSecureRequest(OpenCms.getSiteManager().usesSecureSite(req));
+                // read the error handler file
+                file = cms.readFile(handlerUri, CmsResourceFilter.IGNORE_EXPIRATION);
+                OpenCms.getResourceManager().loadResource(cms, file, req, res);
+            }
         } catch (CmsException e) {
             // unable to load error page handler VFS resource
             CmsMessageContainer container = Messages.get().container(
@@ -329,5 +351,74 @@ public class OpenCmsServlet extends HttpServlet implements I_CmsRequestHandler {
                 handlerUri);
             throw new ServletException(org.opencms.jsp.Messages.getLocalizedMessage(container, req), e);
         }
+    }
+
+    /**
+     * Tries to load the custom error page at the given rootPath.
+     * @param cms {@link CmsObject} used for reading the resource (site root and uri get adjusted!)
+     * @param req the current request
+     * @param res the current response
+     * @param rootPath the VFS root path to the error page resource
+     * @return a flag, indicating if the error page could be loaded
+     */
+    private boolean loadCustomErrorPage(
+        CmsObject cms,
+        HttpServletRequest req,
+        HttpServletResponse res,
+        String rootPath) {
+
+        try {
+
+            // get the site of the error page resource
+            CmsSite errorSite = OpenCms.getSiteManager().getSiteForRootPath(rootPath);
+            cms.getRequestContext().setSiteRoot(errorSite.getSiteRoot());
+            String relPath = cms.getRequestContext().removeSiteRoot(rootPath);
+            if (cms.existsResource(relPath)) {
+                cms.getRequestContext().setUri(relPath);
+                OpenCms.getResourceManager().loadResource(cms, cms.readResource(relPath), req, res);
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Throwable e) {
+            // something went wrong log the exception and return false
+            LOG.error(e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Tries to load a site specific error page. If
+     * @param cms {@link CmsObject} used for reading the resource (site root and uri get adjusted!)
+     * @param req the current request
+     * @param res the current response
+     * @param errorCode the error code to display
+     * @return a flag, indicating if the custom error page could be loaded.
+     */
+    private boolean tryCustomErrorPage(CmsObject cms, HttpServletRequest req, HttpServletResponse res, int errorCode) {
+
+        String siteRoot = OpenCms.getSiteManager().matchRequest(req).getSiteRoot();
+        CmsSite site = OpenCms.getSiteManager().getSiteForSiteRoot(siteRoot);
+        if (site != null) {
+            // store current site root and URI
+            String currentSiteRoot = cms.getRequestContext().getSiteRoot();
+            String currentUri = cms.getRequestContext().getUri();
+            try {
+                if (site.getErrorPage() != null) {
+                    String rootPath = site.getErrorPage();
+                    if (loadCustomErrorPage(cms, req, res, rootPath)) {
+                        return true;
+                    }
+                }
+                String rootPath = CmsStringUtil.joinPaths(siteRoot, "/.errorpages/handle" + errorCode + ".html");
+                if (loadCustomErrorPage(cms, req, res, rootPath)) {
+                    return true;
+                }
+            } finally {
+                cms.getRequestContext().setSiteRoot(currentSiteRoot);
+                cms.getRequestContext().setUri(currentUri);
+            }
+        }
+        return false;
     }
 }

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -51,17 +51,17 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 
 /**
- * This is the session class to work with the {@link CmsRepository}.<p> 
- * 
- * You can get an instance of this class by calling 
+ * This is the session class to work with the {@link CmsRepository}.<p>
+ *
+ * You can get an instance of this class by calling
  * {@link CmsRepository#login(String, String)}.<p>
  *
  * This class provides basic file and folder operations on the resources
  * in the VFS of OpenCms.<p>
- * 
+ *
  * @see A_CmsRepositorySession
  * @see I_CmsRepositorySession
- * 
+ *
  * @since 6.5.6
  */
 public class CmsRepositorySession extends A_CmsRepositorySession {
@@ -73,9 +73,9 @@ public class CmsRepositorySession extends A_CmsRepositorySession {
     private final CmsObjectWrapper m_cms;
 
     /**
-     * Constructor with an initialized {@link CmsObjectWrapper} and a 
+     * Constructor with an initialized {@link CmsObjectWrapper} and a
      * {@link CmsRepositoryFilter} to use.<p>
-     * 
+     *
      * @param cms the initialized CmsObject
      * @param filter the repository filter to use
      */
@@ -255,9 +255,9 @@ public class CmsRepositorySession extends A_CmsRepositorySession {
     /**
      * @see org.opencms.repository.I_CmsRepositorySession#list(java.lang.String)
      */
-    public List list(String path) throws CmsException {
+    public List<I_CmsRepositoryItem> list(String path) throws CmsException {
 
-        List ret = new ArrayList();
+        List<I_CmsRepositoryItem> ret = new ArrayList<I_CmsRepositoryItem>();
 
         path = validatePath(path);
 
@@ -265,10 +265,10 @@ public class CmsRepositorySession extends A_CmsRepositorySession {
             LOG.debug(Messages.get().getBundle().key(Messages.LOG_LIST_ITEMS_1, path));
         }
 
-        List resources = m_cms.getResourcesInFolder(path, CmsResourceFilter.DEFAULT);
-        Iterator iter = resources.iterator();
+        List<CmsResource> resources = m_cms.getResourcesInFolder(path, CmsResourceFilter.DEFAULT);
+        Iterator<CmsResource> iter = resources.iterator();
         while (iter.hasNext()) {
-            CmsResource res = (CmsResource)iter.next();
+            CmsResource res = iter.next();
 
             if (!isFiltered(m_cms.getRequestContext().removeSiteRoot(res.getRootPath()))) {
 
@@ -444,9 +444,10 @@ public class CmsRepositorySession extends A_CmsRepositorySession {
     /**
      * Adds the site root to the path name and checks then if the path
      * is filtered.<p>
-     * 
+     *
      * @see org.opencms.repository.A_CmsRepositorySession#isFiltered(java.lang.String)
      */
+    @Override
     protected boolean isFiltered(String name) {
 
         boolean ret = super.isFiltered(m_cms.getRequestContext().addSiteRoot(name));
@@ -463,11 +464,11 @@ public class CmsRepositorySession extends A_CmsRepositorySession {
 
     /**
      * Validates (translates) the given path and checks if it is filtered out.<p>
-     * 
+     *
      * @param path the path to validate
-     * 
+     *
      * @return the validated path
-     * 
+     *
      * @throws CmsSecurityException if the path is filtered out
      */
     private String validatePath(String path) throws CmsSecurityException {

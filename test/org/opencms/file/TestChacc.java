@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,6 +30,7 @@ package org.opencms.file;
 import org.opencms.main.OpenCms;
 import org.opencms.security.CmsAccessControlEntry;
 import org.opencms.security.CmsPermissionSet;
+import org.opencms.security.CmsRole;
 import org.opencms.security.I_CmsPrincipal;
 import org.opencms.test.OpenCmsTestCase;
 import org.opencms.test.OpenCmsTestProperties;
@@ -44,13 +45,13 @@ import junit.framework.TestSuite;
 
 /**
  * Unit test for the "chacc" method of the CmsObject.<p>
- * 
+ *
  */
 public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestChacc(String arg0) {
@@ -60,7 +61,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method on a file and a group.<p>
-     * 
+     *
      * @param tc the OpenCmsTestCase
      * @param cms the CmsObject
      * @param resource1 the resource to change permissions
@@ -102,7 +103,7 @@ public class TestChacc extends OpenCmsTestCase {
             permissions.getDeniedPermissions(),
             flags + CmsAccessControlEntry.ACCESS_FLAGS_GROUP);
         tc.assertAce(cms, resource1, ace);
-        // test the acl with the permission set        
+        // test the acl with the permission set
         int denied = permissions.getDeniedPermissions();
         if (flags == CmsAccessControlEntry.ACCESS_FLAGS_OVERWRITE) {
             denied = 0;
@@ -113,7 +114,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method on a file and a user.<p>
-     * 
+     *
      * @param tc the OpenCmsTestCase
      * @param cms the CmsObject
      * @param resource1 the resource to change permissions
@@ -166,7 +167,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method on a file and a group.<p>
-     * 
+     *
      * @param tc the OpenCmsTestCase
      * @param cms the CmsObject
      * @param resource1 the resource to change permissions
@@ -208,7 +209,7 @@ public class TestChacc extends OpenCmsTestCase {
             permissions.getDeniedPermissions(),
             flags + CmsAccessControlEntry.ACCESS_FLAGS_GROUP);
         tc.assertAce(cms, resource1, ace);
-        // test the acl with the permission set        
+        // test the acl with the permission set
         int denied = permissions.getDeniedPermissions();
         if ((flags & CmsAccessControlEntry.ACCESS_FLAGS_OVERWRITE) > 0) {
             denied = 0;
@@ -235,7 +236,7 @@ public class TestChacc extends OpenCmsTestCase {
                 flags + CmsAccessControlEntry.ACCESS_FLAGS_GROUP + CmsAccessControlEntry.ACCESS_FLAGS_INHERITED);
             tc.assertAce(cms, subResName, ace);
 
-            // test the acl with the permission set     
+            // test the acl with the permission set
             permission = new CmsPermissionSet(permissions.getAllowedPermissions(), denied);
             tc.assertAcl(cms, resource1, subResName, group.getId(), permission);
 
@@ -244,7 +245,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -280,7 +281,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the creation and deletion of access control entries and checks permissions of a test user.<p>
-     *  
+     *
      * @throws Throwable if something goes wrong
      */
     public void testChaccAddRemove() throws Throwable {
@@ -292,6 +293,7 @@ public class TestChacc extends OpenCmsTestCase {
         CmsGroup testGroup = cms.readGroup("Testgroup");
         cms.createUser("testuser", "test", "A test user", null);
         cms.addUserToGroup("testuser", "Testgroup");
+        OpenCms.getRoleManager().addUserToRole(cms, CmsRole.ELEMENT_AUTHOR, "testuser");
         CmsUser testUser = cms.readUser("testuser");
 
         CmsProject offline = cms.readProject("Offline");
@@ -305,9 +307,9 @@ public class TestChacc extends OpenCmsTestCase {
         OpenCms.getPublishManager().publishProject(cms);
         OpenCms.getPublishManager().waitWhileRunning();
 
-        CmsPermissionSet permissions = new CmsPermissionSet(CmsPermissionSet.PERMISSION_READ
-            | CmsPermissionSet.PERMISSION_VIEW
-            | CmsPermissionSet.PERMISSION_WRITE, 0);
+        CmsPermissionSet permissions = new CmsPermissionSet(
+            CmsPermissionSet.PERMISSION_READ | CmsPermissionSet.PERMISSION_VIEW | CmsPermissionSet.PERMISSION_WRITE,
+            0);
 
         // check set permissions for the test user
         cms.loginUser("testuser", "test");
@@ -346,7 +348,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method for the special 'all others' principal.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testChaccFileAllOthers() throws Throwable {
@@ -384,7 +386,7 @@ public class TestChacc extends OpenCmsTestCase {
             permissions.getDeniedPermissions(),
             flags);
         assertAce(cms, resource, ace);
-        // test the acl with the permission set        
+        // test the acl with the permission set
         int denied = permissions.getDeniedPermissions();
         if ((flags & CmsAccessControlEntry.ACCESS_FLAGS_OVERWRITE) > 0) {
             denied = 0;
@@ -411,7 +413,7 @@ public class TestChacc extends OpenCmsTestCase {
                 flags + CmsAccessControlEntry.ACCESS_FLAGS_INHERITED);
             assertAce(cms, subResName, ace);
 
-            // test the acl with the permission set     
+            // test the acl with the permission set
             permission = new CmsPermissionSet(permissions.getAllowedPermissions(), denied);
             assertAcl(cms, resource, subResName, CmsAccessControlEntry.PRINCIPAL_ALL_OTHERS_ID, permission);
         }
@@ -419,7 +421,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method on a file and a group.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testChaccFileGroup() throws Throwable {
@@ -437,7 +439,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method for the special 'overwrite all' principal.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testChaccFileOverwriteAll() throws Throwable {
@@ -475,7 +477,7 @@ public class TestChacc extends OpenCmsTestCase {
             permissions.getDeniedPermissions(),
             flags);
         assertAce(cms, resource, ace);
-        // test the acl with the permission set        
+        // test the acl with the permission set
         int denied = permissions.getDeniedPermissions();
         if ((flags & CmsAccessControlEntry.ACCESS_FLAGS_OVERWRITE) > 0) {
             denied = 0;
@@ -502,7 +504,7 @@ public class TestChacc extends OpenCmsTestCase {
                 flags + CmsAccessControlEntry.ACCESS_FLAGS_INHERITED);
             assertAce(cms, subResName, ace);
 
-            // test the acl with the permission set     
+            // test the acl with the permission set
             permission = new CmsPermissionSet(permissions.getAllowedPermissions(), denied);
             assertAcl(cms, resource, subResName, CmsAccessControlEntry.PRINCIPAL_OVERWRITE_ALL_ID, permission);
         }
@@ -510,7 +512,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method on a file and a user.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testChaccFileUser() throws Throwable {
@@ -522,7 +524,7 @@ public class TestChacc extends OpenCmsTestCase {
 
     /**
      * Test the chacc method on a folder and a group.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testChaccFolderGroup() throws Throwable {

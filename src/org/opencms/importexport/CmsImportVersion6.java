@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -44,17 +44,18 @@ import org.apache.commons.logging.Log;
 import org.dom4j.Element;
 
 /**
- * Implementation of the OpenCms Import Interface ({@link org.opencms.importexport.I_CmsImport}) for 
+ * Implementation of the OpenCms Import Interface ({@link org.opencms.importexport.I_CmsImport}) for
  * the import version 6.<p>
- * 
+ *
  * This import format is used in OpenCms since 6.5.6.<p>
- * 
- * @since 6.5.6 
- * 
+ *
+ * @since 6.5.6
+ *
  * @see org.opencms.importexport.A_CmsImport
- * 
+ *
  * @deprecated this import class is no longer in use and should only be used to import old export files
  */
+@Deprecated
 public class CmsImportVersion6 extends CmsImportVersion5 {
 
     /** The version number of this import implementation.<p> */
@@ -82,7 +83,7 @@ public class CmsImportVersion6 extends CmsImportVersion5 {
 
     /**
      * Imports the OpenCms users.<p>
-     * 
+     *
      * @throws CmsImportExportException if something goes wrong
      */
     @Override
@@ -90,10 +91,11 @@ public class CmsImportVersion6 extends CmsImportVersion5 {
 
         try {
             // getAll user nodes
-            List userNodes = m_docXml.selectNodes("//" + A_CmsImport.N_USERDATA);
+            @SuppressWarnings("unchecked")
+            List<Element> userNodes = m_docXml.selectNodes("//" + A_CmsImport.N_USERDATA);
             // walk threw all groups in manifest
             for (int i = 0; i < userNodes.size(); i++) {
-                Element currentElement = (Element)userNodes.get(i);
+                Element currentElement = userNodes.get(i);
 
                 String name = getChildElementTextValue(currentElement, A_CmsImport.N_NAME);
                 name = OpenCms.getImportExportManager().translateUser(name);
@@ -109,11 +111,12 @@ public class CmsImportVersion6 extends CmsImportVersion5 {
                 long dateCreated = Long.parseLong(getChildElementTextValue(currentElement, A_CmsImport.N_DATECREATED));
 
                 // get the userinfo and put it into the additional info map
-                Map userInfo = new HashMap();
-                Iterator itInfoNodes = currentElement.selectNodes(
+                Map<String, Object> userInfo = new HashMap<String, Object>();
+                @SuppressWarnings("unchecked")
+                Iterator<Element> itInfoNodes = currentElement.selectNodes(
                     "./" + A_CmsImport.N_USERINFO + "/" + A_CmsImport.N_USERINFO_ENTRY).iterator();
                 while (itInfoNodes.hasNext()) {
-                    Element infoEntryNode = (Element)itInfoNodes.next();
+                    Element infoEntryNode = itInfoNodes.next();
                     String key = infoEntryNode.attributeValue(A_CmsImport.A_NAME);
                     String type = infoEntryNode.attributeValue(A_CmsImport.A_TYPE);
                     String value = infoEntryNode.getTextTrim();
@@ -121,10 +124,11 @@ public class CmsImportVersion6 extends CmsImportVersion5 {
                 }
 
                 // get the groups of the user and put them into the list
-                List groupNodes = currentElement.selectNodes("*/" + A_CmsImport.N_GROUPNAME);
-                List userGroups = new ArrayList();
+                @SuppressWarnings("unchecked")
+                List<Element> groupNodes = currentElement.selectNodes("*/" + A_CmsImport.N_GROUPNAME);
+                List<String> userGroups = new ArrayList<String>();
                 for (int j = 0; j < groupNodes.size(); j++) {
-                    Element currentGroup = (Element)groupNodes.get(j);
+                    Element currentGroup = groupNodes.get(j);
                     String userInGroup = getChildElementTextValue(currentGroup, A_CmsImport.N_NAME);
                     userInGroup = OpenCms.getImportExportManager().translateGroup(userInGroup);
                     userGroups.add(userInGroup);

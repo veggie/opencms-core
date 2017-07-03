@@ -7,11 +7,9 @@
     height: 20px;
 }
 
-@sprite .meterWrap, .meterValue {
-	gwt-image: "backgrounds.softBackground";
-	background-position: 50% 50%;
-    background-repeat: repeat-x;
-    border-radius: 5px;
+.meterWrap, .meterValue {
+	background: value("constants.css.backgroundColorSoft");
+    border-radius: value("constants.css.borderRadius");
     height: 20px;
 }
 

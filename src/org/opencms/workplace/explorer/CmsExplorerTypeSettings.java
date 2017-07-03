@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,6 +33,7 @@ import org.opencms.i18n.CmsMessages;
 import org.opencms.main.CmsLog;
 import org.opencms.main.OpenCms;
 import org.opencms.security.CmsPermissionSet;
+import org.opencms.security.CmsRole;
 import org.opencms.util.CmsStringUtil;
 import org.opencms.workplace.CmsWorkplace;
 import org.opencms.workplace.CmsWorkplaceManager;
@@ -46,13 +47,13 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 
 /**
- * Holds all information to build the explorer context menu of a resource type 
+ * Holds all information to build the explorer context menu of a resource type
  * and information for the new resource dialog.<p>
- * 
+ *
  * Objects of this type are sorted by their order value which specifies the order
  * in the new resource dialog.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettings> {
 
@@ -70,41 +71,125 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /** The log object for this class. */
     private static final Log LOG = CmsLog.getLog(CmsExplorerTypeSettings.class);
+
+    /** Default view orders. */
+    private static Map<String, Integer> m_defaultViewOrders = new HashMap<String, Integer>() {
+
+        /** Serial version id. */
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("folder", new Integer(50));
+            put("plain", new Integer(200));
+            put("jsp", new Integer(300));
+            put("htmlredirect", new Integer(400));
+            put("containerpage", new Integer(500));
+
+            put("imagegallery", new Integer(100));
+            put("downloadgallery", new Integer(200));
+            put("linkgallery", new Integer(300));
+            put("subsitemap", new Integer(400));
+            put("content_folder", new Integer(500));
+            put("formatter_config", new Integer(100));
+
+            put("xmlvfsbundle", new Integer(200));
+            put("propertyvfsbundle", new Integer(300));
+            put("bundledescriptor", new Integer(350));
+            put("sitemap_config", new Integer(400));
+            put("sitemap_master_config", new Integer(500));
+            put("module_config", new Integer(600));
+            put("elementview", new Integer(700));
+            put("seo_file", new Integer(800));
+            put("containerpage_template", new Integer(900));
+            put("inheritance_config", new Integer(1000));
+
+            put("xmlcontent", new Integer(100));
+            put("pointer", new Integer(200));
+
+            put("modelgroup", new Integer(100));
+        }
+    };
+
+    /** The explorer type access. */
     private CmsExplorerTypeAccess m_access;
+
     /** Flag for showing that this is an additional resource type which defined in a module. */
     private boolean m_addititionalModuleExplorerType;
+
+    /** The auto set navigation flag. */
     private boolean m_autoSetNavigation;
+
+    /** The auto set title flag. */
     private boolean m_autoSetTitle;
+
     /** The name of the big icon for this explorer type. */
     private String m_bigIcon;
+
+    /** The context menu. */
     private CmsExplorerContextMenu m_contextMenu;
 
+    /** The context menu entries. */
     private List<CmsExplorerContextMenuItem> m_contextMenuEntries;
 
+    /** The description image. */
     private String m_descriptionImage;
 
+    /** The element view for this explorer type. */
+    private String m_elementView;
+
+    /**The edit options flag. */
     private boolean m_hasEditOptions;
+
+    /** The icon. */
     private String m_icon;
+
     /** The icon rules for this explorer type. */
     private Map<String, CmsIconRule> m_iconRules;
 
+    /** The info. */
     private String m_info;
+
+    /** Flag indicating whether this explorer type represents a view. */
+    private boolean m_isView;
+
+    /** The key. */
     private String m_key;
+
+    /** The name. */
     private String m_name;
+
+    /** The name pattern. */
+    private String m_namePattern;
+
     /** Optional class name for a new resource handler. */
     private String m_newResourceHandlerClassName;
+
+    /** The new resource order value. */
     private Integer m_newResourceOrder;
+
+    /** The new resource page. */
     private String m_newResourcePage;
+
+    /** The new resource URI. */
     private String m_newResourceUri;
+
+    /** The properties. */
     private List<String> m_properties;
 
+    /** The enabled properties. */
     private boolean m_propertiesEnabled;
 
+    /** The reference. */
     private String m_reference;
 
+    /** The show in navigation flag. */
     private boolean m_showNavigation;
 
+    /** The title key. */
     private String m_titleKey;
+
+    /** The configured view order. */
+    private Integer m_viewOrder;
 
     /**
      * Default constructor.<p>
@@ -121,11 +206,24 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
         m_addititionalModuleExplorerType = false;
         m_newResourceOrder = new Integer(0);
         m_iconRules = new HashMap<String, CmsIconRule>();
+
+    }
+
+    /**
+     * Gets the default view order for the given type name (or null, if there is no default view order).<p>
+     *
+     * @param typeName the type name
+     *
+     * @return the default view order for the type
+     */
+    public static Integer getDefaultViewOrder(String typeName) {
+
+        return m_defaultViewOrders.get(typeName);
     }
 
     /**
      * Adds a menu entry to the list of context menu items.<p>
-     * 
+     *
      * @param item the entry item to add to the list
      */
     public void addContextMenuEntry(CmsExplorerContextMenuItem item) {
@@ -139,7 +237,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Adds a menu separator to the list of context menu items.<p>
-     * 
+     *
      * @param item the separator item to add to the list
      */
     public void addContextMenuSeparator(CmsExplorerContextMenuItem item) {
@@ -153,10 +251,10 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Adds a new icon rule to this explorer type.<p>
-     * 
-     * @param extension the extension for the icon rule 
+     *
+     * @param extension the extension for the icon rule
      * @param icon the small icon
-     * @param bigIcon the big icon 
+     * @param bigIcon the big icon
      */
     public void addIconRule(String extension, String icon, String bigIcon) {
 
@@ -166,7 +264,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Adds a property definition name to the list of editable properties.<p>
-     * 
+     *
      * @param propertyName the name of the property definition to add
      * @return true if the property definition was added properly
      */
@@ -180,6 +278,51 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
         } else {
             return false;
         }
+    }
+
+    /**
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public Object clone() {
+
+        CmsExplorerTypeSettings result = new CmsExplorerTypeSettings();
+        result.m_access = m_access;
+        result.m_properties = new ArrayList<String>(m_properties);
+        result.m_contextMenuEntries = m_contextMenuEntries;
+        result.m_contextMenu = (CmsExplorerContextMenu)m_contextMenu.clone();
+        result.m_hasEditOptions = m_hasEditOptions;
+        result.m_propertiesEnabled = m_propertiesEnabled;
+        result.m_showNavigation = m_showNavigation;
+        result.m_addititionalModuleExplorerType = m_addititionalModuleExplorerType;
+        result.m_newResourceOrder = m_newResourceOrder;
+        result.m_autoSetNavigation = m_autoSetNavigation;
+        result.m_autoSetTitle = m_autoSetTitle;
+        result.m_bigIcon = m_bigIcon;
+        result.m_descriptionImage = m_descriptionImage;
+        result.m_hasEditOptions = m_hasEditOptions;
+        result.m_icon = m_icon;
+        result.m_info = m_info;
+        result.m_key = m_key;
+        result.m_name = m_name;
+        result.m_newResourceHandlerClassName = m_newResourceHandlerClassName;
+        result.m_newResourcePage = m_newResourcePage;
+        result.m_newResourceUri = m_newResourceUri;
+        result.m_reference = m_reference;
+        result.m_titleKey = m_titleKey;
+
+        result.m_iconRules = new HashMap<String, CmsIconRule>();
+        for (Map.Entry<String, CmsIconRule> rule : m_iconRules.entrySet()) {
+            result.m_iconRules.put(rule.getKey(), (CmsIconRule)rule.getValue().clone());
+        }
+
+        result.m_contextMenuEntries = new ArrayList<CmsExplorerContextMenuItem>();
+        for (CmsExplorerContextMenuItem entry : m_contextMenuEntries) {
+            // TODO: must also be cloned
+            result.m_contextMenuEntries.add(entry);
+        }
+
+        return result;
     }
 
     /**
@@ -210,8 +353,8 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Adds all context menu entries to the context menu object.<p>
-     * 
-     * This method has to be called when all context menu entries have been 
+     *
+     * This method has to be called when all context menu entries have been
      * added to the list of entries.<p>
      */
     public void createContextMenu() {
@@ -237,7 +380,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Gets the access object of the type settings.<p>
-     * 
+     *
      * @return access object of the type settings
      */
     public CmsExplorerTypeAccess getAccess() {
@@ -253,8 +396,8 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns the big icon.<p>
-     * 
-     * @return an icon name 
+     *
+     * @return an icon name
      */
     public String getBigIcon() {
 
@@ -263,7 +406,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns the biggest icon available.<p>
-     * 
+     *
      * @return the biggest icon available
      */
     public String getBigIconIfAvailable() {
@@ -278,14 +421,15 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
     public CmsExplorerContextMenu getContextMenu() {
 
         if ((m_reference != null) && (m_contextMenu.isEmpty())) {
-            m_contextMenu = (CmsExplorerContextMenu)OpenCms.getWorkplaceManager().getExplorerTypeSetting(m_reference).getContextMenu().clone();
+            m_contextMenu = (CmsExplorerContextMenu)OpenCms.getWorkplaceManager().getExplorerTypeSetting(
+                m_reference).getContextMenu().clone();
         }
         return m_contextMenu;
     }
 
     /**
      * Returns the list of context menu entries of the explorer type setting.<p>
-     * 
+     *
      * @return the list of context menu entries of the explorer type setting
      */
     public List<CmsExplorerContextMenuItem> getContextMenuEntries() {
@@ -304,8 +448,18 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
     }
 
     /**
+     * Gets the element view name.<p>
+     *
+     * @return the element view name
+     */
+    public String getElementView() {
+
+        return m_elementView;
+    }
+
+    /**
      * Returns the icon path and file name of the explorer type setting.<p>
-     * 
+     *
      * @return the icon path and file name of the explorer type setting
      */
     public String getIcon() {
@@ -319,8 +473,8 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns a map from file extensions to icon rules for this explorer type.<p>
-     * 
-     * @return a map from file extensions to icon rules 
+     *
+     * @return a map from file extensions to icon rules
      */
     public Map<String, CmsIconRule> getIconRules() {
 
@@ -339,11 +493,11 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Builds the Javascript to create the context menu.<p>
-     * 
+     *
      * @param settings the explorer type settings for which the context menu is created
      * @param resTypeId the id of the resource type which uses the context menu
      * @param messages the messages to generate the context menu with (should be the workplace messages)
-     * 
+     *
      * @return the JavaScript output to create the context menu
      */
     public String getJSEntries(CmsExplorerTypeSettings settings, int resTypeId, CmsMessages messages) {
@@ -367,7 +521,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns the key name of the explorer type setting.<p>
-     * 
+     *
      * @return the key name of the explorer type setting
      */
     public String getKey() {
@@ -377,7 +531,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns the name of the explorer type setting.<p>
-     * 
+     *
      * @return the name of the explorer type setting
      */
     public String getName() {
@@ -386,8 +540,18 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
     }
 
     /**
+     * Gets the name pattern.<p>
+     *
+     * @return the name pattern
+     */
+    public String getNamePattern() {
+
+        return m_namePattern;
+    }
+
+    /**
      * Returns the class name of the new resource handler used to create new resources of a specified resource type.<p>
-     * 
+     *
      * @return the class name of the new resource handler
      */
     public String getNewResourceHandlerClassName() {
@@ -397,7 +561,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns the order for the new resource dialog of the explorer type setting.<p>
-     * 
+     *
      * @return the order for the new resource dialog of the explorer type setting
      */
     public String getNewResourceOrder() {
@@ -417,7 +581,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns the URI for the new resource dialog of the explorer type setting.<p>
-     * 
+     *
      * @return the URI for the new resource dialog of the explorer type setting
      */
     public String getNewResourceUri() {
@@ -427,8 +591,8 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Gets the original icon name from the configuration.<p>
-     * 
-     * @return an icon name 
+     *
+     * @return an icon name
      */
     public String getOriginalIcon() {
 
@@ -446,7 +610,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns the reference of the explorer type setting.<p>
-     * 
+     *
      * @return the reference of the explorer type setting
      */
     public String getReference() {
@@ -465,8 +629,31 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
     }
 
     /**
+     * Gets the view order, optionally using a default value if the view order is not configured.<p>
+     *
+     * @param useDefault true if a default should be returned in the case where the view order is not configured
+     *
+     * @return the view order
+     */
+    public Integer getViewOrder(boolean useDefault) {
+
+        Integer defaultViewOrder = getDefaultViewOrder(m_name);
+        Integer result = null;
+        if (m_viewOrder != null) {
+            result = m_viewOrder;
+        } else if (useDefault) {
+            if (defaultViewOrder != null) {
+                result = defaultViewOrder;
+            } else {
+                result = new Integer(9999);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Returns true if this explorer type entry has explicit edit options set.<p>
-     *  
+     *
      * @return true if this explorer type entry has explicit edit options set
      */
     public boolean hasEditOptions() {
@@ -485,7 +672,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Indicates that this is an additional explorer type which is defined in a module.<p>
-     * 
+     *
      * @return true or false
      */
     public boolean isAddititionalModuleExplorerType() {
@@ -495,7 +682,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns true if navigation properties should automatically be added on resource creation.<p>
-     * 
+     *
      * @return true if navigation properties should automatically be added on resource creation, otherwise false
      */
     public boolean isAutoSetNavigation() {
@@ -505,7 +692,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns true if the title property should automatically be added on resource creation.<p>
-     * 
+     *
      * @return true if the title property should automatically be added on resource creation, otherwise false
      */
     public boolean isAutoSetTitle() {
@@ -515,14 +702,18 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Checks if the current user has write permissions on the given resource.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resource the resource to check
-     * 
+     *
      * @return <code>true</code> if the current user has write permissions on the given resource
      */
     public boolean isEditable(CmsObject cms, CmsResource resource) {
 
+        if (!cms.getRequestContext().getCurrentProject().isOnlineProject()
+            && OpenCms.getRoleManager().hasRole(cms, CmsRole.ROOT_ADMIN)) {
+            return true;
+        }
         // determine if this resource type is editable for the current user
         CmsPermissionSet permissions = getAccess().getPermissions(cms, resource);
         return permissions.requiresWritePermission();
@@ -530,7 +721,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns if this explorer type setting uses a special properties dialog.<p>
-     * 
+     *
      * @return true, if this explorer type setting uses a special properties dialog
      */
     public boolean isPropertiesEnabled() {
@@ -540,7 +731,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Returns if this explorer type setting displays the navigation properties in the special properties dialog.<p>
-     * 
+     *
      * @return true, if this explorer type setting displays the navigation properties in the special properties dialog
      */
     public boolean isShowNavigation() {
@@ -549,8 +740,18 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
     }
 
     /**
+     * Returns true if this explorer type represents a view.<p>
+     *
+     * @return true if this explorer type represents a view
+     */
+    public boolean isView() {
+
+        return m_isView;
+    }
+
+    /**
      * Sets the access object of the type settings.<p>
-     * 
+     *
      * @param access access object
      */
     public void setAccess(CmsExplorerTypeAccess access) {
@@ -560,7 +761,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the additional explorer type flag.<p>
-     * 
+     *
      * @param addititionalModuleExplorerType true or false
      */
     public void setAddititionalModuleExplorerType(boolean addititionalModuleExplorerType) {
@@ -596,8 +797,8 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the file name of the big icon for this explorer type.<p>
-     * 
-     * @param bigIcon the file name of the big icon 
+     *
+     * @param bigIcon the file name of the big icon
      */
     public void setBigIcon(String bigIcon) {
 
@@ -606,7 +807,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the list of context menu entries of the explorer type setting.<p>
-     * 
+     *
      * @param entries the list of context menu entries of the explorer type setting
      */
     public void setContextMenuEntries(List<CmsExplorerContextMenuItem> entries) {
@@ -623,15 +824,14 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
         m_descriptionImage = descriptionImage;
         if (LOG.isDebugEnabled()) {
-            LOG.debug(Messages.get().getBundle().key(
-                Messages.LOG_SET_NEW_RESOURCE_DESCRIPTION_IMAGE_1,
-                descriptionImage));
+            LOG.debug(
+                Messages.get().getBundle().key(Messages.LOG_SET_NEW_RESOURCE_DESCRIPTION_IMAGE_1, descriptionImage));
         }
     }
 
-    /** 
+    /**
      * Sets the flag if this explorer type entry has explicit edit options set.<p>
-     * 
+     *
      * This is determined by the presence of the &lt;editoptions&gt; node in the Cms workplace configuration.<p>
      */
     public void setEditOptions() {
@@ -640,8 +840,22 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
     }
 
     /**
+     * Sets the reference of the explorer type setting.<p>
+     *
+     * @param elementView the element view
+     */
+    public void setElementView(String elementView) {
+
+        m_elementView = elementView;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Setting element view to " + elementView);
+
+        }
+    }
+
+    /**
      * Sets the icon path and file name of the explorer type setting.<p>
-     * 
+     *
      * @param icon the icon path and file name of the explorer type setting
      */
     public void setIcon(String icon) {
@@ -667,7 +881,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the key name of the explorer type setting.<p>
-     * 
+     *
      * @param key the key name of the explorer type setting
      */
     public void setKey(String key) {
@@ -680,7 +894,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the name of the explorer type setting.<p>
-     * 
+     *
      * @param name the name of the explorer type setting
      */
     public void setName(String name) {
@@ -693,7 +907,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the class name of the new resource handler used to create new resources of a specified resource type.<p>
-     * 
+     *
      * @param newResourceHandlerClassName the class name of the new resource handler
      */
     public void setNewResourceHandlerClassName(String newResourceHandlerClassName) {
@@ -703,7 +917,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the order for the new resource dialog of the explorer type setting.<p>
-     * 
+     *
      * @param newResourceOrder the order for the new resource dialog of the explorer type setting
      */
     public void setNewResourceOrder(String newResourceOrder) {
@@ -734,7 +948,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the URI for the new resource dialog of the explorer type setting.<p>
-     * 
+     *
      * @param newResourceUri the URI for the new resource dialog of the explorer type setting
      */
     public void setNewResourceUri(String newResourceUri) {
@@ -747,7 +961,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the list of properties of the explorer type setting.<p>
-     * 
+     *
      * @param properties the list of properties of the explorer type setting
      */
     public void setProperties(List<String> properties) {
@@ -757,7 +971,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets if this explorer type setting uses a special properties dialog.<p>
-     * 
+     *
      * @param enabled true, if this explorer type setting uses a special properties dialog
      */
     public void setPropertiesEnabled(boolean enabled) {
@@ -767,7 +981,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the default settings for the property display dialog.<p>
-     * 
+     *
      * @param enabled true, if this explorer type setting uses a special properties dialog
      * @param showNavigation true, if this explorer type setting displays the navigation properties in the special properties dialog
      */
@@ -782,7 +996,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the reference of the explorer type setting.<p>
-     * 
+     *
      * @param reference the reference of the explorer type setting
      */
     public void setReference(String reference) {
@@ -795,7 +1009,7 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets if this explorer type setting displays the navigation properties in the special properties dialog.<p>
-     * 
+     *
      * @param navigation true, if this explorer type setting displays the navigation properties in the special properties dialog
      */
     public void setShowNavigation(boolean navigation) {
@@ -818,9 +1032,9 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the basic attributes of the type settings.<p>
-     * 
+     *
      * @param name the name of the type setting
-     * @param key the key name of the explorer type setting 
+     * @param key the key name of the explorer type setting
      * @param icon the icon path and file name of the explorer type setting
      */
     public void setTypeAttributes(String name, String key, String icon) {
@@ -832,20 +1046,42 @@ public class CmsExplorerTypeSettings implements Comparable<CmsExplorerTypeSettin
 
     /**
      * Sets the basic attributes of the type settings.<p>
-     * 
+     *
      * @param name the name of the type setting
-     * @param key the key name of the explorer type setting 
+     * @param key the key name of the explorer type setting
      * @param icon the icon path and file name of the explorer type setting
      * @param bigIcon the file name of the big icon
      * @param reference the reference of the explorer type setting
+     * @param elementView the element view
+     * @param isView 'true' if this type represents an element view
+     * @param namePattern the name pattern
+     * @param viewOrder the view order
      */
-    public void setTypeAttributes(String name, String key, String icon, String bigIcon, String reference) {
+    public void setTypeAttributes(
+        String name,
+        String key,
+        String icon,
+        String bigIcon,
+        String reference,
+        String elementView,
+        String isView,
+        String namePattern,
+        String viewOrder) {
 
         setName(name);
         setKey(key);
         setIcon(icon);
         setBigIcon(bigIcon);
         setReference(reference);
+        setElementView(elementView);
+        try {
+            m_viewOrder = Integer.valueOf(viewOrder);
+        } catch (NumberFormatException e) {
+            LOG.debug("Type " + name + " has no or invalid view order:" + viewOrder);
+        }
+        m_isView = Boolean.valueOf(isView).booleanValue();
+        m_namePattern = namePattern;
+
     }
 
 }

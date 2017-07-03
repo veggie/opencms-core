@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,20 +28,30 @@
 package org.opencms.test;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.security.Principal;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 
 /**
  * Very incomplete implementation of <code>HttpServletRequest</code> for testing.<p>
- * 
+ *
  */
 public class OpenCmsTestServletRequest implements HttpServletRequest {
 
@@ -51,6 +61,16 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
     public OpenCmsTestServletRequest() {
 
         // noop
+    }
+
+    public boolean authenticate(HttpServletResponse response) throws IOException, ServletException {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public AsyncContext getAsyncContext() {
+
+        throw new RuntimeException("Not implemented");
     }
 
     /**
@@ -121,6 +141,11 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
      * @see javax.servlet.http.HttpServletRequest#getDateHeader(java.lang.String)
      */
     public long getDateHeader(String arg0) {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public DispatcherType getDispatcherType() {
 
         throw new RuntimeException("Not implemented");
     }
@@ -247,6 +272,16 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
         throw new RuntimeException("Not implemented");
     }
 
+    public Part getPart(String name) throws IOException, ServletException {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public Collection<Part> getParts() throws IOException, ServletException {
+
+        throw new RuntimeException("Not implemented");
+    }
+
     /**
      * @see javax.servlet.http.HttpServletRequest#getPathInfo()
      */
@@ -289,9 +324,10 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
 
     /**
      * @see javax.servlet.ServletRequest#getRealPath(java.lang.String)
-     * 
-     * @deprecated deprecated in Java standard, but still required to implement 
+     *
+     * @deprecated deprecated in Java standard, but still required to implement
      */
+    @Deprecated
     public String getRealPath(String arg0) {
 
         throw new RuntimeException("Not implemented");
@@ -385,6 +421,11 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
         throw new RuntimeException("Not implemented");
     }
 
+    public ServletContext getServletContext() {
+
+        throw new RuntimeException("Not implemented");
+    }
+
     /**
      * @see javax.servlet.http.HttpServletRequest#getServletPath()
      */
@@ -417,6 +458,16 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
         throw new RuntimeException("Not implemented");
     }
 
+    public boolean isAsyncStarted() {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public boolean isAsyncSupported() {
+
+        throw new RuntimeException("Not implemented");
+    }
+
     /**
      * @see javax.servlet.http.HttpServletRequest#isRequestedSessionIdFromCookie()
      */
@@ -427,9 +478,10 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
 
     /**
      * @see javax.servlet.http.HttpServletRequest#isRequestedSessionIdFromUrl()
-     * 
+     *
      * @deprecated deprecated in Java standard, but still required to implement
      */
+    @Deprecated
     public boolean isRequestedSessionIdFromUrl() {
 
         throw new RuntimeException("Not implemented");
@@ -467,6 +519,16 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
         throw new RuntimeException("Not implemented");
     }
 
+    public void login(String username, String password) throws ServletException {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public void logout() throws ServletException {
+
+        throw new RuntimeException("Not implemented");
+    }
+
     /**
      * @see javax.servlet.ServletRequest#removeAttribute(java.lang.String)
      */
@@ -487,6 +549,17 @@ public class OpenCmsTestServletRequest implements HttpServletRequest {
      * @see javax.servlet.ServletRequest#setCharacterEncoding(java.lang.String)
      */
     public void setCharacterEncoding(String arg0) {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public AsyncContext startAsync() throws IllegalStateException {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse)
+    throws IllegalStateException {
 
         throw new RuntimeException("Not implemented");
     }

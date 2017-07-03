@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,9 +39,9 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 
 /**
  * Image preview dialog controller handler.<p>
- * 
+ *
  * Delegates the actions of the preview controller to the preview dialog.
- * 
+ *
  * @since 8.0.0
  */
 public class CmsImagePreviewHandler extends A_CmsPreviewHandler<CmsImageInfoBean>
@@ -50,48 +50,27 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
     /** Enumeration of image tag attribute names. */
     public enum Attribute {
         /** Image align attribute. */
-        align,
-        /** Image alt attribute. */
-        alt,
-        /** Image class attribute. */
-        clazz,
-        /** Image copyright info. */
-        copyright,
-        /** Image direction attribute. */
-        dir,
-        /** No image selected if this attribute is present. */
-        emptySelection,
-        /** The image hash. */
-        hash,
-        /** Image height attribute. */
-        height,
-        /** Image hspace attribute. */
-        hspace,
-        /** Image id attribute. */
-        id,
-        /** Image copyright flag. */
-        insertCopyright,
-        /** Image link original flag. */
-        insertLinkOrig,
-        /** Image spacing flag. */
-        insertSpacing,
-        /** Image subtitle flag. */
-        insertSubtitle,
-        /** Image language attribute. */
-        lang,
-        /** Image link path. */
-        linkPath,
-        /** Image link target. */
-        linkTarget,
-        /** Image longDesc attribute. */
-        longDesc,
-        /** Image style attribute. */
-        style,
-        /** Image title attribute. */
-        title,
-        /** Image vspace attribute. */
-        vspace,
-        /** Image width attribute. */
+        align, /** Image alt attribute. */
+        alt, /** Image class attribute. */
+        clazz, /** Image copyright info. */
+        copyright, /** Image direction attribute. */
+        dir, /** No image selected if this attribute is present. */
+        emptySelection, /** The image hash. */
+        hash, /** Image height attribute. */
+        height, /** Image hspace attribute. */
+        hspace, /** Image id attribute. */
+        id, /** Image copyright flag. */
+        insertCopyright, /** Image link original flag. */
+        insertLinkOrig, /** Image spacing flag. */
+        insertSpacing, /** Image subtitle flag. */
+        insertSubtitle, /** Image language attribute. */
+        lang, /** Image link path. */
+        linkPath, /** Image link target. */
+        linkTarget, /** Image longDesc attribute. */
+        longDesc, /** Image style attribute. */
+        style, /** Image title attribute. */
+        title, /** Image vspace attribute. */
+        vspace, /** Image width attribute. */
         width
     }
 
@@ -106,7 +85,7 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param resourcePreview the resource preview instance
      */
     public CmsImagePreviewHandler(CmsImageResourcePreview resourcePreview) {
@@ -117,7 +96,7 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
 
     /**
      * Returns the image cropping parameter bean.<p>
-     * 
+     *
      * @return the image cropping parameter bean
      */
     public CmsCroppingParamBean getCroppingParam() {
@@ -127,7 +106,7 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
 
     /**
      * Returns the name of the currently selected image format.<p>
-     * 
+     *
      * @return the format name
      */
     public String getFormatName() {
@@ -141,7 +120,7 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
 
     /**
      * Returns image tag attributes to set for editor plugins.<p>
-     * 
+     *
      * @return the attribute map
      */
     public Map<String, String> getImageAttributes() {
@@ -155,7 +134,7 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
 
     /**
      * Returns the structure id hash of the previewed image.<p>
-     * 
+     *
      * @return the structure id hash
      */
     public int getImageIdHash() {
@@ -165,26 +144,22 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
 
     /**
      * Returns the cropping parameter.<p>
-     * 
-     * @param imageHeight the original image height 
+     *
+     * @param imageHeight the original image height
      * @param imageWidth the original image width
-     * 
+     *
      * @return the cropping parameter
      */
     public String getPreviewScaleParam(int imageHeight, int imageWidth) {
 
+        int maxHeight = m_previewDialog.getPreviewHeight() - 4;
+        int maxWidth = m_previewDialog.getDialogWidth() - 10;
         if (m_croppingParam != null) {
-            return m_croppingParam.getRestrictedSizeScaleParam(
-                CmsImagePreviewDialog.IMAGE_HEIGHT_MAX,
-                CmsImagePreviewDialog.IMAGE_WIDTH_MAX);
+            return m_croppingParam.getRestrictedSizeScaleParam(maxHeight, maxWidth);
         }
         CmsCroppingParamBean restricted = new CmsCroppingParamBean();
-        restricted.setTargetHeight(imageHeight > CmsImagePreviewDialog.IMAGE_HEIGHT_MAX
-        ? CmsImagePreviewDialog.IMAGE_HEIGHT_MAX
-        : imageHeight);
-        restricted.setTargetWidth(imageWidth > CmsImagePreviewDialog.IMAGE_WIDTH_MAX
-        ? CmsImagePreviewDialog.IMAGE_WIDTH_MAX
-        : imageWidth);
+        restricted.setTargetHeight(imageHeight > maxHeight ? maxHeight : imageHeight);
+        restricted.setTargetWidth(imageWidth > maxWidth ? maxWidth : imageWidth);
         return restricted.toString();
     }
 
@@ -194,14 +169,17 @@ implements ValueChangeHandler<CmsCroppingParamBean> {
     public void onValueChange(ValueChangeEvent<CmsCroppingParamBean> event) {
 
         m_croppingParam = event.getValue();
-        m_previewDialog.resetPreviewImage(CmsCoreProvider.get().link(m_resourcePreview.getResourcePath())
-            + "?"
-            + getPreviewScaleParam(m_croppingParam.getOrgHeight(), m_croppingParam.getOrgWidth()));
+        String viewLink = m_resourcePreview.getViewLink();
+        if (viewLink == null) {
+            viewLink = CmsCoreProvider.get().link(m_resourcePreview.getResourcePath());
+        }
+        m_previewDialog.resetPreviewImage(
+            viewLink + "?" + getPreviewScaleParam(m_croppingParam.getOrgHeight(), m_croppingParam.getOrgWidth()));
     }
 
     /**
      * Sets the image format handler.<p>
-     * 
+     *
      * @param formatHandler the format handler
      */
     public void setFormatHandler(CmsImageFormatHandler formatHandler) {

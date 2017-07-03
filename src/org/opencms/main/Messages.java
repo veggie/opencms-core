@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,16 +31,16 @@ import org.opencms.i18n.A_CmsMessageBundle;
 import org.opencms.i18n.I_CmsMessageBundle;
 
 /**
- * Convenience class to access the localized messages of this OpenCms package.<p> 
- * 
- * @since 6.0.0 
+ * Convenience class to access the localized messages of this OpenCms package.<p>
+ *
+ * @since 6.0.0
  */
 public final class Messages extends A_CmsMessageBundle {
 
     /** The copyright message for OpenCms. */
     public static final String[] COPYRIGHT_BY_ALKACON = {
         "",
-        "Copyright (c) 2012 Alkacon Software GmbH",
+        "Copyright (c) 2016 Alkacon Software GmbH & Co. KG",
         "OpenCms comes with ABSOLUTELY NO WARRANTY",
         "This is free software, and you are welcome to",
         "redistribute it under certain conditions.",
@@ -97,6 +97,9 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String ERR_CRITICAL_NO_DB_CONTEXT_0 = "ERR_CRITICAL_NO_DB_CONTEXT_0";
 
     /** Message constant for key in the resource bundle. */
+    public static final String ERR_DEREGISTERING_JDBC_DRIVER_1 = "ERR_DEREGISTERING_JDBC_DRIVER_1";
+
+    /** Message constant for key in the resource bundle. */
     public static final String ERR_ILLEGAL_ARG_2 = "ERR_ILLEGAL_ARG_2";
 
     /** Message constant for key in the resource bundle. */
@@ -118,6 +121,9 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String ERR_OPENCMS_NOT_INITIALIZED_2 = "ERR_OPENCMS_NOT_INITIALIZED_2";
 
     /** Message constant for key in the resource bundle. */
+    public static final String ERR_PATH_NOT_FOUND_1 = "ERR_PATH_NOT_FOUND_1";
+
+    /** Message constant for key in the resource bundle. */
     public static final String ERR_PERMALINK_1 = "ERR_PERMALINK_1";
 
     /** Message constant for key in the resource bundle. */
@@ -125,6 +131,9 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String ERR_REQUEST_SECURE_RESOURCE_0 = "ERR_REQUEST_SECURE_RESOURCE_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String ERR_RESOURCE_INIT_ABORTED_1 = "ERR_RESOURCE_INIT_ABORTED_1";
 
     /** Message constant for key in the resource bundle. */
     public static final String ERR_SECURE_SITE_NOT_CONFIGURED_1 = "ERR_SECURE_SITE_NOT_CONFIGURED_1";
@@ -160,6 +169,9 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String GUI_SHELL_EXEC_METHOD_1 = "GUI_SHELL_EXEC_METHOD_1";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_SHELL_FOLDER_ALREADY_EXISTS_1 = "GUI_SHELL_FOLDER_ALREADY_EXISTS_1";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_SHELL_GOODBYE_0 = "GUI_SHELL_GOODBYE_0";
 
     /** Message constant for key in the resource bundle. */
@@ -182,6 +194,9 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_SHELL_IMPORTEXPORT_MODULE_HANDLER_NAME_1 = "GUI_SHELL_IMPORTEXPORT_MODULE_HANDLER_NAME_1";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_SHELL_ESCAPE_SEQUENCES_NOT_SUPPORTED_0 = "GUI_SHELL_ESCAPE_SEQUENCES_NOT_SUPPORTED_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_SHELL_LIST_MODULES_1 = "GUI_SHELL_LIST_MODULES_1";
@@ -226,6 +241,9 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String GUI_SHELL_USAGE_1 = "GUI_SHELL_USAGE_1";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_SHELL_USER_ALREADY_EXISTS_1 = "GUI_SHELL_USER_ALREADY_EXISTS_1";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_SHELL_VERSION_1 = "GUI_SHELL_VERSION_1";
 
     /** Message constant for key in the resource bundle. */
@@ -236,6 +254,18 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_SHELL_WRONG_USAGE_0 = "GUI_SHELL_WRONG_USAGE_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_SOLR_ERROR_HTML_1 = "GUI_SOLR_ERROR_HTML_1";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_SOLR_INDEX_NOT_FOUND_1 = "GUI_SOLR_INDEX_NOT_FOUND_1";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_SOLR_NOT_LOGGED_IN_0 = "GUI_SOLR_NOT_LOGGED_IN_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_SOLR_UNEXPECTED_ERROR_0 = "GUI_SOLR_UNEXPECTED_ERROR_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String INIT_ADDED_REQUEST_HANDLER_2 = "INIT_ADDED_REQUEST_HANDLER_2";
@@ -355,6 +385,9 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String LOG_ERROR_ADE_MANAGER_SHUTDOWN_1 = "LOG_ERROR_ADE_MANAGER_SHUTDOWN_1";
 
     /** Message constant for key in the resource bundle. */
+    public static final String LOG_ERROR_DERIGISTERING_JDBC_DRIVER_1 = "LOG_ERROR_DERIGISTERING_JDBC_DRIVER_1";
+
+    /** Message constant for key in the resource bundle. */
     public static final String LOG_ERROR_EXPORT_1 = "LOG_ERROR_EXPORT_1";
 
     /** Message constant for key in the resource bundle. */
@@ -398,6 +431,9 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String LOG_ERROR_THREAD_SHUTDOWN_1 = "LOG_ERROR_THREAD_SHUTDOWN_1";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String LOG_ERROR_VFSBUNDLE_MANAGER_SHUTDOWN_1 = "LOG_ERROR_VFSBUNDLE_MANAGER_SHUTDOWN_1";
 
     /** Message constant for key in the resource bundle. */
     public static final String LOG_ERROR_WRITING_CONFIG_1 = "LOG_ERROR_WRITING_CONFIG_1";
@@ -475,7 +511,7 @@ public final class Messages extends A_CmsMessageBundle {
 
     /**
      * Returns an instance of this localized message accessor.<p>
-     * 
+     *
      * @return an instance of this localized message accessor
      */
     public static I_CmsMessageBundle get() {
@@ -485,7 +521,7 @@ public final class Messages extends A_CmsMessageBundle {
 
     /**
      * Returns the bundle name for this OpenCms package.<p>
-     * 
+     *
      * @return the bundle name for this OpenCms package
      */
     public String getBundleName() {

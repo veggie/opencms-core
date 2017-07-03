@@ -2,24 +2,24 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version. 
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,14 +29,19 @@ package org.opencms.db.generic;
 
 import org.opencms.configuration.CmsConfigurationManager;
 import org.opencms.configuration.CmsParameterConfiguration;
+import org.opencms.db.CmsAlias;
+import org.opencms.db.CmsAliasFilter;
 import org.opencms.db.CmsDbConsistencyException;
 import org.opencms.db.CmsDbContext;
 import org.opencms.db.CmsDbEntryNotFoundException;
 import org.opencms.db.CmsDbSqlException;
+import org.opencms.db.CmsDbUtil;
 import org.opencms.db.CmsDriverManager;
 import org.opencms.db.CmsPreparedStatementIntParameter;
 import org.opencms.db.CmsPreparedStatementStringParameter;
 import org.opencms.db.CmsResourceState;
+import org.opencms.db.CmsRewriteAlias;
+import org.opencms.db.CmsRewriteAliasFilter;
 import org.opencms.db.CmsVfsOnlineResourceAlreadyExistsException;
 import org.opencms.db.I_CmsDriver;
 import org.opencms.db.I_CmsPreparedStatementParameter;
@@ -58,6 +63,7 @@ import org.opencms.file.CmsVfsResourceNotFoundException;
 import org.opencms.file.I_CmsResource;
 import org.opencms.file.history.I_CmsHistoryResource;
 import org.opencms.file.types.CmsResourceTypeJsp;
+import org.opencms.gwt.shared.alias.CmsAliasMode;
 import org.opencms.main.CmsEvent;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
@@ -79,6 +85,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,8 +98,8 @@ import org.apache.commons.logging.Log;
 
 /**
  * Generic (ANSI-SQL) database server implementation of the VFS driver methods.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
@@ -108,22 +115,22 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /** The driver manager. */
     protected CmsDriverManager m_driverManager;
 
-    /** 
+    /**
      * This field is temporarily used to compute the versions during publishing.<p>
-     * 
-     * @see #publishVersions(CmsDbContext, CmsResource, boolean) 
+     *
+     * @see #publishVersions(CmsDbContext, CmsResource, boolean)
      */
-    protected List m_resOp = new ArrayList();
+    protected List<CmsUUID> m_resOp = new ArrayList<CmsUUID>();
 
     /** The sql manager. */
     protected CmsSqlManager m_sqlManager;
 
     /**
      * This method prepares the SQL conditions for mapping entries for a given URL name mapping filter.<p>
-     * 
-     * @param filter the filter from which the SQL conditions should be generated 
-     * 
-     * @return a pair consisting of an SQL string and a list of the prepared statement parameters for the SQL 
+     *
+     * @param filter the filter from which the SQL conditions should be generated
+     *
+     * @return a pair consisting of an SQL string and a list of the prepared statement parameters for the SQL
      */
     public static CmsPair<String, List<I_CmsPreparedStatementParameter>> prepareUrlNameMappingConditions(
         CmsUrlNameMappingFilter filter) {
@@ -145,9 +152,15 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             parameters.add(new CmsPreparedStatementStringParameter(filter.getNamePattern()));
         }
 
-        if (filter.getState() != null) {
-            sqlConditions.add("STATE = ?");
-            parameters.add(new CmsPreparedStatementIntParameter(filter.getState().intValue()));
+        if ((filter.getStates() != null) && (filter.getStates().length > 0)) {
+            List<String> stateConditions = new ArrayList<String>();
+            stateConditions.add("1 = 0");
+            for (int i = 0; i < filter.getStates().length; i++) {
+                stateConditions.add("STATE = ?");
+                parameters.add(new CmsPreparedStatementIntParameter(filter.getStates()[i]));
+            }
+            sqlConditions.add("( " + CmsStringUtil.listAsString(stateConditions, " OR ") + ")");
+
         }
 
         if (filter.getRejectStructureId() != null) {
@@ -166,15 +179,15 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Escapes the database wildcards within the resource path.<p>
-     * 
-     * This method is required to ensure chars in the resource path that have a special 
+     *
+     * This method is required to ensure chars in the resource path that have a special
      * meaning in SQL (for example "_", which is the "any char" operator) are escaped.<p>
-     * 
-     * It will escape the following chars: 
+     *
+     * It will escape the following chars:
      * <ul>
      * <li>"_" to "|_"</li>
      * </ul>
-     * 
+     *
      * @param path the resource path
      * @return the escaped resource path
      */
@@ -211,13 +224,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Counts the number of siblings of a resource.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param projectId the current project id
      * @param resourceId the resource id to count the number of siblings from
-     * 
+     *
      * @return number of siblings
-     * @throws CmsDataAccessException if something goes wrong 
+     * @throws CmsDataAccessException if something goes wrong
      */
     public int countSiblings(CmsDbContext dbc, CmsUUID projectId, CmsUUID resourceId) throws CmsDataAccessException {
 
@@ -240,9 +253,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -271,9 +284,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             }
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -497,7 +510,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, null);
 
                 if (!keepOnline) {
-                    // put the online content in the history 
+                    // put the online content in the history
                     stmt = m_sqlManager.getPreparedStatement(conn, "C_ONLINE_CONTENTS_HISTORY");
                     stmt.setString(1, resourceId.toString());
                     stmt.executeUpdate();
@@ -505,9 +518,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -533,9 +546,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setInt(3, type.getMode());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -546,7 +559,8 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#createRelation(org.opencms.db.CmsDbContext, CmsUUID, org.opencms.relations.CmsRelation)
      */
-    public void createRelation(CmsDbContext dbc, CmsUUID projectId, CmsRelation relation) throws CmsDataAccessException {
+    public void createRelation(CmsDbContext dbc, CmsUUID projectId, CmsRelation relation)
+    throws CmsDataAccessException {
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -561,18 +575,51 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setInt(5, relation.getType().getId());
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug(Messages.get().getBundle().key(
-                    Messages.LOG_CREATE_RELATION_2,
-                    String.valueOf(projectId),
-                    relation));
+                LOG.debug(
+                    Messages.get().getBundle().key(
+                        Messages.LOG_CREATE_RELATION_2,
+                        String.valueOf(projectId),
+                        relation));
             }
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
+        }
+
+        if (relation.getType().getId() == CmsRelationType.LOCALE_VARIANT.getId()) {
+            try {
+
+                // Normalizes locale relations after creating a relation.
+                // After creating a locale variant relation from A to B, this statment
+                // removes all locale variant relations which are either
+                //       - from A to somewhere else than B,
+                //       - from B to some other resource
+                //       - to A from some other resources
+                conn = m_sqlManager.getConnection(dbc);
+                stmt = m_sqlManager.getPreparedStatement(conn, projectId, "C_RELATIONS_NORMALIZE_LOCALE_RELATIONS");
+                stmt.setString(1, relation.getSourceId().toString());
+                stmt.setString(2, relation.getTargetId().toString());
+                stmt.setString(3, relation.getSourceId().toString());
+                stmt.setString(4, relation.getTargetId().toString());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
+                        Messages.get().getBundle().key(
+                            Messages.LOG_CREATE_RELATION_2,
+                            String.valueOf(projectId),
+                            relation));
+                }
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new CmsDbSqlException(
+                    Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                    e);
+            } finally {
+                m_sqlManager.closeAll(dbc, conn, stmt, null);
+            }
         }
     }
 
@@ -589,10 +636,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         // check the resource path
         String resourcePath = CmsFileUtil.removeTrailingSeparator(resource.getRootPath());
         if (resourcePath.length() > CmsDriverManager.MAX_VFS_RESOURCE_PATH_LENGTH) {
-            throw new CmsDataAccessException(Messages.get().container(
-                Messages.ERR_RESOURCENAME_TOO_LONG_2,
-                resourcePath,
-                new Integer(CmsDriverManager.MAX_VFS_RESOURCE_PATH_LENGTH)));
+            throw new CmsDataAccessException(
+                Messages.get().container(
+                    Messages.ERR_RESOURCENAME_TOO_LONG_2,
+                    resourcePath,
+                    new Integer(CmsDriverManager.MAX_VFS_RESOURCE_PATH_LENGTH)));
         }
 
         // check if the parent folder of the resource exists and if is not deleted
@@ -600,9 +648,8 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             String parentFolderName = CmsResource.getParentFolder(resource.getRootPath());
             CmsFolder parentFolder = m_driverManager.getVfsDriver(dbc).readFolder(dbc, projectId, parentFolderName);
             if (parentFolder.getState().isDeleted()) {
-                throw new CmsDbEntryNotFoundException(Messages.get().container(
-                    Messages.ERR_PARENT_FOLDER_DELETED_1,
-                    resource.getRootPath()));
+                throw new CmsDbEntryNotFoundException(
+                    Messages.get().container(Messages.ERR_PARENT_FOLDER_DELETED_1, resource.getRootPath()));
             }
         }
 
@@ -646,7 +693,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 newState = CmsResource.STATE_CHANGED;
 
                 // remove the existing file and it's properties
-                List modifiedResources = m_driverManager.getVfsDriver(dbc).readSiblings(
+                List<CmsResource> modifiedResources = m_driverManager.getVfsDriver(dbc).readSiblings(
                     dbc,
                     projectId,
                     existingResource,
@@ -660,14 +707,16 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 OpenCms.fireCmsEvent(new CmsEvent(
                     I_CmsEventListener.EVENT_RESOURCES_MODIFIED,
                     Collections.<String, Object> singletonMap(I_CmsEventListener.KEY_RESOURCES, modifiedResources)));
-                OpenCms.fireCmsEvent(new CmsEvent(
-                    I_CmsEventListener.EVENT_RESOURCE_AND_PROPERTIES_MODIFIED,
-                    Collections.<String, Object> singletonMap(I_CmsEventListener.KEY_RESOURCE, existingResource)));
+                OpenCms.fireCmsEvent(
+                    new CmsEvent(
+                        I_CmsEventListener.EVENT_RESOURCE_AND_PROPERTIES_MODIFIED,
+                        Collections.<String, Object> singletonMap(I_CmsEventListener.KEY_RESOURCE, existingResource)));
             } else {
                 // we have a collision: there exists already a resource with the same path/name which cannot be removed
-                throw new CmsVfsResourceAlreadyExistsException(Messages.get().container(
-                    Messages.ERR_RESOURCE_WITH_NAME_ALREADY_EXISTS_1,
-                    dbc.removeSiteRoot(resource.getRootPath())));
+                throw new CmsVfsResourceAlreadyExistsException(
+                    Messages.get().container(
+                        Messages.ERR_RESOURCE_WITH_NAME_ALREADY_EXISTS_1,
+                        dbc.removeSiteRoot(resource.getRootPath())));
             }
         } catch (CmsVfsResourceNotFoundException e) {
             // that's what we want in the best case- anything else should be thrown
@@ -783,9 +832,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -854,7 +903,8 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#createSibling(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.file.CmsResource)
      */
-    public void createSibling(CmsDbContext dbc, CmsProject project, CmsResource resource) throws CmsDataAccessException {
+    public void createSibling(CmsDbContext dbc, CmsProject project, CmsResource resource)
+    throws CmsDataAccessException {
 
         if (!project.getUuid().equals(CmsProject.ONLINE_PROJECT_ID)) {
             // this method is only intended to be used during publishing
@@ -876,24 +926,29 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 newStructureId = existingSibling.getStructureId();
 
                 // remove the existing file and it's properties
-                List modifiedResources = readSiblings(dbc, project.getUuid(), existingSibling, false);
+                List<CmsResource> modifiedResources = readSiblings(dbc, project.getUuid(), existingSibling, false);
                 int propertyDeleteOption = (existingSibling.getSiblingCount() > 1)
                 ? CmsProperty.DELETE_OPTION_DELETE_STRUCTURE_VALUES
                 : CmsProperty.DELETE_OPTION_DELETE_STRUCTURE_AND_RESOURCE_VALUES;
                 deletePropertyObjects(dbc, project.getUuid(), existingSibling, propertyDeleteOption);
                 removeFile(dbc, project.getUuid(), existingSibling);
 
-                OpenCms.fireCmsEvent(new CmsEvent(
-                    I_CmsEventListener.EVENT_RESOURCES_MODIFIED,
-                    Collections.<String, Object> singletonMap(I_CmsEventListener.KEY_RESOURCES, modifiedResources)));
-                OpenCms.fireCmsEvent(new CmsEvent(
-                    I_CmsEventListener.EVENT_RESOURCE_AND_PROPERTIES_MODIFIED,
-                    Collections.<String, Object> singletonMap(I_CmsEventListener.KEY_RESOURCE, existingSibling)));
+                OpenCms.fireCmsEvent(
+                    new CmsEvent(
+                        I_CmsEventListener.EVENT_RESOURCES_MODIFIED,
+                        Collections.<String, Object> singletonMap(
+                            I_CmsEventListener.KEY_RESOURCES,
+                            modifiedResources)));
+                OpenCms.fireCmsEvent(
+                    new CmsEvent(
+                        I_CmsEventListener.EVENT_RESOURCE_AND_PROPERTIES_MODIFIED,
+                        Collections.<String, Object> singletonMap(I_CmsEventListener.KEY_RESOURCE, existingSibling)));
             } else {
                 // we have a collision: there exists already a resource with the same path/name which could not be removed
-                throw new CmsVfsResourceAlreadyExistsException(Messages.get().container(
-                    Messages.ERR_RESOURCE_WITH_NAME_ALREADY_EXISTS_1,
-                    dbc.removeSiteRoot(resource.getRootPath())));
+                throw new CmsVfsResourceAlreadyExistsException(
+                    Messages.get().container(
+                        Messages.ERR_RESOURCE_WITH_NAME_ALREADY_EXISTS_1,
+                        dbc.removeSiteRoot(resource.getRootPath())));
             }
         } catch (CmsVfsResourceNotFoundException e) {
             // that's what we want in the best case- anything else should be thrown
@@ -901,9 +956,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
         // check if a resource with the specified ID already exists
         if (!validateResourceIdExists(dbc, project.getUuid(), resource.getResourceId())) {
-            throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                Messages.ERR_CREATE_SIBLING_FILE_NOT_FOUND_1,
-                dbc.removeSiteRoot(resource.getRootPath())));
+            throw new CmsVfsResourceNotFoundException(
+                Messages.get().container(
+                    Messages.ERR_CREATE_SIBLING_FILE_NOT_FOUND_1,
+                    dbc.removeSiteRoot(resource.getRootPath())));
         }
 
         // write a new structure referring to the resource
@@ -955,9 +1011,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(3, resource.getResourceId().toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -965,9 +1021,41 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     }
 
     /**
+     * @see org.opencms.db.I_CmsVfsDriver#deleteAliases(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.db.CmsAliasFilter)
+     */
+    public void deleteAliases(CmsDbContext dbc, CmsProject project, CmsAliasFilter filter)
+    throws CmsDataAccessException {
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet res = null;
+        if (filter.isNullFilter()) {
+            throw new IllegalArgumentException("Trivial filter is not allowed for deleting aliases.");
+        }
+        try {
+            conn = m_sqlManager.getConnection(dbc);
+            CmsPair<String, List<String>> filterData = buildAliasConditions(filter);
+            String sql = "DELETE FROM CMS_ALIASES WHERE " + filterData.getFirst();
+            stmt = m_sqlManager.getPreparedStatementForSql(conn, sql);
+            List<String> conditionParams = filterData.getSecond();
+            for (int i = 0; i < conditionParams.size(); i++) {
+                stmt.setString(1 + i, conditionParams.get(i));
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
+        } finally {
+            m_sqlManager.closeAll(dbc, conn, stmt, res);
+        }
+    }
+
+    /**
      * @see org.opencms.db.I_CmsVfsDriver#deletePropertyDefinition(org.opencms.db.CmsDbContext, org.opencms.file.CmsPropertyDefinition)
      */
-    public void deletePropertyDefinition(CmsDbContext dbc, CmsPropertyDefinition metadef) throws CmsDataAccessException {
+    public void deletePropertyDefinition(CmsDbContext dbc, CmsPropertyDefinition metadef)
+    throws CmsDataAccessException {
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -976,9 +1064,8 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             if ((internalCountProperties(dbc, metadef, CmsProject.ONLINE_PROJECT_ID) != 0)
                 || (internalCountProperties(dbc, metadef, CmsUUID.getOpenCmsUUID()) != 0)) { // HACK: to get an offline project
 
-                throw new CmsDataAccessException(Messages.get().container(
-                    Messages.ERR_DELETE_USED_PROPERTY_1,
-                    metadef.getName()));
+                throw new CmsDataAccessException(
+                    Messages.get().container(Messages.ERR_DELETE_USED_PROPERTY_1, metadef.getName()));
             }
 
             conn = m_sqlManager.getConnection(dbc);
@@ -989,7 +1076,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     stmt = m_sqlManager.getPreparedStatement(conn, CmsUUID.getOpenCmsUUID(), "C_PROPERTYDEF_DELETE"); // HACK: to get an offline project
                 } else {
                     // delete the online property definition
-                    stmt = m_sqlManager.getPreparedStatement(conn, CmsProject.ONLINE_PROJECT_ID, "C_PROPERTYDEF_DELETE");
+                    stmt = m_sqlManager.getPreparedStatement(
+                        conn,
+                        CmsProject.ONLINE_PROJECT_ID,
+                        "C_PROPERTYDEF_DELETE");
                 }
 
                 stmt.setString(1, metadef.getId().toString());
@@ -997,9 +1087,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, null);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -1049,9 +1139,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -1070,7 +1160,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             conn = m_sqlManager.getConnection(dbc);
 
             if (filter.isSource()) {
-                List params = new ArrayList(7);
+                List<Object> params = new ArrayList<Object>(7);
 
                 StringBuffer queryBuf = new StringBuffer(256);
                 queryBuf.append(m_sqlManager.readQuery(projectId, "C_DELETE_RELATIONS"));
@@ -1088,7 +1178,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, null);
             }
             if (filter.isTarget()) {
-                List params = new ArrayList(7);
+                List<Object> params = new ArrayList<Object>(7);
 
                 StringBuffer queryBuf = new StringBuffer(256);
                 queryBuf.append(m_sqlManager.readQuery(projectId, "C_DELETE_RELATIONS"));
@@ -1106,14 +1196,37 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, null);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
         // update broken remaining relations
         updateBrokenRelations(dbc, projectId, resource.getRootPath());
+    }
+
+    /**
+     * @see org.opencms.db.I_CmsVfsDriver#deleteRewriteAliases(org.opencms.db.CmsDbContext, org.opencms.db.CmsRewriteAliasFilter)
+     */
+    public void deleteRewriteAliases(CmsDbContext dbc, CmsRewriteAliasFilter filter) throws CmsDataAccessException {
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = m_sqlManager.getConnection(dbc);
+            CmsPair<String, List<Object>> conditionAndParams = prepareRewriteAliasConditions(filter);
+            String condition = conditionAndParams.getFirst();
+            List<Object> params = conditionAndParams.getSecond();
+            String query = "DELETE FROM CMS_REWRITES WHERE " + condition;
+            stmt = m_sqlManager.getPreparedStatementForSql(conn, query);
+            CmsDbUtil.fillParameters(stmt, params);
+            stmt.execute();
+        } catch (SQLException e) {
+            throw wrapException(stmt, e);
+        } finally {
+            m_sqlManager.closeAll(dbc, conn, stmt, null);
+        }
     }
 
     /**
@@ -1152,13 +1265,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Returns all organizational units for the given resource.<p>
-     * 
+     *
      * @param dbc the database context
      * @param projectId the id of the project
      * @param resource the resource
-     * 
+     *
      * @return a list of {@link org.opencms.security.CmsOrganizationalUnit} objects
-     * 
+     *
      * @throws CmsDbSqlException if something goes wrong
      */
     public List<CmsOrganizationalUnit> getResourceOus(CmsDbContext dbc, CmsUUID projectId, CmsResource resource)
@@ -1187,18 +1300,19 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 rels.add(internalReadRelation(res));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
 
         for (CmsRelation rel : rels) {
             try {
-                ous.add(m_driverManager.readOrganizationalUnit(
-                    dbc,
-                    rel.getSourcePath().substring(CmsUserDriver.ORGUNIT_BASE_FOLDER.length())));
+                ous.add(
+                    m_driverManager.readOrganizationalUnit(
+                        dbc,
+                        rel.getSourcePath().substring(CmsUserDriver.ORGUNIT_BASE_FOLDER.length())));
             } catch (CmsException e) {
                 // should never happen
                 if (LOG.isErrorEnabled()) {
@@ -1240,13 +1354,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     public void init(
         CmsDbContext dbc,
         CmsConfigurationManager configurationManager,
-        List successiveDrivers,
+        List<String> successiveDrivers,
         CmsDriverManager driverManager) {
 
         CmsParameterConfiguration configuration = configurationManager.getConfiguration();
         String poolUrl = configuration.get("db.vfs.pool");
         String classname = configuration.get("db.vfs.sqlmanager");
-        m_sqlManager = this.initSqlManager(classname);
+        m_sqlManager = initSqlManager(classname);
         m_sqlManager.init(I_CmsVfsDriver.DRIVER_TYPE_ID, poolUrl);
 
         m_driverManager = driverManager;
@@ -1257,9 +1371,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
         if ((successiveDrivers != null) && !successiveDrivers.isEmpty()) {
             if (LOG.isWarnEnabled()) {
-                LOG.warn(Messages.get().getBundle().key(
-                    Messages.LOG_SUCCESSIVE_DRIVERS_UNSUPPORTED_1,
-                    getClass().getName()));
+                LOG.warn(
+                    Messages.get().getBundle().key(
+                        Messages.LOG_SUCCESSIVE_DRIVERS_UNSUPPORTED_1,
+                        getClass().getName()));
             }
         }
     }
@@ -1270,6 +1385,64 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     public org.opencms.db.generic.CmsSqlManager initSqlManager(String classname) {
 
         return CmsSqlManager.getInstance(classname);
+    }
+
+    /**
+     * @see org.opencms.db.I_CmsVfsDriver#insertAlias(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.db.CmsAlias)
+     */
+    public void insertAlias(CmsDbContext dbc, CmsProject project, CmsAlias alias) throws CmsDataAccessException {
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet res = null;
+        try {
+            conn = m_sqlManager.getConnection(dbc);
+            stmt = m_sqlManager.getPreparedStatement(conn, project, "C_ALIAS_ADD_4");
+            stmt.setString(1, alias.getSiteRoot());
+            stmt.setString(2, alias.getAliasPath());
+            stmt.setInt(3, alias.getMode().toInt());
+            stmt.setString(4, alias.getStructureId().toString());
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
+        } finally {
+            m_sqlManager.closeAll(dbc, conn, stmt, res);
+        }
+    }
+
+    /**
+     * @see org.opencms.db.I_CmsVfsDriver#insertRewriteAliases(org.opencms.db.CmsDbContext, java.util.Collection)
+     */
+    public void insertRewriteAliases(CmsDbContext dbc, Collection<CmsRewriteAlias> rewriteAliases)
+    throws CmsDataAccessException {
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet res = null;
+        if (!rewriteAliases.isEmpty()) {
+            try {
+                conn = m_sqlManager.getConnection(dbc);
+                stmt = m_sqlManager.getPreparedStatement(conn, dbc.currentProject(), "C_REWRITE_ALIAS_INSERT_5");
+                for (CmsRewriteAlias alias : rewriteAliases) {
+                    stmt.setString(1, alias.getId().toString());
+                    stmt.setString(2, alias.getSiteRoot());
+                    stmt.setString(3, alias.getPatternString());
+                    stmt.setString(4, alias.getReplacementString());
+                    stmt.setInt(5, alias.getMode().toInt());
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            } catch (SQLException e) {
+                throw new CmsDbSqlException(
+                    Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                    e);
+            } finally {
+                m_sqlManager.closeAll(dbc, conn, stmt, res);
+            }
+        }
     }
 
     /**
@@ -1285,7 +1458,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             return;
         }
 
-        // determine destination folder        
+        // determine destination folder
         String destinationFoldername = CmsResource.getParentFolder(destinationPath);
 
         // read the destination folder (will also check read permissions)
@@ -1301,7 +1474,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     true);
 
                 if (!onlineResource.getStructureId().equals(source.getStructureId())) {
-                    // source resource has been moved and it is not the 
+                    // source resource has been moved and it is not the
                     // same as the resource that is being trying to move back
                     CmsResource offlineResource = null;
                     try {
@@ -1318,11 +1491,12 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                         }
                     }
 
-                    throw new CmsVfsOnlineResourceAlreadyExistsException(Messages.get().container(
-                        Messages.ERR_OVERWRITE_MOVED_RESOURCE_3,
-                        dbc.removeSiteRoot(source.getRootPath()),
-                        dbc.removeSiteRoot(destinationPath),
-                        dbc.removeSiteRoot(offlineResource == null ? "__ERROR__" : offlineResource.getRootPath())));
+                    throw new CmsVfsOnlineResourceAlreadyExistsException(
+                        Messages.get().container(
+                            Messages.ERR_OVERWRITE_MOVED_RESOURCE_3,
+                            dbc.removeSiteRoot(source.getRootPath()),
+                            dbc.removeSiteRoot(destinationPath),
+                            dbc.removeSiteRoot(offlineResource == null ? "__ERROR__" : offlineResource.getRootPath())));
                 }
             } catch (CmsVfsResourceNotFoundException e) {
                 // ok, no online resource
@@ -1342,28 +1516,31 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(3, source.getStructureId().toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
 
         moveRelations(dbc, projectId, source.getStructureId(), destinationPath);
         repairBrokenRelations(dbc, projectId, source.getStructureId(), destinationPath);
-        try {
-            m_driverManager.repairCategories(dbc, projectId, readResource(dbc, projectId, destinationPath, true));
-        } catch (CmsException e) {
-            throw new CmsDataAccessException(e.getMessageContainer(), e);
+        if (!projectId.equals(CmsProject.ONLINE_PROJECT_ID)) {
+            // doesn'T work in Online project
+            try {
+                m_driverManager.repairCategories(dbc, projectId, readResource(dbc, projectId, destinationPath, true));
+            } catch (CmsException e) {
+                throw new CmsDataAccessException(e.getMessageContainer(), e);
+            }
         }
         // repair project resources
         if (!projectId.equals(CmsProject.ONLINE_PROJECT_ID) && (dbc.getRequestContext() != null)) {
             String deletedResourceRootPath = source.getRootPath();
             dbc.getRequestContext().setAttribute(CmsProjectDriver.DBC_ATTR_READ_PROJECT_FOR_RESOURCE, Boolean.TRUE);
             I_CmsProjectDriver projectDriver = m_driverManager.getProjectDriver(dbc);
-            Iterator itProjects = projectDriver.readProjects(dbc, deletedResourceRootPath).iterator();
+            Iterator<CmsProject> itProjects = projectDriver.readProjects(dbc, deletedResourceRootPath).iterator();
             while (itProjects.hasNext()) {
-                CmsProject project = (CmsProject)itProjects.next();
+                CmsProject project = itProjects.next();
                 projectDriver.deleteProjectResource(dbc, project.getUuid(), deletedResourceRootPath);
                 projectDriver.createProjectResource(dbc, project.getUuid(), destinationPath);
             }
@@ -1466,9 +1643,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, null);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -1503,10 +1680,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
         if (!resState.isUnchanged()) {
             if (strState.isDeleted()) {
-                resOp = (resState.isDeleted() || (resource.getSiblingCount() == 1) || (countSiblings(
-                    dbc,
-                    dbc.currentProject().getUuid(),
-                    resource.getResourceId()) == 1));
+                resOp = (resState.isDeleted()
+                    || (resource.getSiblingCount() == 1)
+                    || (countSiblings(dbc, dbc.currentProject().getUuid(), resource.getResourceId()) == 1));
             } else {
                 resOp = true;
             }
@@ -1522,13 +1698,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         }
 
         // read the offline version numbers
-        Map versions = readVersions(
+        Map<String, Integer> versions = readVersions(
             dbc,
             dbc.currentProject().getUuid(),
             resource.getResourceId(),
             resource.getStructureId());
-        int strVersion = ((Integer)versions.get("structure")).intValue();
-        int resVersion = ((Integer)versions.get("resource")).intValue();
+        int strVersion = versions.get("structure").intValue();
+        int resVersion = versions.get("resource").intValue();
 
         if (resOp) {
             if (resource.getSiblingCount() > 1) {
@@ -1570,25 +1746,61 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, null);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
     }
 
     /**
+     * @see org.opencms.db.I_CmsVfsDriver#readAliases(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.db.CmsAliasFilter)
+     */
+    public List<CmsAlias> readAliases(CmsDbContext dbc, CmsProject project, CmsAliasFilter filter)
+    throws CmsDataAccessException {
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet res = null;
+        try {
+            conn = m_sqlManager.getConnection(dbc);
+            CmsPair<String, List<String>> conditionPair = buildAliasConditions(filter);
+            String conditionString = conditionPair.getFirst();
+            List<String> conditionParams = conditionPair.getSecond();
+            String sql = "SELECT site_root, path, alias_mode, structure_id FROM CMS_ALIASES WHERE " + conditionString;
+            stmt = m_sqlManager.getPreparedStatementForSql(conn, sql);
+            for (int i = 0; i < conditionParams.size(); i++) {
+                stmt.setString(1 + i, conditionParams.get(i));
+            }
+            res = stmt.executeQuery();
+            List<CmsAlias> result = new ArrayList<CmsAlias>();
+            while (res.next()) {
+                CmsAlias alias = internalReadAlias(res);
+                result.add(alias);
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
+        } finally {
+            m_sqlManager.closeAll(dbc, conn, stmt, res);
+        }
+
+    }
+
+    /**
      * @see org.opencms.db.I_CmsVfsDriver#readChildResources(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.file.CmsResource, boolean, boolean)
      */
-    public List readChildResources(
+    public List<CmsResource> readChildResources(
         CmsDbContext dbc,
         CmsProject currentProject,
         CmsResource resource,
         boolean getFolders,
         boolean getFiles) throws CmsDataAccessException {
 
-        List result = new ArrayList();
+        List<CmsResource> result = new ArrayList<CmsResource>();
         CmsUUID projectId = currentProject.getUuid();
 
         String resourceTypeClause;
@@ -1626,9 +1838,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1665,15 +1877,16 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                    Messages.ERR_READ_CONTENT_WITH_RESOURCE_ID_2,
-                    resourceId,
-                    Boolean.valueOf(projectId.equals(CmsProject.ONLINE_PROJECT_ID))));
+                throw new CmsVfsResourceNotFoundException(
+                    Messages.get().container(
+                        Messages.ERR_READ_CONTENT_WITH_RESOURCE_ID_2,
+                        resourceId,
+                        Boolean.valueOf(projectId.equals(CmsProject.ONLINE_PROJECT_ID))));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1702,14 +1915,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                    Messages.ERR_READ_FOLDER_WITH_ID_1,
-                    folderId));
+                throw new CmsVfsResourceNotFoundException(
+                    Messages.get().container(Messages.ERR_READ_FOLDER_WITH_ID_1, folderId));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1741,14 +1953,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                    Messages.ERR_READ_FOLDER_1,
-                    dbc.removeSiteRoot(folderPath)));
+                throw new CmsVfsResourceNotFoundException(
+                    Messages.get().container(Messages.ERR_READ_FOLDER_1, dbc.removeSiteRoot(folderPath)));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1780,9 +1991,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1811,19 +2022,19 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 propDef = new CmsPropertyDefinition(
                     new CmsUUID(res.getString(m_sqlManager.readQuery("C_PROPERTYDEF_ID"))),
                     res.getString(m_sqlManager.readQuery("C_PROPERTYDEF_NAME")),
-                    CmsPropertyDefinition.CmsPropertyType.valueOf(res.getInt(m_sqlManager.readQuery("C_PROPERTYDEF_TYPE"))));
+                    CmsPropertyDefinition.CmsPropertyType.valueOf(
+                        res.getInt(m_sqlManager.readQuery("C_PROPERTYDEF_TYPE"))));
                 while (res.next()) {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsDbEntryNotFoundException(Messages.get().container(
-                    Messages.ERR_NO_PROPERTYDEF_WITH_NAME_1,
-                    name));
+                throw new CmsDbEntryNotFoundException(
+                    Messages.get().container(Messages.ERR_NO_PROPERTYDEF_WITH_NAME_1, name));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1834,9 +2045,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readPropertyDefinitions(org.opencms.db.CmsDbContext, CmsUUID)
      */
-    public List readPropertyDefinitions(CmsDbContext dbc, CmsUUID projectId) throws CmsDataAccessException {
+    public List<CmsPropertyDefinition> readPropertyDefinitions(CmsDbContext dbc, CmsUUID projectId)
+    throws CmsDataAccessException {
 
-        ArrayList propertyDefinitions = new ArrayList();
+        ArrayList<CmsPropertyDefinition> propertyDefinitions = new ArrayList<CmsPropertyDefinition>();
         ResultSet res = null;
         PreparedStatement stmt = null;
         Connection conn = null;
@@ -1847,15 +2059,17 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
             res = stmt.executeQuery();
             while (res.next()) {
-                propertyDefinitions.add(new CmsPropertyDefinition(
-                    new CmsUUID(res.getString(m_sqlManager.readQuery("C_PROPERTYDEF_ID"))),
-                    res.getString(m_sqlManager.readQuery("C_PROPERTYDEF_NAME")),
-                    CmsPropertyDefinition.CmsPropertyType.valueOf(res.getInt(m_sqlManager.readQuery("C_PROPERTYDEF_TYPE")))));
+                propertyDefinitions.add(
+                    new CmsPropertyDefinition(
+                        new CmsUUID(res.getString(m_sqlManager.readQuery("C_PROPERTYDEF_ID"))),
+                        res.getString(m_sqlManager.readQuery("C_PROPERTYDEF_NAME")),
+                        CmsPropertyDefinition.CmsPropertyType.valueOf(
+                            res.getInt(m_sqlManager.readQuery("C_PROPERTYDEF_TYPE")))));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1891,11 +2105,12 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
             while (res.next()) {
                 if (resultSize >= 2) {
-                    throw new CmsDbConsistencyException(Messages.get().container(
-                        Messages.ERR_TOO_MANY_PROPERTIES_3,
-                        key,
-                        resource.getRootPath(),
-                        new Integer(resultSize)));
+                    throw new CmsDbConsistencyException(
+                        Messages.get().container(
+                            Messages.ERR_TOO_MANY_PROPERTIES_3,
+                            key,
+                            resource.getRootPath(),
+                            new Integer(resultSize)));
                 }
 
                 if (property == null) {
@@ -1911,19 +2126,20 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 } else if (mappingType == CmsProperty.RESOURCE_RECORD_MAPPING) {
                     property.setResourceValue(propertyValue);
                 } else {
-                    throw new CmsDbConsistencyException(Messages.get().container(
-                        Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
-                        resource.getRootPath(),
-                        new Integer(mappingType),
-                        key));
+                    throw new CmsDbConsistencyException(
+                        Messages.get().container(
+                            Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
+                            resource.getRootPath(),
+                            new Integer(mappingType),
+                            key));
                 }
 
                 resultSize++;
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -1934,7 +2150,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readPropertyObjects(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.file.CmsResource)
      */
-    public List readPropertyObjects(CmsDbContext dbc, CmsProject project, CmsResource resource)
+    public List<CmsProperty> readPropertyObjects(CmsDbContext dbc, CmsProject project, CmsResource resource)
     throws CmsDataAccessException {
 
         CmsUUID projectId = ((dbc.getProjectId() == null) || dbc.getProjectId().isNullUUID())
@@ -1945,7 +2161,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         PreparedStatement stmt = null;
         Connection conn = null;
         int mappingType = -1;
-        Map propertyMap = new HashMap();
+        Map<String, CmsProperty> propertyMap = new HashMap<String, CmsProperty>();
 
         String propertyKey;
         String propertyValue;
@@ -1967,7 +2183,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 propertyValue = res.getString(2);
                 mappingType = res.getInt(3);
 
-                property = (CmsProperty)propertyMap.get(propertyKey);
+                property = propertyMap.get(propertyKey);
                 if (property == null) {
                     // there doesn't exist a property object for this key yet
                     property = new CmsProperty();
@@ -1982,32 +2198,36 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     // this property value is mapped to a resource record
                     property.setResourceValue(propertyValue);
                 } else {
-                    throw new CmsDbConsistencyException(Messages.get().container(
-                        Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
-                        resource.getRootPath(),
-                        new Integer(mappingType),
-                        propertyKey));
+                    throw new CmsDbConsistencyException(
+                        Messages.get().container(
+                            Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
+                            resource.getRootPath(),
+                            new Integer(mappingType),
+                            propertyKey));
                 }
                 property.setOrigin(resource.getRootPath());
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
 
-        return new ArrayList(propertyMap.values());
+        return new ArrayList<CmsProperty>(propertyMap.values());
     }
 
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readRelations(org.opencms.db.CmsDbContext, CmsUUID, CmsResource, org.opencms.relations.CmsRelationFilter)
      */
-    public List readRelations(CmsDbContext dbc, CmsUUID projectId, CmsResource resource, CmsRelationFilter filter)
-    throws CmsDataAccessException {
+    public List<CmsRelation> readRelations(
+        CmsDbContext dbc,
+        CmsUUID projectId,
+        CmsResource resource,
+        CmsRelationFilter filter) throws CmsDataAccessException {
 
-        Set relations = new HashSet();
+        Set<CmsRelation> relations = new HashSet<CmsRelation>();
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -2016,7 +2236,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         try {
             conn = m_sqlManager.getConnection(dbc);
             if (filter.isSource()) {
-                List params = new ArrayList(7);
+                List<Object> params = new ArrayList<Object>(7);
 
                 StringBuffer queryBuf = new StringBuffer(256);
                 queryBuf.append(m_sqlManager.readQuery(projectId, "C_READ_RELATIONS"));
@@ -2041,7 +2261,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             }
 
             if (filter.isTarget()) {
-                List params = new ArrayList(7);
+                List<Object> params = new ArrayList<Object>(7);
 
                 StringBuffer queryBuf = new StringBuffer(256);
                 queryBuf.append(m_sqlManager.readQuery(projectId, "C_READ_RELATIONS"));
@@ -2065,14 +2285,14 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, res);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
 
-        List result = new ArrayList(relations);
+        List<CmsRelation> result = new ArrayList<CmsRelation>(relations);
         Collections.sort(result, CmsRelation.COMPARATOR);
         return result;
     }
@@ -2101,23 +2321,23 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                    Messages.ERR_READ_RESOURCE_WITH_ID_1,
-                    structureId));
+                throw new CmsVfsResourceNotFoundException(
+                    Messages.get().container(Messages.ERR_READ_RESOURCE_WITH_ID_1, structureId));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
 
         // check if this resource is marked as deleted and if we are allowed to return a deleted resource
         if ((resource != null) && resource.getState().isDeleted() && !includeDeleted) {
-            throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                Messages.ERR_READ_DELETED_RESOURCE_1,
-                dbc.removeSiteRoot(resource.getRootPath())));
+            throw new CmsVfsResourceNotFoundException(
+                Messages.get().container(
+                    Messages.ERR_READ_DELETED_RESOURCE_1,
+                    dbc.removeSiteRoot(resource.getRootPath())));
         }
 
         return resource;
@@ -2151,32 +2371,31 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
                 // check if the resource is a file, it is not allowed to end with a "/" then
                 if (endsWithSlash && resource.isFile()) {
-                    throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                        Messages.ERR_READ_RESOURCE_1,
-                        dbc.removeSiteRoot(path + "/")));
+                    throw new CmsVfsResourceNotFoundException(
+                        Messages.get().container(Messages.ERR_READ_RESOURCE_1, dbc.removeSiteRoot(path + "/")));
                 }
 
                 while (res.next()) {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                    Messages.ERR_READ_RESOURCE_1,
-                    dbc.removeSiteRoot(path)));
+                throw new CmsVfsResourceNotFoundException(
+                    Messages.get().container(Messages.ERR_READ_RESOURCE_1, dbc.removeSiteRoot(path)));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
 
         // check if this resource is marked as deleted and if we are allowed to return a deleted resource
         if ((resource != null) && resource.getState().isDeleted() && !includeDeleted) {
-            throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                Messages.ERR_READ_DELETED_RESOURCE_1,
-                dbc.removeSiteRoot(resource.getRootPath())));
+            throw new CmsVfsResourceNotFoundException(
+                Messages.get().container(
+                    Messages.ERR_READ_DELETED_RESOURCE_1,
+                    dbc.removeSiteRoot(resource.getRootPath())));
         }
 
         return resource;
@@ -2185,10 +2404,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readResources(org.opencms.db.CmsDbContext, CmsUUID, CmsResourceState, int)
      */
-    public List readResources(CmsDbContext dbc, CmsUUID projectId, CmsResourceState state, int mode)
+    public List<CmsResource> readResources(CmsDbContext dbc, CmsUUID projectId, CmsResourceState state, int mode)
     throws CmsDataAccessException {
 
-        List result = new ArrayList();
+        List<CmsResource> result = new ArrayList<CmsResource>();
 
         ResultSet res = null;
         PreparedStatement stmt = null;
@@ -2228,9 +2447,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 result.add(resource);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2241,14 +2460,14 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readResourcesForPrincipalACE(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.util.CmsUUID)
      */
-    public List readResourcesForPrincipalACE(CmsDbContext dbc, CmsProject project, CmsUUID principalId)
+    public List<CmsResource> readResourcesForPrincipalACE(CmsDbContext dbc, CmsProject project, CmsUUID principalId)
     throws CmsDataAccessException {
 
         PreparedStatement stmt = null;
         Connection conn = null;
         ResultSet res = null;
         CmsResource currentResource = null;
-        List resources = new ArrayList();
+        List<CmsResource> resources = new ArrayList<CmsResource>();
 
         try {
             conn = m_sqlManager.getConnection(dbc);
@@ -2262,9 +2481,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 resources.add(currentResource);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2274,14 +2493,14 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readResourcesForPrincipalAttr(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.util.CmsUUID)
      */
-    public List readResourcesForPrincipalAttr(CmsDbContext dbc, CmsProject project, CmsUUID principalId)
+    public List<CmsResource> readResourcesForPrincipalAttr(CmsDbContext dbc, CmsProject project, CmsUUID principalId)
     throws CmsDataAccessException {
 
         PreparedStatement stmt = null;
         Connection conn = null;
         ResultSet res = null;
         CmsResource currentResource = null;
-        List resources = new ArrayList();
+        List<CmsResource> resources = new ArrayList<CmsResource>();
 
         try {
             conn = m_sqlManager.getConnection(dbc);
@@ -2296,9 +2515,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 resources.add(currentResource);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2308,14 +2527,14 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readResourcesWithProperty(org.opencms.db.CmsDbContext, CmsUUID, org.opencms.util.CmsUUID, String, String)
      */
-    public List readResourcesWithProperty(
+    public List<CmsResource> readResourcesWithProperty(
         CmsDbContext dbc,
         CmsUUID projectId,
         CmsUUID propertyDef,
         String path,
         String value) throws CmsDataAccessException {
 
-        List resources = new ArrayList();
+        List<CmsResource> resources = new ArrayList<CmsResource>();
         ResultSet res = null;
         PreparedStatement stmt = null;
         Connection conn = null;
@@ -2347,9 +2566,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 resources.add(resource);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2360,7 +2579,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readResourceTree(org.opencms.db.CmsDbContext, CmsUUID, java.lang.String, int, CmsResourceState, long, long, long, long, long, long, int)
      */
-    public List readResourceTree(
+    public List<CmsResource> readResourceTree(
         CmsDbContext dbc,
         CmsUUID projectId,
         String parentPath,
@@ -2374,10 +2593,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         long expiredBefore,
         int mode) throws CmsDataAccessException {
 
-        List result = new ArrayList();
+        List<CmsResource> result = new ArrayList<CmsResource>();
 
         StringBuffer conditions = new StringBuffer();
-        List params = new ArrayList(5);
+        List<Object> params = new ArrayList<Object>(5);
 
         // prepare the selection criteria
         prepareProjectCondition(projectId, mode, conditions, params);
@@ -2389,7 +2608,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         preparePathCondition(projectId, parentPath, mode, conditions, params);
         prepareStateCondition(projectId, state, mode, conditions, params);
 
-        // now read matching resources within the subtree 
+        // now read matching resources within the subtree
         ResultSet res = null;
         PreparedStatement stmt = null;
         Connection conn = null;
@@ -2420,9 +2639,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             }
 
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2431,16 +2650,62 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     }
 
     /**
+     * @see org.opencms.db.I_CmsVfsDriver#readRewriteAliases(org.opencms.db.CmsDbContext, org.opencms.db.CmsRewriteAliasFilter)
+     */
+    public List<CmsRewriteAlias> readRewriteAliases(CmsDbContext dbc, CmsRewriteAliasFilter filter)
+    throws CmsDataAccessException {
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet res = null;
+        List<CmsRewriteAlias> result = new ArrayList<CmsRewriteAlias>();
+        try {
+            conn = m_sqlManager.getConnection(dbc);
+            CmsPair<String, List<Object>> conditionAndParams = prepareRewriteAliasConditions(filter);
+            String condition = conditionAndParams.getFirst();
+            List<Object> params = conditionAndParams.getSecond();
+            String query = m_sqlManager.readQuery("C_REWRITE_ALIAS_READ") + condition;
+            stmt = m_sqlManager.getPreparedStatementForSql(conn, query);
+            CmsDbUtil.fillParameters(stmt, params);
+            res = stmt.executeQuery();
+            while (res.next()) {
+                int col = 1;
+                String id = res.getString(col++);
+                String siteRoot = res.getString(col++);
+                String patternString = res.getString(col++);
+                String replacementString = res.getString(col++);
+                int mode = res.getInt(col++);
+                CmsRewriteAlias alias = new CmsRewriteAlias(
+                    new CmsUUID(id),
+                    siteRoot,
+                    patternString,
+                    replacementString,
+                    CmsAliasMode.fromInt(mode));
+                result.add(alias);
+            }
+            return result;
+        } catch (SQLException e) {
+            throw wrapException(stmt, e);
+        } finally {
+            m_sqlManager.closeAll(dbc, conn, stmt, res);
+        }
+
+    }
+
+    /**
      * @see org.opencms.db.I_CmsVfsDriver#readSiblings(org.opencms.db.CmsDbContext, CmsUUID, org.opencms.file.CmsResource, boolean)
      */
-    public List readSiblings(CmsDbContext dbc, CmsUUID projectId, CmsResource resource, boolean includeDeleted)
-    throws CmsDataAccessException {
+    public List<CmsResource> readSiblings(
+        CmsDbContext dbc,
+        CmsUUID projectId,
+        CmsResource resource,
+        boolean includeDeleted) throws CmsDataAccessException {
 
         PreparedStatement stmt = null;
         Connection conn = null;
         ResultSet res = null;
         CmsResource currentResource = null;
-        List vfsLinks = new ArrayList();
+        List<CmsResource> vfsLinks = new ArrayList<CmsResource>();
 
         try {
             conn = m_sqlManager.getConnection(dbc);
@@ -2459,9 +2724,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 vfsLinks.add(currentResource);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2471,14 +2736,14 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Reads the URL name mapping entries which match a given filter.<p>
-     * 
-     * @param dbc the database context 
-     * @param online if true, reads from the online mapping, else from the offline mapping 
-     * @param filter the filter which the entries to be read should match 
-     * 
-     * @return the mapping entries which match the given filter 
-     * 
-     * @throws CmsDataAccessException if something goes wrong 
+     *
+     * @param dbc the database context
+     * @param online if true, reads from the online mapping, else from the offline mapping
+     * @param filter the filter which the entries to be read should match
+     *
+     * @return the mapping entries which match the given filter
+     *
+     * @throws CmsDataAccessException if something goes wrong
      */
     public List<CmsUrlNameMappingEntry> readUrlNameMappingEntries(
         CmsDbContext dbc,
@@ -2510,8 +2775,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#readVersions(org.opencms.db.CmsDbContext, org.opencms.util.CmsUUID, org.opencms.util.CmsUUID, org.opencms.util.CmsUUID)
      */
-    public Map readVersions(CmsDbContext dbc, CmsUUID projectId, CmsUUID resourceId, CmsUUID structureId)
-    throws CmsDataAccessException {
+    public Map<String, Integer> readVersions(
+        CmsDbContext dbc,
+        CmsUUID projectId,
+        CmsUUID resourceId,
+        CmsUUID structureId) throws CmsDataAccessException {
 
         int structureVersion = -1;
         int resourceVersion = -1;
@@ -2545,13 +2813,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
-        Map result = new HashMap();
+        Map<String, Integer> result = new HashMap<String, Integer>();
         result.put("structure", new Integer(structureVersion));
         result.put(I_CmsEventListener.KEY_RESOURCE, new Integer(resourceVersion));
         return result;
@@ -2607,7 +2875,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
                 // if online we have to keep historical content
                 if (projectId.equals(CmsProject.ONLINE_PROJECT_ID)) {
-                    // put the online content in the history 
+                    // put the online content in the history
                     stmt = m_sqlManager.getPreparedStatement(conn, "C_ONLINE_CONTENTS_HISTORY");
                     stmt.setString(1, resource.getResourceId().toString());
                     stmt.executeUpdate();
@@ -2624,9 +2892,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -2646,7 +2914,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         }
 
         // check if the folder has any resources in it
-        Iterator childResources = readChildResources(dbc, currentProject, resource, true, true).iterator();
+        Iterator<CmsResource> childResources = readChildResources(dbc, currentProject, resource, true, true).iterator();
 
         CmsUUID projectId = CmsProject.ONLINE_PROJECT_ID;
         if (currentProject.isOnlineProject()) {
@@ -2657,14 +2925,18 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         I_CmsVfsDriver vfsDriver = m_driverManager.getVfsDriver(dbc);
         StringBuffer errorResNames = new StringBuffer(128);
         while (childResources.hasNext()) {
-            CmsResource errorRes = (CmsResource)childResources.next();
+            CmsResource errorRes = childResources.next();
             // if deleting offline, or not moved, or just renamed inside the deleted folder
             // so, it may remain some orphan online entries for moved resources
             // which will be fixed during the publishing of the moved resources
             boolean error = !currentProject.isOnlineProject();
             if (!error) {
                 try {
-                    String originalPath = vfsDriver.readResource(dbc, projectId, errorRes.getRootPath(), true).getRootPath();
+                    String originalPath = vfsDriver.readResource(
+                        dbc,
+                        projectId,
+                        errorRes.getRootPath(),
+                        true).getRootPath();
                     error = originalPath.equals(errorRes.getRootPath())
                         || originalPath.startsWith(resource.getRootPath());
                 } catch (CmsVfsResourceNotFoundException e) {
@@ -2682,10 +2954,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         // the current implementation only deletes empty folders
         if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(errorResNames.toString())) {
 
-            throw new CmsVfsException(Messages.get().container(
-                Messages.ERR_DELETE_NONEMTY_FOLDER_2,
-                dbc.removeSiteRoot(resource.getRootPath()),
-                errorResNames.toString()));
+            throw new CmsVfsException(
+                Messages.get().container(
+                    Messages.ERR_DELETE_NONEMTY_FOLDER_2,
+                    dbc.removeSiteRoot(resource.getRootPath()),
+                    errorResNames.toString()));
         }
         internalRemoveFolder(dbc, currentProject, resource);
 
@@ -2694,9 +2967,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         if (dbc.getRequestContext() != null) {
             dbc.getRequestContext().setAttribute(CmsProjectDriver.DBC_ATTR_READ_PROJECT_FOR_RESOURCE, Boolean.TRUE);
             I_CmsProjectDriver projectDriver = m_driverManager.getProjectDriver(dbc);
-            Iterator itProjects = projectDriver.readProjects(dbc, deletedResourceRootPath).iterator();
+            Iterator<CmsProject> itProjects = projectDriver.readProjects(dbc, deletedResourceRootPath).iterator();
             while (itProjects.hasNext()) {
-                CmsProject project = (CmsProject)itProjects.next();
+                CmsProject project = itProjects.next();
                 projectDriver.deleteProjectResource(dbc, project.getUuid(), deletedResourceRootPath);
             }
         }
@@ -2728,9 +3001,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -2779,9 +3052,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(3, resource.getResourceId().toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -2807,14 +3080,14 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         // copy offline to online relations
         CmsUUID dbcProjectId = dbc.getProjectId();
         dbc.setProjectId(CmsUUID.getNullUUID());
-        Iterator itRelations = m_driverManager.getVfsDriver(dbc).readRelations(
+        Iterator<CmsRelation> itRelations = m_driverManager.getVfsDriver(dbc).readRelations(
             dbc,
             projectId,
             offlineResource,
             CmsRelationFilter.TARGETS).iterator();
         dbc.setProjectId(dbcProjectId);
         while (itRelations.hasNext()) {
-            vfsDriver.createRelation(dbc, onlineProject.getUuid(), (CmsRelation)itRelations.next());
+            vfsDriver.createRelation(dbc, onlineProject.getUuid(), itRelations.next());
         }
     }
 
@@ -2837,9 +3110,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             res = stmt.executeQuery();
             exists = res.next();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2875,9 +3148,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 found = false;
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -2905,9 +3178,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(2, resourceId.toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -2916,8 +3189,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#writeLastModifiedProjectId(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, CmsUUID, org.opencms.file.CmsResource)
      */
-    public void writeLastModifiedProjectId(CmsDbContext dbc, CmsProject project, CmsUUID projectId, CmsResource resource)
-    throws CmsDataAccessException {
+    public void writeLastModifiedProjectId(
+        CmsDbContext dbc,
+        CmsProject project,
+        CmsUUID projectId,
+        CmsResource resource) throws CmsDataAccessException {
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -2929,9 +3205,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(2, resource.getResourceId().toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -2976,14 +3252,14 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                         property.getName(),
                         CmsPropertyDefinition.TYPE_NORMAL);
                 }
-                OpenCms.fireCmsEvent(new CmsEvent(
-                    I_CmsEventListener.EVENT_PROPERTY_DEFINITION_CREATED,
-                    Collections.<String, Object> singletonMap("propertyDefinition", propertyDefinition)));
+                OpenCms.fireCmsEvent(
+                    new CmsEvent(
+                        I_CmsEventListener.EVENT_PROPERTY_DEFINITION_CREATED,
+                        Collections.<String, Object> singletonMap("propertyDefinition", propertyDefinition)));
 
             } else {
-                throw new CmsDbEntryNotFoundException(Messages.get().container(
-                    Messages.ERR_NO_PROPERTYDEF_WITH_NAME_1,
-                    property.getName()));
+                throw new CmsDbEntryNotFoundException(
+                    Messages.get().container(Messages.ERR_NO_PROPERTYDEF_WITH_NAME_1, property.getName()));
             }
         }
 
@@ -2991,7 +3267,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         Connection conn = null;
 
         try {
-            // read the existing property to test if we need the 
+            // read the existing property to test if we need the
             // insert or update query to write a property value
             CmsProperty existingProperty = readPropertyObject(dbc, propertyDefinition.getName(), project, resource);
 
@@ -3019,7 +3295,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     } else {
                         value = property.getStructureValue();
                         if (CmsStringUtil.isEmptyOrWhitespaceOnly(value)) {
-                            // no structure value set or the structure value is an empty string, 
+                            // no structure value set or the structure value is an empty string,
                             // continue with the resource value
                             continue;
                         }
@@ -3052,7 +3328,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 // 2) execute the SQL query
                 try {
                     if (!deletePropertyValue) {
-                        // insert/update the property value                    
+                        // insert/update the property value
                         if (existsPropertyValue) {
                             // {structure|resource} property value already exists- use update statement
                             stmt = m_sqlManager.getPreparedStatement(conn, projectId, "C_PROPERTIES_UPDATE");
@@ -3082,9 +3358,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -3093,13 +3369,16 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     /**
      * @see org.opencms.db.I_CmsVfsDriver#writePropertyObjects(org.opencms.db.CmsDbContext, org.opencms.file.CmsProject, org.opencms.file.CmsResource, java.util.List)
      */
-    public void writePropertyObjects(CmsDbContext dbc, CmsProject project, CmsResource resource, List properties)
-    throws CmsDataAccessException {
+    public void writePropertyObjects(
+        CmsDbContext dbc,
+        CmsProject project,
+        CmsResource resource,
+        List<CmsProperty> properties) throws CmsDataAccessException {
 
         CmsProperty property = null;
 
         for (int i = 0; i < properties.size(); i++) {
-            property = (CmsProperty)properties.get(i);
+            property = properties.get(i);
             writePropertyObject(dbc, project, resource, property);
         }
     }
@@ -3197,9 +3476,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(7, resource.getStructureId().toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -3235,7 +3514,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             }
 
             if (changed == CmsDriverManager.UPDATE_RESOURCE) {
-                stmt = m_sqlManager.getPreparedStatement(conn, project, "C_RESOURCES_UPDATE_RESOURCE_STATELASTMODIFIED");
+                stmt = m_sqlManager.getPreparedStatement(
+                    conn,
+                    project,
+                    "C_RESOURCES_UPDATE_RESOURCE_STATELASTMODIFIED");
                 stmt.setInt(1, resource.getState().getState());
                 stmt.setLong(2, resource.getDateLastModified());
                 stmt.setString(3, resource.getUserLastModified().toString());
@@ -3273,9 +3555,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 m_sqlManager.closeAll(dbc, null, stmt, null);
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -3287,11 +3569,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Checks that the current user has write permissions for all subresources of the given folder.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param folder the folder to check
-     * 
-     * @throws CmsDataAccessException if something goes wrong 
+     *
+     * @throws CmsDataAccessException if something goes wrong
      */
     protected void checkWritePermissionsInFolder(CmsDbContext dbc, CmsResource folder) throws CmsDataAccessException {
 
@@ -3302,7 +3584,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         CmsUUID projectId = dbc.getRequestContext().getCurrentProject().getUuid();
 
         // first read all subresources with ACEs
-        List resources = new ArrayList();
+        List<CmsResource> resources = new ArrayList<CmsResource>();
         try {
             conn = m_sqlManager.getConnection(dbc);
             stmt = m_sqlManager.getPreparedStatement(conn, projectId, "C_RESOURCES_READ_WITH_ACE_1");
@@ -3313,17 +3595,17 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 resources.add(createResource(res, projectId));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
 
         // check current user write permission for each of these resources
-        Iterator itResources = resources.iterator();
+        Iterator<CmsResource> itResources = resources.iterator();
         while (itResources.hasNext()) {
-            CmsResource resource = (CmsResource)itResources.next();
+            CmsResource resource = itResources.next();
             try {
                 m_driverManager.getSecurityManager().checkPermissions(
                     dbc.getRequestContext(),
@@ -3352,7 +3634,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             filter.getExpireBefore(),
             CmsDriverManager.READMODE_INCLUDE_TREE).iterator();
         while (itResources.hasNext()) {
-            CmsResource resource = (CmsResource)itResources.next();
+            CmsResource resource = itResources.next();
             try {
                 m_driverManager.getSecurityManager().checkPermissions(
                     dbc.getRequestContext(),
@@ -3368,11 +3650,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Returns the count of properties for a property definition.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param propertyDefinition the property definition to test
      * @param projectId the ID of the current project
-     * 
+     *
      * @return the amount of properties for a property definition
      * @throws CmsDataAccessException if something goes wrong
      */
@@ -3397,14 +3679,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsDbConsistencyException(Messages.get().container(
-                    Messages.ERR_COUNTING_PROPERTIES_1,
-                    propertyDefinition.getName()));
+                throw new CmsDbConsistencyException(
+                    Messages.get().container(Messages.ERR_COUNTING_PROPERTIES_1, propertyDefinition.getName()));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -3414,12 +3695,12 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Creates a new counter.<p>
-     * 
-     * @param dbc the database context 
-     * @param name the name of the counter to create 
-     * @param value the inital value of the counter  
-     * 
-     * @throws CmsDbSqlException if something goes wrong 
+     *
+     * @param dbc the database context
+     * @param name the name of the counter to create
+     * @param value the inital value of the counter
+     *
+     * @throws CmsDbSqlException if something goes wrong
      */
     protected void internalCreateCounter(CmsDbContext dbc, String name, int value) throws CmsDbSqlException {
 
@@ -3440,11 +3721,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Creates an URL name mapping entry from a result set.<p>
-     * 
-     * @param resultSet a result set 
-     * @return the URL name mapping entry created from the result set 
-     * 
-     * @throws SQLException if something goes wrong 
+     *
+     * @param resultSet a result set
+     * @return the URL name mapping entry created from the result set
+     *
+     * @throws SQLException if something goes wrong
      */
     protected CmsUrlNameMappingEntry internalCreateUrlNameMappingEntry(ResultSet resultSet) throws SQLException {
 
@@ -3458,11 +3739,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Increments a counter.<p>
-     *  
-     * @param dbc the current db context 
-     * @param name the name of the counter which should be incremented  
-     * 
-     * @throws CmsDbSqlException if something goes wrong 
+     *
+     * @param dbc the current db context
+     * @param name the name of the counter which should be incremented
+     *
+     * @throws CmsDbSqlException if something goes wrong
      */
     protected void internalIncrementCounter(CmsDbContext dbc, String name) throws CmsDbSqlException {
 
@@ -3483,12 +3764,29 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     }
 
     /**
+     * Helper method to create an alias object from a result set.<p>
+     *
+     * @param resultset the result set
+     * @return the alias object created from the result set
+     *
+     * @throws SQLException if something goes wrong
+     */
+    protected CmsAlias internalReadAlias(ResultSet resultset) throws SQLException {
+
+        String siteRoot = resultset.getString(1);
+        String path = resultset.getString(2);
+        int mode = resultset.getInt(3);
+        String structId = resultset.getString(4);
+        return new CmsAlias(new CmsUUID(structId), siteRoot, path, CmsAliasMode.fromInt(mode));
+    }
+
+    /**
      * Reads the current value of a counter.<p>
-     * 
-     * @param dbc the database context 
-     * @param name the name of the counter 
-     * @return the current value of the  counter, or null if the counter was not found 
-     * 
+     *
+     * @param dbc the database context
+     * @param name the name of the counter
+     * @return the current value of the  counter, or null if the counter was not found
+     *
      * @throws CmsDbSqlException if something goes wrong
      */
     protected Integer internalReadCounter(CmsDbContext dbc, String name) throws CmsDbSqlException {
@@ -3506,7 +3804,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 int counter = resultSet.getInt(1);
                 result = new Integer(counter);
                 while (resultSet.next()) {
-                    // for MSSQL 
+                    // for MSSQL
                 }
             }
             return result;
@@ -3519,13 +3817,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Returns the parent id of the given resource.<p>
-     * 
+     *
      * @param dbc the current database context
-     * @param projectId the current project id 
+     * @param projectId the current project id
      * @param resourcename the resource name to read the parent id for
-     * 
+     *
      * @return  the parent id of the given resource
-     * 
+     *
      * @throws CmsDataAccessException if something goes wrong
      */
     protected String internalReadParentId(CmsDbContext dbc, CmsUUID projectId, String resourcename)
@@ -3555,14 +3853,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                     // do nothing only move through all rows because of mssql odbc driver
                 }
             } else {
-                throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                    Messages.ERR_READ_PARENT_ID_1,
-                    dbc.removeSiteRoot(resourcename)));
+                throw new CmsVfsResourceNotFoundException(
+                    Messages.get().container(Messages.ERR_READ_PARENT_ID_1, dbc.removeSiteRoot(resourcename)));
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -3572,11 +3869,11 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Creates a new {@link CmsRelation} object from the given result set entry.<p>
-     * 
-     * @param res the result set 
-     *  
+     *
+     * @param res the result set
+     *
      * @return the new {@link CmsRelation} object
-     * 
+     *
      * @throws SQLException if something goes wrong
      */
     protected CmsRelation internalReadRelation(ResultSet res) throws SQLException {
@@ -3591,13 +3888,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Returns the resource state of the given resource.<p>
-     * 
+     *
      * @param dbc the database context
      * @param projectId the id of the project
      * @param resource the resource to read the resource state for
-     * 
+     *
      * @return the resource state of the given resource
-     * 
+     *
      * @throws CmsDbSqlException if something goes wrong
      */
     protected CmsResourceState internalReadResourceState(CmsDbContext dbc, CmsUUID projectId, CmsResource resource)
@@ -3620,9 +3917,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -3631,13 +3928,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Returns the structure state of the given resource.<p>
-     * 
+     *
      * @param dbc the database context
      * @param projectId the id of the project
      * @param resource the resource to read the structure state for
-     * 
+     *
      * @return the structure state of the given resource
-     * 
+     *
      * @throws CmsDbSqlException if something goes wrong
      */
     protected CmsResourceState internalReadStructureState(CmsDbContext dbc, CmsUUID projectId, CmsResource resource)
@@ -3660,9 +3957,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
                 }
             }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -3671,7 +3968,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Removes a resource physically in the database.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param currentProject the current project
      * @param resource the folder to remove
@@ -3687,7 +3984,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         try {
             conn = m_sqlManager.getConnection(dbc);
 
-            // delete the structure record            
+            // delete the structure record
             stmt = m_sqlManager.getPreparedStatement(conn, currentProject, "C_STRUCTURE_DELETE_BY_STRUCTUREID");
             stmt.setString(1, resource.getStructureId().toString());
             stmt.executeUpdate();
@@ -3699,9 +3996,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(1, resource.getResourceId().toString());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -3709,16 +4006,16 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Updates the offline version numbers.<p>
-     *  
+     *
      * @param dbc the current database context
      * @param resource the resource to update the version number for
-     * 
-     * @throws CmsDataAccessException if something goes wrong 
+     *
+     * @throws CmsDataAccessException if something goes wrong
      */
     protected void internalUpdateVersions(CmsDbContext dbc, CmsResource resource) throws CmsDataAccessException {
 
         if (dbc.getRequestContext() == null) {
-            // no needed during initialization 
+            // no needed during initialization
             return;
         }
         if (dbc.currentProject().isOnlineProject()) {
@@ -3727,13 +4024,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         }
 
         // read the online version numbers
-        Map onlineVersions = readVersions(
+        Map<String, Integer> onlineVersions = readVersions(
             dbc,
             CmsProject.ONLINE_PROJECT_ID,
             resource.getResourceId(),
             resource.getStructureId());
-        int onlineStructureVersion = ((Integer)onlineVersions.get("structure")).intValue();
-        int onlineResourceVersion = ((Integer)onlineVersions.get("resource")).intValue();
+        int onlineStructureVersion = onlineVersions.get("structure").intValue();
+        int onlineResourceVersion = onlineVersions.get("resource").intValue();
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -3750,16 +4047,19 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             m_sqlManager.closeAll(dbc, null, stmt, null);
 
             // update the structure version
-            stmt = m_sqlManager.getPreparedStatement(conn, dbc.currentProject(), "C_RESOURCES_UPDATE_STRUCTURE_VERSION");
+            stmt = m_sqlManager.getPreparedStatement(
+                conn,
+                dbc.currentProject(),
+                "C_RESOURCES_UPDATE_STRUCTURE_VERSION");
             stmt.setInt(1, onlineStructureVersion);
             stmt.setString(2, resource.getStructureId().toString());
             stmt.executeUpdate();
             m_sqlManager.closeAll(dbc, null, stmt, null);
 
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -3767,10 +4067,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Validates that the length setting of a resource is always correct.<p>
-     * 
+     *
      * Files need to have a resource length of >= 0, while folders require
      * a resource length of -1.<p>
-     * 
+     *
      * @param resource the resource to check the length for
      * @throws CmsDataAccessException if the resource length is not correct
      */
@@ -3784,20 +4084,21 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             return;
         }
 
-        throw new CmsDataAccessException(Messages.get().container(
-            Messages.ERR_INVALID_RESOURCE_LENGTH_2,
-            new Integer(resource.getLength()),
-            resource.getRootPath()));
+        throw new CmsDataAccessException(
+            Messages.get().container(
+                Messages.ERR_INVALID_RESOURCE_LENGTH_2,
+                new Integer(resource.getLength()),
+                resource.getRootPath()));
     }
 
     /**
      * Moves all relations of a resource to the new path.<p>
-     * 
+     *
      * @param dbc the current database context
-     * @param projectId the id of the project to apply the changes 
+     * @param projectId the id of the project to apply the changes
      * @param structureId the structure id of the resource to apply the changes to
      * @param rootPath the new root path
-     * 
+     *
      * @throws CmsDataAccessException if something goes wrong
      */
     protected void moveRelations(CmsDbContext dbc, CmsUUID projectId, CmsUUID structureId, String rootPath)
@@ -3821,9 +4122,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -3831,7 +4132,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the expiration date.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param startTime the start time
      * @param endTime the end time
@@ -3843,7 +4144,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         long startTime,
         long endTime,
         StringBuffer conditions,
-        List params) {
+        List<Object> params) {
 
         if (startTime > 0L) {
             // READ_IGNORE_TIME: if NOT set, add condition to match expired date against startTime
@@ -3864,14 +4165,19 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the parentPath.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param parent the parent path or UUID (if mode is C_READMODE_EXCLUDE_TREE)
      * @param mode the selection mode
      * @param conditions buffer to append the selection criteria
      * @param params list to append the selection parameters
      */
-    protected void preparePathCondition(CmsUUID projectId, String parent, int mode, StringBuffer conditions, List params) {
+    protected void preparePathCondition(
+        CmsUUID projectId,
+        String parent,
+        int mode,
+        StringBuffer conditions,
+        List<Object> params) {
 
         if (parent == CmsDriverManager.READ_IGNORE_PARENT) {
             // parent can be ignored
@@ -3879,7 +4185,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         }
 
         if ((mode & CmsDriverManager.READMODE_EXCLUDE_TREE) > 0) {
-            // only return immediate children - use UUID optimization            
+            // only return immediate children - use UUID optimization
             conditions.append(BEGIN_INCLUDE_CONDITION);
             conditions.append(m_sqlManager.readQuery(projectId, "C_RESOURCES_SELECT_BY_PARENT_UUID"));
             conditions.append(END_CONDITION);
@@ -3892,7 +4198,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             return;
         }
 
-        // add condition to read path subtree        
+        // add condition to read path subtree
         conditions.append(BEGIN_INCLUDE_CONDITION);
         conditions.append(m_sqlManager.readQuery(projectId, "C_RESOURCES_SELECT_BY_PATH_PREFIX"));
         conditions.append(END_CONDITION);
@@ -3901,13 +4207,13 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the projectId.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param mode the selection mode
      * @param conditions buffer to append the selection criteria
      * @param params list to append the selection parameters
      */
-    protected void prepareProjectCondition(CmsUUID projectId, int mode, StringBuffer conditions, List params) {
+    protected void prepareProjectCondition(CmsUUID projectId, int mode, StringBuffer conditions, List<Object> params) {
 
         if ((mode & CmsDriverManager.READMODE_INCLUDE_PROJECT) > 0) {
             // C_READMODE_INCLUDE_PROJECT: add condition to match the PROJECT_ID
@@ -3920,20 +4226,20 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Build the whole WHERE sql statement part for the given relation filter.<p>
-     * 
+     *
      * @param projectId the current project id
      * @param filter the filter
      * @param resource the resource (may be null, if you want to delete all relations for the resource in the filter)
      * @param params the parameter values (return parameter)
-     * @param checkSource if the query is for the source relations 
-     * 
+     * @param checkSource if the query is for the source relations
+     *
      * @return the WHERE sql statement part string
      */
     protected String prepareRelationConditions(
         CmsUUID projectId,
         CmsRelationFilter filter,
         CmsResource resource,
-        List params,
+        List<Object> params,
         boolean checkSource) {
 
         StringBuffer conditions = new StringBuffer(128);
@@ -4006,7 +4312,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         }
 
         // relation type filter
-        Set types = filter.getTypes();
+        Set<CmsRelationType> types = filter.getTypes();
         if (!types.isEmpty()) {
             if (conditions.length() == 0) {
                 conditions.append(BEGIN_CONDITION);
@@ -4015,9 +4321,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             }
             conditions.append(m_sqlManager.readQuery(projectId, "C_RELATION_FILTER_TYPE"));
             conditions.append(BEGIN_CONDITION);
-            Iterator it = types.iterator();
+            Iterator<CmsRelationType> it = types.iterator();
             while (it.hasNext()) {
-                CmsRelationType type = (CmsRelationType)it.next();
+                CmsRelationType type = it.next();
                 conditions.append("?");
                 params.add(new Integer(type.getId()));
                 if (it.hasNext()) {
@@ -4032,7 +4338,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the released date.<p>
-     * 
+     *
      * @param projectId the id of the project
      * @param startTime the start time
      * @param endTime the stop time
@@ -4044,7 +4350,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         long startTime,
         long endTime,
         StringBuffer conditions,
-        List params) {
+        List<Object> params) {
 
         if (startTime > 0L) {
             // READ_IGNORE_TIME: if NOT set, add condition to match released date against startTime
@@ -4065,7 +4371,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the read mode.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param mode the selection mode
      * @param conditions buffer to append the selection criteria
@@ -4087,7 +4393,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the resource state.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param state the resource state
      * @param mode the selection mode
@@ -4099,7 +4405,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         CmsResourceState state,
         int mode,
         StringBuffer conditions,
-        List params) {
+        List<Object> params) {
 
         if (state != null) {
             if ((mode & CmsDriverManager.READMODE_EXCLUDE_STATE) > 0) {
@@ -4118,7 +4424,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the date of the last modification.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param startTime start of the time range
      * @param endTime end of the time range
@@ -4130,7 +4436,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         long startTime,
         long endTime,
         StringBuffer conditions,
-        List params) {
+        List<Object> params) {
 
         if (startTime > 0L) {
             // READ_IGNORE_TIME: if NOT set, add condition to match last modified date against startTime
@@ -4151,14 +4457,19 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the resource type.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param type the resource type
      * @param mode the selection mode
      * @param conditions buffer to append the selection criteria
      * @param params list to append the selection parameters
      */
-    protected void prepareTypeCondition(CmsUUID projectId, int type, int mode, StringBuffer conditions, List params) {
+    protected void prepareTypeCondition(
+        CmsUUID projectId,
+        int type,
+        int mode,
+        StringBuffer conditions,
+        List<Object> params) {
 
         if (type != CmsDriverManager.READ_IGNORE_TYPE) {
             if ((mode & CmsDriverManager.READMODE_EXCLUDE_TYPE) > 0) {
@@ -4179,7 +4490,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Appends the appropriate selection criteria related with the resource type.<p>
-     * 
+     *
      * @param projectId the id of the project of the resources
      * @param types the resource type id's
      * @param mode the selection mode
@@ -4191,45 +4502,43 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         List<Integer> types,
         int mode,
         StringBuffer conditions,
-        List params) {
+        List<Object> params) {
 
-        if ((types == null) || types.isEmpty()) {
-            if ((mode & CmsDriverManager.READMODE_EXCLUDE_TYPE) > 0) {
-                // C_READ_FILE_TYPES: add condition to match against any type, but not given type
-                conditions.append(BEGIN_EXCLUDE_CONDITION);
+        if ((mode & CmsDriverManager.READMODE_EXCLUDE_TYPE) > 0) {
+            // C_READ_FILE_TYPES: add condition to match against any type, but not given type
+            conditions.append(BEGIN_EXCLUDE_CONDITION);
+            conditions.append(m_sqlManager.readQuery(projectId, "C_RESOURCES_SELECT_BY_RESOURCE_TYPE"));
+            conditions.append(END_CONDITION);
+            params.add(new Integer(CmsDriverManager.READ_IGNORE_TYPE));
+        } else if (!((types == null) || types.isEmpty())) {
+            //otherwise add condition to match against given type if necessary
+            conditions.append(BEGIN_INCLUDE_CONDITION);
+            Iterator<Integer> typeIt = types.iterator();
+            while (typeIt.hasNext()) {
                 conditions.append(m_sqlManager.readQuery(projectId, "C_RESOURCES_SELECT_BY_RESOURCE_TYPE"));
-                conditions.append(END_CONDITION);
-                params.add(new Integer(CmsDriverManager.READ_IGNORE_TYPE));
-            } else {
-                //otherwise add condition to match against given type if necessary
-                conditions.append(BEGIN_INCLUDE_CONDITION);
-                Iterator<Integer> typeIt = types.iterator();
-                while (typeIt.hasNext()) {
-                    conditions.append(m_sqlManager.readQuery(projectId, "C_RESOURCES_SELECT_BY_RESOURCE_TYPE"));
-                    params.add(typeIt.next());
-                    if (typeIt.hasNext()) {
-                        conditions.append(OR_CONDITION);
-                    }
+                params.add(typeIt.next());
+                if (typeIt.hasNext()) {
+                    conditions.append(OR_CONDITION);
                 }
-                conditions.append(END_CONDITION);
             }
+            conditions.append(END_CONDITION);
         }
     }
 
     /**
      * Reads all resources inside a given project matching the criteria specified by parameter values.<p>
-     * 
-     * Important: If {@link CmsDriverManager#READMODE_EXCLUDE_TREE} is true (or {@link CmsDriverManager#READMODE_INCLUDE_TREE} is false), 
+     *
+     * Important: If {@link CmsDriverManager#READMODE_EXCLUDE_TREE} is true (or {@link CmsDriverManager#READMODE_INCLUDE_TREE} is false),
      * the provided parent String must be the UUID of the parent folder, NOT the parent folder path.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param projectId the project id for matching resources
-     * @param parent the path to the resource used as root of the searched subtree or {@link CmsDriverManager#READ_IGNORE_PARENT}, 
-     *               {@link CmsDriverManager#READMODE_EXCLUDE_TREE} means to read immediate children only 
+     * @param parentPath the path to the resource used as root of the searched subtree or {@link CmsDriverManager#READ_IGNORE_PARENT},
+     *               {@link CmsDriverManager#READMODE_EXCLUDE_TREE} means to read immediate children only
      * @param types the resource types of matching resources or <code>null</code> (meaning inverted by {@link CmsDriverManager#READMODE_EXCLUDE_TYPE}
      * @param state the state of matching resources (meaning inverted by {@link CmsDriverManager#READMODE_EXCLUDE_STATE} or <code>null</code> to ignore
-     * @param startTime the start of the time range for the last modification date of matching resources or READ_IGNORE_TIME 
-     * @param endTime the end of the time range for the last modification date of matching resources or READ_IGNORE_TIME
+     * @param lastModifiedAfter the start of the time range for the last modification date of matching resources or READ_IGNORE_TIME
+     * @param lastModifiedBefore the end of the time range for the last modification date of matching resources or READ_IGNORE_TIME
      * @param releasedAfter the start of the time range for the release date of matching resources
      * @param releasedBefore the end of the time range for the release date of matching resources
      * @param expiredAfter the start of the time range for the expire date of matching resources
@@ -4242,12 +4551,12 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
      *  <li>{@link CmsDriverManager#READMODE_EXCLUDE_TYPE}
      *  <li>{@link CmsDriverManager#READMODE_EXCLUDE_STATE}
      * </ul>
-     * 
+     *
      * @return a list of CmsResource objects matching the given criteria
-     * 
+     *
      * @throws CmsDataAccessException if something goes wrong
      */
-    protected List readTypesInResourceTree(
+    protected List<CmsResource> readTypesInResourceTree(
         CmsDbContext dbc,
         CmsUUID projectId,
         String parentPath,
@@ -4261,10 +4570,10 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         long expiredBefore,
         int mode) throws CmsDataAccessException {
 
-        List result = new ArrayList();
+        List<CmsResource> result = new ArrayList<CmsResource>();
 
         StringBuffer conditions = new StringBuffer();
-        List params = new ArrayList(5);
+        List<Object> params = new ArrayList<Object>(5);
 
         // prepare the selection criteria
         prepareProjectCondition(projectId, mode, conditions, params);
@@ -4276,7 +4585,7 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
         preparePathCondition(projectId, parentPath, mode, conditions, params);
         prepareStateCondition(projectId, state, mode, conditions, params);
 
-        // now read matching resources within the subtree 
+        // now read matching resources within the subtree
         ResultSet res = null;
         PreparedStatement stmt = null;
         Connection conn = null;
@@ -4307,9 +4616,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             }
 
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, res);
         }
@@ -4319,15 +4628,15 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Repairs broken links.<p>
-     * 
+     *
      * When a resource is created any relation pointing to it is updated to use the right id.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param projectId the project id
      * @param structureId the structure id of the resource that may help to repair broken links
      * @param rootPath the path of the resource that may help to repair broken links
-     * 
-     * @throws CmsDataAccessException if something goes wrong 
+     *
+     * @throws CmsDataAccessException if something goes wrong
      */
     protected void repairBrokenRelations(CmsDbContext dbc, CmsUUID projectId, CmsUUID structureId, String rootPath)
     throws CmsDataAccessException {
@@ -4342,9 +4651,9 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
             stmt.setString(2, rootPath);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         } finally {
             m_sqlManager.closeAll(dbc, conn, stmt, null);
         }
@@ -4352,54 +4661,87 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
 
     /**
      * Updates broken links.<p>
-     * 
-     * When a resource is deleted, then the relations pointing to 
+     *
+     * When a resource is deleted, then the relations pointing to
      * the deleted resource are set to the null uuid.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param projectId the project id
-     * @param rootPath the root path of the resource that has been deleted 
-     * 
-     * @throws CmsDataAccessException if something goes wrong 
+     * @param rootPath the root path of the resource that has been deleted
+     *
+     * @throws CmsDataAccessException if something goes wrong
      */
     protected void updateBrokenRelations(CmsDbContext dbc, CmsUUID projectId, String rootPath)
     throws CmsDataAccessException {
 
         PreparedStatement stmt = null;
         Connection conn = null;
-
         try {
-            conn = m_sqlManager.getConnection(dbc);
-            stmt = m_sqlManager.getPreparedStatement(conn, projectId, "C_RELATIONS_UPDATE_BROKEN");
-            stmt.setString(1, rootPath);
-            stmt.executeUpdate();
+            try {
+                conn = m_sqlManager.getConnection(dbc);
+                stmt = m_sqlManager.getPreparedStatement(conn, projectId, "C_RELATIONS_UPDATE_BROKEN");
+                stmt.setString(1, rootPath);
+                stmt.executeUpdate();
+
+                stmt = m_sqlManager.getPreparedStatement(conn, projectId, "C_RELATIONS_DELETE_BROKEN_LOCALE_RELATIONS");
+                stmt.setString(1, rootPath);
+                stmt.executeUpdate();
+            } finally {
+                m_sqlManager.closeAll(dbc, conn, stmt, null);
+            }
+
+            PreparedStatement stmt2 = null;
+            Connection conn2 = null;
+
+            try {
+                conn2 = m_sqlManager.getConnection(dbc);
+                stmt2 = m_sqlManager.getPreparedStatement(conn2, projectId, "C_RELATIONS_UPDATE_BROKEN");
+                stmt2.setString(1, rootPath);
+                stmt2.executeUpdate();
+
+                stmt2 = m_sqlManager.getPreparedStatement(
+                    conn2,
+                    projectId,
+                    "C_RELATIONS_DELETE_BROKEN_LOCALE_RELATIONS");
+                stmt2.setString(1, rootPath);
+                stmt2.executeUpdate();
+            } finally {
+                m_sqlManager.closeAll(dbc, conn2, stmt2, null);
+            }
         } catch (SQLException e) {
-            throw new CmsDbSqlException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                CmsDbSqlException.getErrorQuery(stmt)), e);
-        } finally {
-            m_sqlManager.closeAll(dbc, conn, stmt, null);
+            throw new CmsDbSqlException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+                e);
         }
+
     }
 
+    /**
+     * Wrap a SQL exception into a CmsDbSqlException.<p>
+     *
+     * @param stmt the used statement
+     * @param e the exception
+     *
+     * @return the CmsDbSqlException
+     */
     protected CmsDbSqlException wrapException(PreparedStatement stmt, SQLException e) {
 
-        return new CmsDbSqlException(Messages.get().container(
-            Messages.ERR_GENERIC_SQL_1,
-            CmsDbSqlException.getErrorQuery(stmt)), e);
+        return new CmsDbSqlException(
+            Messages.get().container(Messages.ERR_GENERIC_SQL_1, CmsDbSqlException.getErrorQuery(stmt)),
+            e);
     }
 
     /**
      * Creates a prepared statement by combining a base query with the generated SQL conditions for a given
      * URL name mapping filter.<p>
-     *  
-     * @param conn the connection to use for creating the prepared statement 
-     * @param baseQuery the base query to which the conditions should be appended 
-     * @param filter the filter from which to generate the conditions 
-     * 
-     * @return the created prepared statement 
-     * 
-     * @throws SQLException if something goes wrong 
+     *
+     * @param conn the connection to use for creating the prepared statement
+     * @param baseQuery the base query to which the conditions should be appended
+     * @param filter the filter from which to generate the conditions
+     *
+     * @return the created prepared statement
+     *
+     * @throws SQLException if something goes wrong
      */
     PreparedStatement getPreparedStatementForFilter(Connection conn, String baseQuery, CmsUrlNameMappingFilter filter)
     throws SQLException {
@@ -4420,16 +4762,66 @@ public class CmsVfsDriver implements I_CmsDriver, I_CmsVfsDriver {
     }
 
     /**
-     * Replaces the %(PROJECT) macro inside a query with either ONLINE or OFFLINE, depending on the value 
+     * Helper method to convert an alias filter to SQL conditions.<p>
+     *
+     * @param filter the alias filter
+     * @return a pair containing a condition string and the parameters which are necessary for the conditions
+     */
+    private CmsPair<String, List<String>> buildAliasConditions(CmsAliasFilter filter) {
+
+        List<String> conditions = new ArrayList<String>();
+        conditions.add("1 = 1");
+        List<String> conditionParams = new ArrayList<String>();
+        if (filter.getSiteRoot() != null) {
+            conditions.add("site_root = ?");
+            conditionParams.add(filter.getSiteRoot());
+        }
+        if (filter.getStructureId() != null) {
+            conditions.add("structure_id = ?");
+            conditionParams.add(filter.getStructureId().toString());
+        }
+        if (filter.getPath() != null) {
+            conditions.add("path = ?");
+            conditionParams.add(filter.getPath());
+        }
+        String conditionString = CmsStringUtil.listAsString(conditions, " AND ");
+        return CmsPair.create(conditionString, conditionParams);
+    }
+
+    /**
+     * Helper method to prepare the SQL conditions for accessing rewrite aliases using a given filter.<p>
+     *
+     * @param filter the filter to use for rewrite aliases
+     *
+     * @return a pair consisting of an SQL condition string and a list of query parameters
+     */
+    private CmsPair<String, List<Object>> prepareRewriteAliasConditions(CmsRewriteAliasFilter filter) {
+
+        List<String> conditions = new ArrayList<String>();
+        conditions.add("1 = 1");
+        List<Object> parameters = new ArrayList<Object>();
+        if (filter.getSiteRoot() != null) {
+            parameters.add(filter.getSiteRoot());
+            conditions.add("SITE_ROOT = ?");
+        }
+        if (filter.getId() != null) {
+            parameters.add(filter.getId().toString());
+            conditions.add("ID = ?");
+        }
+        return CmsPair.create(CmsStringUtil.listAsString(conditions, " AND "), parameters);
+    }
+
+    /**
+     * Replaces the %(PROJECT) macro inside a query with either ONLINE or OFFLINE, depending on the value
      * of a flag.<p>
-     * 
-     * We use this instead of the ${PROJECT} replacement mechanism when we need explicit control over the 
+     *
+     * We use this instead of the ${PROJECT} replacement mechanism when we need explicit control over the
      * project, and don't want to implicitly use the project of the DB context.<p>
-     * 
-     * @param query the query in which the macro should be replaced 
+     *
+     * @param query the query in which the macro should be replaced
      * @param online if true, the macro will be replaced with "ONLINE", else "OFFLINE"
-     * 
-     * @return the query with the replaced macro 
+     *
+     * @return the query with the replaced macro
      */
     private String replaceProject(String query, boolean online) {
 

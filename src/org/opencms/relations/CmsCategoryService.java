@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,6 +37,7 @@ import org.opencms.file.types.CmsResourceTypeFolder;
 import org.opencms.lock.CmsLock;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
+import org.opencms.main.OpenCms;
 import org.opencms.util.CmsStringUtil;
 
 import java.util.ArrayList;
@@ -50,9 +51,9 @@ import org.apache.commons.logging.Log;
 
 /**
  * Provides several simplified methods for manipulating category relations.<p>
- * 
+ *
  * @since 6.9.2
- * 
+ *
  * @see CmsCategory
  */
 public class CmsCategoryService {
@@ -60,18 +61,18 @@ public class CmsCategoryService {
     /** The centralized path for categories. */
     public static final String CENTRALIZED_REPOSITORY = "/system/categories/";
 
+    /** The folder for the local category repositories. */
+    public static final String REPOSITORY_BASE_FOLDER = "/.categories/";
+
     /** The log object for this class. */
     private static final Log LOG = CmsLog.getLog(CmsCategoryService.class);
 
     /** The singleton instance. */
     private static CmsCategoryService m_instance;
 
-    /** The folder for the local category repositories. */
-    private static final String REPOSITORY_BASE_FOLDER = "/_categories/";
-
     /**
      * Returns the singleton instance.<p>
-     * 
+     *
      * @return the singleton instance
      */
     public static CmsCategoryService getInstance() {
@@ -84,13 +85,13 @@ public class CmsCategoryService {
 
     /**
      * Adds a resource identified by the given resource name to the given category.<p>
-     * 
+     *
      * The resource has to be locked.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resourceName the site relative path to the resource to add
      * @param category the category to add the resource to
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public void addResourceToCategory(CmsObject cms, String resourceName, CmsCategory category) throws CmsException {
@@ -115,16 +116,16 @@ public class CmsCategoryService {
     /**
      * Adds a resource identified by the given resource name to the category
      * identified by the given category path.<p>
-     * 
-     * Only the most global category matching the given category path for the 
+     *
+     * Only the most global category matching the given category path for the
      * given resource will be affected.<p>
-     * 
+     *
      * The resource has to be locked.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resourceName the site relative path to the resource to add
      * @param categoryPath the path of the category to add the resource to
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public void addResourceToCategory(CmsObject cms, String resourceName, String categoryPath) throws CmsException {
@@ -135,10 +136,10 @@ public class CmsCategoryService {
 
     /**
      * Removes the given resource from all categories.<p>
-     * 
+     *
      * @param cms the cms context
      * @param resourcePath the resource to reset the categories for
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public void clearCategoriesForResource(CmsObject cms, String resourcePath) throws CmsException {
@@ -150,41 +151,20 @@ public class CmsCategoryService {
 
     /**
      * Creates a new category.<p>
-     * 
-     * @param cms the current cms context
-     * @param parent the parent category or <code>null</code> for a new top level category
-     * @param name the name of the new category 
-     * @param title the title
-     * @param description the description
-     * 
-     * @return the new created category 
-     * 
-     * @throws CmsException if something goes wrong
-     * 
-     * @deprecated use {@link #createCategory(CmsObject, CmsCategory, String, String, String, String)} instead
-     */
-    public CmsCategory createCategory(CmsObject cms, CmsCategory parent, String name, String title, String description)
-    throws CmsException {
-
-        return createCategory(cms, parent, name, title, description, null);
-    }
-
-    /**
-     * Creates a new category.<p>
-     * 
+     *
      * Will use the same category repository as the parent if specified,
      * or the closest category repository to the reference path if specified,
      * or the centralized category repository in all other cases.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param parent the parent category or <code>null</code> for a new top level category
-     * @param name the name of the new category 
+     * @param name the name of the new category
      * @param title the title
      * @param description the description
      * @param referencePath the reference path for the category repository
-     * 
-     * @return the new created category 
-     * 
+     *
+     * @return the new created category
+     *
      * @throws CmsException if something goes wrong
      */
     public CmsCategory createCategory(
@@ -195,7 +175,7 @@ public class CmsCategoryService {
         String description,
         String referencePath) throws CmsException {
 
-        List properties = new ArrayList();
+        List<CmsProperty> properties = new ArrayList<CmsProperty>();
         if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(title)) {
             properties.add(new CmsProperty(CmsPropertyDefinition.PROPERTY_TITLE, title, null));
         }
@@ -209,9 +189,9 @@ public class CmsCategoryService {
             if (referencePath == null) {
                 folderPath += CmsCategoryService.CENTRALIZED_REPOSITORY;
             } else {
-                List repositories = getCategoryRepositories(cms, referencePath);
+                List<String> repositories = getCategoryRepositories(cms, referencePath);
                 // take the last one
-                folderPath = (String)repositories.get(repositories.size() - 1);
+                folderPath = repositories.get(repositories.size() - 1);
             }
         }
         folderPath = cms.getRequestContext().removeSiteRoot(internalCategoryRootPath(folderPath, name));
@@ -228,35 +208,17 @@ public class CmsCategoryService {
     }
 
     /**
-     * Deletes the category identified by the given path.<p> 
-     * 
-     * The given category path may be a relative path to the centralized categories repository,
-     * or an absolute path.<p>
-     * 
-     * @param cms the current cms context
-     * @param categoryPath the path of the category to delete
-     * 
-     * @throws CmsException if something goes wrong
-     * 
-     * @deprecated use {@link #deleteCategory(CmsObject, String, String)} instead
-     */
-    public void deleteCategory(CmsObject cms, String categoryPath) throws CmsException {
-
-        deleteCategory(cms, categoryPath, null);
-    }
-
-    /**
-     * Deletes the category identified by the given path.<p> 
-     * 
-     * Only the most global category matching the given category path for the 
+     * Deletes the category identified by the given path.<p>
+     *
+     * Only the most global category matching the given category path for the
      * given resource will be affected.<p>
-     * 
+     *
      * This method will try to lock the involved resource.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param categoryPath the path of the category to delete
      * @param referencePath the reference path to find the category repositories
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public void deleteCategory(CmsObject cms, String categoryPath, String referencePath) throws CmsException {
@@ -274,13 +236,13 @@ public class CmsCategoryService {
 
     /**
      * Creates a category from the given resource.<p>
-     * 
+     *
      * @param cms the cms context
      * @param resource the resource
-     * 
+     *
      * @return a category object
-     * 
-     * @throws CmsException if something goes wrong 
+     *
+     * @throws CmsException if something goes wrong
      */
     public CmsCategory getCategory(CmsObject cms, CmsResource resource) throws CmsException {
 
@@ -296,13 +258,13 @@ public class CmsCategoryService {
 
     /**
      * Creates a category from the given category root path.<p>
-     * 
+     *
      * @param cms the cms context
      * @param categoryRootPath the category root path
-     * 
+     *
      * @return a category object
-     * 
-     * @throws CmsException if something goes wrong 
+     *
+     * @throws CmsException if something goes wrong
      */
     public CmsCategory getCategory(CmsObject cms, String categoryRootPath) throws CmsException {
 
@@ -312,10 +274,10 @@ public class CmsCategoryService {
 
     /**
      * Returns all category repositories for the given reference path.<p>
-     * 
+     *
      * @param cms the cms context
      * @param referencePath the reference path
-     * 
+     *
      * @return a list of root paths
      */
     public List<String> getCategoryRepositories(CmsObject cms, String referencePath) {
@@ -348,59 +310,49 @@ public class CmsCategoryService {
 
     /**
      * Returns the category repositories base folder name.<p>
-     * 
+     *
      * @param cms the cms context
-     * 
+     *
      * @return the category repositories base folder name
      */
     public String getRepositoryBaseFolderName(CmsObject cms) {
 
+        String value = "";
         try {
-            String value = cms.readPropertyObject(
+            value = cms.readPropertyObject(
                 CmsCategoryService.CENTRALIZED_REPOSITORY,
                 CmsPropertyDefinition.PROPERTY_DEFAULT_FILE,
-                false).getValue(CmsCategoryService.REPOSITORY_BASE_FOLDER);
-            if (!value.endsWith("/")) {
-                value += "/";
-            }
-            if (!value.startsWith("/")) {
-                value = "/" + value;
-            }
-            return value;
+                false).getValue();
         } catch (CmsException e) {
             if (LOG.isErrorEnabled()) {
                 LOG.error(e.getLocalizedMessage(), e);
             }
-            return CmsCategoryService.REPOSITORY_BASE_FOLDER;
         }
+        if (CmsStringUtil.isEmptyOrWhitespaceOnly(value)) {
+            value = OpenCms.getWorkplaceManager().getCategoryFolder();
+        }
+        if (CmsStringUtil.isEmptyOrWhitespaceOnly(value)) {
+            value = REPOSITORY_BASE_FOLDER;
+        }
+        if (!value.endsWith("/")) {
+            value += "/";
+        }
+        if (!value.startsWith("/")) {
+            value = "/" + value;
+        }
+        return value;
     }
 
     /**
      * Renames/Moves a category from the old path to the new one.<p>
-     * 
-     * @param cms the current cms context
-     * @param oldCatPath the path of the category to move
-     * @param newCatPath the new category path
-     * 
-     * @throws CmsException if something goes wrong
-     * 
-     * @deprecated use {@link #moveCategory(CmsObject, String, String, String)} instead
-     */
-    public void moveCategory(CmsObject cms, String oldCatPath, String newCatPath) throws CmsException {
-
-        moveCategory(cms, oldCatPath, newCatPath, null);
-    }
-
-    /**
-     * Renames/Moves a category from the old path to the new one.<p>
-     * 
+     *
      * This method will keep all categories in their original repository.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param oldCatPath the path of the category to move
      * @param newCatPath the new category path
      * @param referencePath the reference path to find the category
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public void moveCategory(CmsObject cms, String oldCatPath, String newCatPath, String referencePath)
@@ -420,32 +372,15 @@ public class CmsCategoryService {
     }
 
     /**
-     * Reads all first level categories, including sub categories if needed.<p> 
-     * 
-     * @param cms the current cms context
-     * @param includeSubCats flag to indicate if sub categories should also be read
-     * 
-     * @return a list of {@link CmsCategory} objects
-     * 
-     * @throws CmsException if something goes wrong
-     * 
-     * @deprecated use {@link #readCategories(CmsObject, String, boolean, String)} instead
-     */
-    public List<CmsCategory> readAllCategories(CmsObject cms, boolean includeSubCats) throws CmsException {
-
-        return readCategories(cms, null, includeSubCats, null);
-    }
-
-    /**
      * Returns all categories given some search parameters.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param parentCategoryPath the path of the parent category to get the categories for
      * @param includeSubCats if to include all categories, or first level child categories only
      * @param referencePath the reference path to find all the category repositories
-     * 
+     *
      * @return a list of {@link CmsCategory} objects
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public List<CmsCategory> readCategories(
@@ -454,13 +389,13 @@ public class CmsCategoryService {
         boolean includeSubCats,
         String referencePath) throws CmsException {
 
-        List repositories = getCategoryRepositories(cms, referencePath);
+        List<String> repositories = getCategoryRepositories(cms, referencePath);
         return readCategoriesForRepositories(cms, parentCategoryPath, includeSubCats, repositories);
     }
 
     /**
      * Returns all categories given some search parameters.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param parentCategoryPath the path of the parent category to get the categories for
      * @param includeSubCats if to include all categories, or first level child categories only
@@ -472,7 +407,7 @@ public class CmsCategoryService {
         CmsObject cms,
         String parentCategoryPath,
         boolean includeSubCats,
-        List repositories) throws CmsException {
+        List<String> repositories) throws CmsException {
 
         String catPath = parentCategoryPath;
         if (catPath == null) {
@@ -480,14 +415,12 @@ public class CmsCategoryService {
         }
         Set<CmsCategory> cats = new HashSet<CmsCategory>();
         // traverse in reverse order, to ensure the set will contain most global categories
-        Iterator it = repositories.iterator();
+        Iterator<String> it = repositories.iterator();
         while (it.hasNext()) {
-            String repository = (String)it.next();
+            String repository = it.next();
             try {
-                cats.addAll(internalReadSubCategories(
-                    cms,
-                    internalCategoryRootPath(repository, catPath),
-                    includeSubCats));
+                cats.addAll(
+                    internalReadSubCategories(cms, internalCategoryRootPath(repository, catPath), includeSubCats));
             } catch (CmsVfsResourceNotFoundException e) {
                 // it may be that the given category is not defined in this repository
                 // just ignore
@@ -499,41 +432,22 @@ public class CmsCategoryService {
     }
 
     /**
-     * Reads the category identified by the given category path.<p>
-     * 
-     * This method will only lookup in the centralized repository.<p>
-     * 
-     * @param cms the current cms context
-     * @param categoryPath the path of the category to read
-     * 
-     * @return the category
-     * 
-     * @throws CmsException if something goes wrong
-     * 
-     * @deprecated use {@link #readCategory(CmsObject, String, String)} instead
-     */
-    public CmsCategory readCategory(CmsObject cms, String categoryPath) throws CmsException {
-
-        return getCategory(cms, internalCategoryRootPath(CmsCategoryService.CENTRALIZED_REPOSITORY, categoryPath));
-    }
-
-    /**
      * Reads all categories identified by the given category path for the given reference path.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param categoryPath the path of the category to read
      * @param referencePath the reference path to find all the category repositories
-     * 
+     *
      * @return a list of matching categories, could also be empty, if no category exists with the given path
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public CmsCategory readCategory(CmsObject cms, String categoryPath, String referencePath) throws CmsException {
 
         // iterate all possible category repositories, starting with the most global one
-        Iterator it = getCategoryRepositories(cms, referencePath).iterator();
+        Iterator<String> it = getCategoryRepositories(cms, referencePath).iterator();
         while (it.hasNext()) {
-            String repository = (String)it.next();
+            String repository = it.next();
             try {
                 return getCategory(cms, internalCategoryRootPath(repository, categoryPath));
             } catch (CmsVfsResourceNotFoundException e) {
@@ -549,32 +463,14 @@ public class CmsCategoryService {
 
     /**
      * Reads the resources for a category identified by the given category path.<p>
-     * 
-     * @param cms the current cms context
-     * @param categoryPath the path of the category to read the resources for
-     * @param recursive <code>true</code> if including sub-categories
-     * 
-     * @return a list of {@link CmsResource} objects
-     * 
-     * @throws CmsException if something goes wrong
-     * 
-     * @deprecated use {@link #readCategoryResources(CmsObject, String, boolean, String)} instead
-     */
-    public List readCategoryResources(CmsObject cms, String categoryPath, boolean recursive) throws CmsException {
-
-        return readCategoryResources(cms, categoryPath, recursive, null);
-    }
-
-    /**
-     * Reads the resources for a category identified by the given category path.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param categoryPath the path of the category to read the resources for
      * @param recursive <code>true</code> if including sub-categories
      * @param referencePath the reference path to find all the category repositories
-     * 
+     *
      * @return a list of {@link CmsResource} objects
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public List<CmsResource> readCategoryResources(
@@ -588,15 +484,15 @@ public class CmsCategoryService {
 
     /**
      * Reads the resources for a category identified by the given category path.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param categoryPath the path of the category to read the resources for
      * @param recursive <code>true</code> if including sub-categories
      * @param referencePath the reference path to find all the category repositories
      * @param resFilter the resource filter to use
-     * 
+     *
      * @return a list of {@link CmsResource} objects
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public List<CmsResource> readCategoryResources(
@@ -633,12 +529,12 @@ public class CmsCategoryService {
 
     /**
      * Reads the categories for a resource.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resource the resource to get the categories for
-     * 
+     *
      * @return the categories list
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public List<CmsCategory> readResourceCategories(CmsObject cms, CmsResource resource) throws CmsException {
@@ -648,12 +544,12 @@ public class CmsCategoryService {
 
     /**
      * Reads the categories for a resource identified by the given resource name.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resourceName the path of the resource to get the categories for
-     * 
+     *
      * @return the categories list
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public List<CmsCategory> readResourceCategories(CmsObject cms, String resourceName) throws CmsException {
@@ -662,32 +558,14 @@ public class CmsCategoryService {
     }
 
     /**
-     * Returns all sub categories of the given category.<p>
-     * 
-     * @param cms the current cms context
-     * @param categoryPath the path of the category to get the sub categories for
-     * @param includeSubCats if to include sub-subcategories
-     * 
-     * @return a list of {@link CmsCategory} objects
-     * 
-     * @throws CmsException if something goes wrong
-     * 
-     * @deprecated use {@link #readCategories(CmsObject, String, boolean, String)} instead
-     */
-    public List readSubCategories(CmsObject cms, String categoryPath, boolean includeSubCats) throws CmsException {
-
-        return readCategories(cms, categoryPath, includeSubCats, null);
-    }
-
-    /**
      * Removes a resource identified by the given resource name from the given category.<p>
-     * 
+     *
      * The resource has to be previously locked.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resourceName the site relative path to the resource to remove
      * @param category the category to remove the resource from
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public void removeResourceFromCategory(CmsObject cms, String resourceName, CmsCategory category)
@@ -696,7 +574,8 @@ public class CmsCategoryService {
         // remove the resource just from this category
         CmsRelationFilter filter = CmsRelationFilter.TARGETS;
         filter = filter.filterType(CmsRelationType.CATEGORY);
-        filter = filter.filterResource(cms.readResource(cms.getRequestContext().removeSiteRoot(category.getRootPath())));
+        filter = filter.filterResource(
+            cms.readResource(cms.getRequestContext().removeSiteRoot(category.getRootPath())));
         filter = filter.filterIncludeChildren();
         cms.deleteRelationsFromResource(resourceName, filter);
     }
@@ -704,16 +583,17 @@ public class CmsCategoryService {
     /**
      * Removes a resource identified by the given resource name from the category
      * identified by the given category path.<p>
-     * 
+     *
      * The resource has to be previously locked.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resourceName the site relative path to the resource to remove
      * @param categoryPath the path of the category to remove the resource from
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
-    public void removeResourceFromCategory(CmsObject cms, String resourceName, String categoryPath) throws CmsException {
+    public void removeResourceFromCategory(CmsObject cms, String resourceName, String categoryPath)
+    throws CmsException {
 
         CmsCategory category = readCategory(cms, categoryPath, resourceName);
         removeResourceFromCategory(cms, resourceName, category);
@@ -721,19 +601,19 @@ public class CmsCategoryService {
 
     /**
      * Repairs broken category relations.<p>
-     * 
+     *
      * This could be caused by renaming/moving a category folder,
      * or changing the category repositories base folder name.<p>
-     * 
+     *
      * Also repairs problems when creating/deleting conflicting
      * category folders across several repositories.<p>
-     * 
+     *
      * The resource has to be previously locked.<p>
-     * 
+     *
      * @param cms the cms context
      * @param resource the resource to repair
-     * 
-     * @throws CmsException if something goes wrong 
+     *
+     * @throws CmsException if something goes wrong
      */
     public void repairRelations(CmsObject cms, CmsResource resource) throws CmsException {
 
@@ -742,19 +622,19 @@ public class CmsCategoryService {
 
     /**
      * Repairs broken category relations.<p>
-     * 
+     *
      * This could be caused by renaming/moving a category folder,
      * or changing the category repositories base folder name.<p>
-     * 
+     *
      * Also repairs problems when creating/deleting conflicting
      * category folders across several repositories.<p>
-     * 
+     *
      * The resource has to be previously locked.<p>
-     * 
+     *
      * @param cms the cms context
      * @param resourceName the site relative path to the resource to repair
-     * 
-     * @throws CmsException if something goes wrong 
+     *
+     * @throws CmsException if something goes wrong
      */
     public void repairRelations(CmsObject cms, String resourceName) throws CmsException {
 
@@ -762,11 +642,11 @@ public class CmsCategoryService {
     }
 
     /**
-     * Composes the category root path by appending the category path to the given category repository path.<p> 
-     * 
+     * Composes the category root path by appending the category path to the given category repository path.<p>
+     *
      * @param basePath the category repository path
      * @param categoryPath the category path
-     * 
+     *
      * @return the category root path
      */
     private String internalCategoryRootPath(String basePath, String categoryPath) {
@@ -784,23 +664,23 @@ public class CmsCategoryService {
 
     /**
      * Reads/Repairs the categories for a resource identified by the given resource name.<p>
-     * 
+     *
      * For reparation, the resource has to be previously locked.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resource the resource to get the categories for
      * @param repair if to repair broken relations
-     * 
+     *
      * @return the categories list
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
-    private List internalReadResourceCategories(CmsObject cms, CmsResource resource, boolean repair)
+    private List<CmsCategory> internalReadResourceCategories(CmsObject cms, CmsResource resource, boolean repair)
     throws CmsException {
 
-        List result = new ArrayList();
+        List<CmsCategory> result = new ArrayList<CmsCategory>();
         String baseFolder = null;
-        Iterator itRelations = cms.getRelationsForResource(
+        Iterator<CmsRelation> itRelations = cms.getRelationsForResource(
             resource,
             CmsRelationFilter.TARGETS.filterType(CmsRelationType.CATEGORY)).iterator();
         if (repair && itRelations.hasNext()) {
@@ -809,7 +689,7 @@ public class CmsCategoryService {
         String resourceName = cms.getSitePath(resource);
         boolean repaired = false;
         while (itRelations.hasNext()) {
-            CmsRelation relation = (CmsRelation)itRelations.next();
+            CmsRelation relation = itRelations.next();
             try {
                 CmsResource res = relation.getTarget(cms, CmsResourceFilter.DEFAULT_FOLDERS);
                 CmsCategory category = getCategory(cms, res);
@@ -818,10 +698,10 @@ public class CmsCategoryService {
                 } else {
                     CmsCategory actualCat = readCategory(cms, category.getPath(), resourceName);
                     if (!category.getId().equals(actualCat.getId())) {
-                        // repair broken categories caused by creation/deletion of 
+                        // repair broken categories caused by creation/deletion of
                         // category folders across several repositories
-                        CmsRelationFilter filter = CmsRelationFilter.TARGETS.filterType(CmsRelationType.CATEGORY).filterResource(
-                            res);
+                        CmsRelationFilter filter = CmsRelationFilter.TARGETS.filterType(
+                            CmsRelationType.CATEGORY).filterResource(res);
                         cms.deleteRelationsFromResource(resourceName, filter);
                         repaired = true;
                         // set the right category
@@ -841,8 +721,8 @@ public class CmsCategoryService {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug(e.getLocalizedMessage(), e);
                     }
-                    CmsRelationFilter filter = CmsRelationFilter.TARGETS.filterType(CmsRelationType.CATEGORY).filterPath(
-                        relation.getTargetPath());
+                    CmsRelationFilter filter = CmsRelationFilter.TARGETS.filterType(
+                        CmsRelationType.CATEGORY).filterPath(relation.getTargetPath());
                     if (!relation.getTargetId().isNullUUID()) {
                         filter = filter.filterStructureId(relation.getTargetId());
                     }
@@ -868,9 +748,9 @@ public class CmsCategoryService {
             Collections.sort(result);
         } else if (repaired) {
             // be sure that no higher level category is missing
-            Iterator it = result.iterator();
+            Iterator<CmsCategory> it = result.iterator();
             while (it.hasNext()) {
-                CmsCategory category = (CmsCategory)it.next();
+                CmsCategory category = it.next();
                 addResourceToCategory(cms, resourceName, category.getPath());
             }
         }
@@ -879,13 +759,13 @@ public class CmsCategoryService {
 
     /**
      * Returns all sub categories of the given one, including sub sub categories if needed.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param rootPath the base category's root path (this category is not part of the result)
      * @param includeSubCats flag to indicate if sub categories should also be read
-     * 
+     *
      * @return a list of {@link CmsCategory} objects
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     private List<CmsCategory> internalReadSubCategories(CmsObject cms, String rootPath, boolean includeSubCats)

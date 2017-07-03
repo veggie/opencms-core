@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -46,9 +46,9 @@ public class CmsNewsletterContent implements I_CmsNewsletterContent {
 
     /**
      * Creates a new CmsNewsletterContent instance.<p>
-     * 
+     *
      * @param order the order of the newsletter content
-     * @param content the content 
+     * @param content the content
      * @param type the newsletter contents' type
      */
     public CmsNewsletterContent(int order, String content, CmsNewsletterContentType type) {
@@ -60,18 +60,19 @@ public class CmsNewsletterContent implements I_CmsNewsletterContent {
     }
 
     /**
-     * 
+     *
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(Object o) {
+    public int compareTo(I_CmsNewsletterContent o) {
 
         return new Integer(m_order).compareTo(new Integer(((CmsNewsletterContent)o).getOrder()));
     }
 
     /**
-     * 
+     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(Object obj) {
 
         if (!(obj instanceof CmsNewsletterContent)) {
@@ -94,9 +95,10 @@ public class CmsNewsletterContent implements I_CmsNewsletterContent {
     }
 
     /**
-     * 
+     *
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
 
         return m_channel.hashCode() + m_content.hashCode() + m_order + m_type.hashCode();

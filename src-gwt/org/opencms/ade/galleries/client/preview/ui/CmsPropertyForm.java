@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,6 +30,7 @@ package org.opencms.ade.galleries.client.preview.ui;
 import org.opencms.ade.galleries.client.ui.css.I_CmsLayoutBundle;
 import org.opencms.gwt.client.ui.input.CmsLabel;
 import org.opencms.gwt.client.ui.input.CmsTextBox;
+import org.opencms.util.CmsStringUtil;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -45,7 +46,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 
 /**
  * The widget to display a simple form with a label and an text box.<p>
- * 
+ *
  * @since 8.0.
  */
 public class CmsPropertyForm extends Composite implements HasValueChangeHandlers<String> {
@@ -76,13 +77,14 @@ public class CmsPropertyForm extends Composite implements HasValueChangeHandlers
 
     /**
      * The constructor.<p>
-     * 
+     *
      * @param id the id of the property from
      * @param width the property from width
      * @param value the property value
-     * @param textMetricsKey the key identifying the text metrics to use 
+     * @param noEditReason the reason why the properties are not editable
+     * @param textMetricsKey the key identifying the text metrics to use
      */
-    public CmsPropertyForm(String id, int width, String value, String textMetricsKey) {
+    public CmsPropertyForm(String id, int width, String value, String noEditReason, String textMetricsKey) {
 
         m_id = id;
         m_originalValue = value;
@@ -102,6 +104,10 @@ public class CmsPropertyForm extends Composite implements HasValueChangeHandlers
         m_inputPanel.getElement().getStyle().setWidth(getInputWidth(), Unit.PX);
         m_inputPanel.addStyleName(I_CmsLayoutBundle.INSTANCE.previewDialogCss().inputField());
         m_textBox = new CmsTextBox();
+        if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(noEditReason)) {
+            m_textBox.setTitle(noEditReason);
+            m_textBox.setReadOnly(true);
+        }
         m_textBox.setFormValueAsString(m_originalValue);
         m_textBox.addValueChangeHandler(new ValueChangeHandler<String>() {
 
@@ -161,7 +167,7 @@ public class CmsPropertyForm extends Composite implements HasValueChangeHandlers
 
     /**
      * Returns the field value.<p>
-     * 
+     *
      * @return the field value
      */
     public String getValue() {
@@ -181,7 +187,7 @@ public class CmsPropertyForm extends Composite implements HasValueChangeHandlers
 
     /**
      * Sets the style of the parent panel.<p>
-     * 
+     *
      * @param style the css class
      */
     public void setFormStyle(String style) {
@@ -190,8 +196,8 @@ public class CmsPropertyForm extends Composite implements HasValueChangeHandlers
     }
 
     /**
-     * The width of the text box.<p> 
-     * 
+     * The width of the text box.<p>
+     *
      * @return the width
      */
     private int getInputWidth() {
@@ -201,7 +207,7 @@ public class CmsPropertyForm extends Composite implements HasValueChangeHandlers
 
     /**
      * The width of the label.<p>
-     * 
+     *
      * @return the label width
      */
     private int getLabelWidth() {

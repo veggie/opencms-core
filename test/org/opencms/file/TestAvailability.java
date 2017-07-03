@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -44,7 +44,7 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestAvailability(String arg0) {
@@ -54,7 +54,7 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -91,9 +91,9 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Test to set release date on a resource.<p>
-     * 
+     *
      * The method reads the file, and tests if the file cannot be read with the CmsResourceFilter.DEFAULT.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testDateExpired() throws Throwable {
@@ -116,7 +116,7 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Test to set release date on a resource.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testDateReleased() throws Throwable {
@@ -138,9 +138,9 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Test to set expired date on a folder.<p>
-     * 
+     *
      * The method reads the file, and tests if the file cannot be read with the CmsResourceFilter.DEFAULT.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testFolderDateExpired() throws Throwable {
@@ -164,9 +164,9 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Test to set release date on a folder.<p>
-     * 
+     *
      * The method reads the file, and tests if the file cannot be read with the CmsResourceFilter.DEFAULT.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testFolderDateReleased() throws Throwable {
@@ -190,9 +190,9 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Test to set expired date on a subfolder.<p>
-     * 
+     *
      * The method reads the file, and tests if the file cannot be read with the CmsResourceFilter.DEFAULT.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testSubFolderDateExpired() throws Throwable {
@@ -218,9 +218,9 @@ public class TestAvailability extends OpenCmsTestCase {
 
     /**
      * Test to set release date on a subfolder.<p>
-     * 
+     *
      * The method reads the file, and tests if the file cannot be read with the CmsResourceFilter.DEFAULT.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testSubFolderDateReleased() throws Throwable {
@@ -248,7 +248,7 @@ public class TestAvailability extends OpenCmsTestCase {
     throws CmsException {
 
         try {
-            // should throw exception  
+            // should throw exception
             cms.readResource(resourceName, CmsResourceFilter.DEFAULT);
             fail("Read outside-of-time-range resource with filter CmsResourceFilter.DEFAULT");
         } catch (CmsVfsResourceNotFoundException e) {

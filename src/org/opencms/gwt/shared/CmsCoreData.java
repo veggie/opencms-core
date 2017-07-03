@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
  * Runtime data bean for prefetching.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsCoreData implements IsSerializable {
@@ -46,8 +46,176 @@ public class CmsCoreData implements IsSerializable {
         /** Context for container page. */
         containerpage,
 
+        /** Context for classic direct edit provider. */
+        editprovider,
+
         /** Context for sitemap. */
         sitemap
+    }
+
+    /** The available client modules. */
+    public enum ModuleKey {
+
+        /** Container page editor. */
+        containerpage,
+
+        /** Content editor. */
+        contenteditor,
+
+        /** Direct edit provider. */
+        editprovider,
+
+        /** Galleries. */
+        galleries,
+
+        /** Post upload dialog. */
+        postupload,
+
+        /** Properties dialog. */
+        properties,
+
+        /** Publish dialog. */
+        publish,
+
+        /** Sitemap editor. */
+        sitemap,
+
+        /** Upload dialog. */
+        upload
+    }
+
+    /**
+     * Bean class containing info about the current user.<p>
+     */
+    public static class UserInfo implements IsSerializable {
+
+        /** True if the user is an administrator. */
+        private boolean m_isAdmin;
+
+        /** True if the user is a category manager. */
+        private boolean m_isCategoryManager;
+
+        /** True if the user is a template developer. */
+        private boolean m_isDeveloper;
+
+        /** True if the user is managed. */
+        private boolean m_isManaged;
+
+        /** True if the user is a workplace user. */
+        private boolean m_isWorkplaceUser;
+
+        /** The user name. */
+        private String m_name;
+
+        /** The user icon path. */
+        private String m_userIcon;
+
+        /**
+         * Creates a new instance.<p>
+         *
+         * @param name the user name
+         * @param userIcon the user icon path
+         * @param isAdmin true if the user is an administrator
+         * @param isDeveloper true if the user is a template developer
+         * @param isCategoryManager true if the user is a category manager
+         * @param isWorkplaceUser true if the user is a workplace user
+         * @param isManaged true if the user is managed
+         */
+        public UserInfo(
+            String name,
+            String userIcon,
+            boolean isAdmin,
+            boolean isDeveloper,
+            boolean isCategoryManager,
+            boolean isWorkplaceUser,
+            boolean isManaged) {
+
+            m_isDeveloper = isDeveloper;
+            m_isCategoryManager = isCategoryManager;
+            m_isAdmin = isAdmin;
+            m_isManaged = isManaged;
+            m_isWorkplaceUser = isWorkplaceUser;
+            m_name = name;
+            m_userIcon = userIcon;
+        }
+
+        /**
+         * Default constructor, needed for serialization.<p>
+         */
+        protected UserInfo() {
+
+            // empty
+        }
+
+        /**
+         * Gets the user name.<p>
+         *
+         * @return the user name
+         */
+        public String getName() {
+
+            return m_name;
+        }
+
+        /**
+         * Returns the user icon path.<p>
+         *
+         * @return the user icon path
+         */
+        public String getUserIcon() {
+
+            return m_userIcon;
+        }
+
+        /**
+         * Returns true if the user is an administrator.<p>
+         *
+         * @return true if the user is an administrator
+         */
+        public boolean isAdmin() {
+
+            return m_isAdmin;
+        }
+
+        /**
+         * Returns true if the user is a category manager.<p>
+         *
+         * @return true if the user is a category manager
+         */
+        public boolean isCategoryManager() {
+
+            return m_isCategoryManager;
+        }
+
+        /**
+         * Returns true if the user is a template developer.<p>
+         *
+         * @return true if the user is a template developer
+         */
+        public boolean isDeveloper() {
+
+            return m_isDeveloper;
+        }
+
+        /**
+         * Returns if the user is managed.<p>
+         *
+         * @return <code>true</code> if the user is managed
+         */
+        public boolean isManaged() {
+
+            return m_isManaged;
+        }
+
+        /**
+         * Returns true if the current user is a workplace user.<p>
+         *
+         * @return true if the current user is a workplace user
+         */
+        public boolean isWorkplaceUser() {
+
+            return m_isWorkplaceUser;
+        }
     }
 
     /** Name of the used js variable. */
@@ -55,6 +223,9 @@ public class CmsCoreData implements IsSerializable {
 
     /** The key for the GWT build id property. */
     public static final String KEY_GWT_BUILDID = "gwt.buildid";
+
+    /** The meta element name to the requested module key. */
+    public static final String META_PARAM_MODULE_KEY = "opencms-module";
 
     /** The parameter name for path. */
     public static final String PARAM_PATH = "path";
@@ -65,17 +236,38 @@ public class CmsCoreData implements IsSerializable {
     /** The time sent from the server when loading the data. */
     protected long m_serverTime;
 
+    /** A bean with information about the current user. */
+    protected UserInfo m_userInfo;
+
+    /** The link to the page displayed in the "about" dialog. */
+    private String m_aboutLink;
+
+    /** ADE parameters. */
+    private Map<String, String> m_adeParameters;
+
     /** The XML content editor back-link URL. */
     private String m_contentEditorBacklinkUrl;
-
-    /** The XML content editor delete-link URL. */
-    private String m_contentEditorDeleteLinkUrl;
 
     /** The XML content editor URL. */
     private String m_contentEditorUrl;
 
+    /** The default link to use for opening the workplace. */
+    private String m_defaultWorkplaceLink;
+
+    /** The embedded dialogs URL. */
+    private String m_embeddedDialogsUrl;
+
     /** The mappings of file extensions to resource types. */
     private Map<String, String> m_extensionMapping;
+
+    /** The file explorer link. */
+    private String m_fileExplorerLink;
+
+    /** The show editor help flag. */
+    private boolean m_isShowEditorHelp;
+
+    /** Keep-alive setting. */
+    private boolean m_keepAlive;
 
     /** The current request locale. */
     private String m_locale;
@@ -95,20 +287,20 @@ public class CmsCoreData implements IsSerializable {
     /** A flag which indicates whether the toolbar should be shown initially. */
     private boolean m_toolbarVisible;
 
+    /** The maximum file size for the upload. */
+    private long m_uploadFileSizeLimit;
+
     /** The current uri. */
     private String m_uri;
 
     /** The OpenCms VFS prefix. */
     private String m_vfsPrefix;
 
+    /** The workplaces resources path prefix. */
+    private String m_workplaceResourcesPrefix;
+
     /** The current workplace locale. */
     private String m_wpLocale;
-
-    /** The default link to use for opening the workplace. */
-    private String m_defaultWorkplaceLink;
-
-    /** The map of GWT build ids. */
-    private Map<String, String> m_gwtBuildIds;
 
     /**
      * Constructor.<p>
@@ -120,17 +312,19 @@ public class CmsCoreData implements IsSerializable {
 
     /**
      * Clone constructor.<p>
-     * 
-     * @param clone the instance to clone 
+     *
+     * @param clone the instance to clone
      */
     public CmsCoreData(CmsCoreData clone) {
 
         this(
             clone.getContentEditorUrl(),
             clone.getContentEditorBacklinkUrl(),
-            clone.getContentEditorDeleteLinkUrl(),
             clone.getLoginURL(),
             clone.getVfsPrefix(),
+            clone.getFileExplorerLink(),
+            clone.getWorkplaceResourcesPrefix(),
+            clone.getEmbeddedDialogsUrl(),
             clone.getSiteRoot(),
             clone.getLocale(),
             clone.getWpLocale(),
@@ -139,35 +333,51 @@ public class CmsCoreData implements IsSerializable {
             clone.getStructureId(),
             clone.getExtensionMapping(),
             clone.getServerTime(),
+            clone.isShowEditorHelp(),
             clone.isToolbarVisible(),
-            clone.getGwtBuildIds());
+            clone.getDefaultWorkplaceLink(),
+            clone.getAboutLink(),
+            clone.getUserInfo(),
+            clone.getUploadFileSizeLimit(),
+            clone.isKeepAlive(),
+            clone.m_adeParameters);
     }
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param contentEditorUrl the XML content editor URL
      * @param contentEditorBacklinkUrl the XML content editor back-link URL
-     * @param contentEditorDeleteLinkUrl the XML content editor delete-link URL
      * @param loginUrl the login JSP URL
      * @param vfsPrefix the OpenCms VFS prefix
+     * @param fileExplorerLink the file explorer link
+     * @param workplaceResourcesPrefix the workplace resources path prefix
+     * @param embeddedDialogsUrl the embedded dialogs URL
      * @param siteRoot the current site root
      * @param locale the current request locale
      * @param wpLocale the workplace locale
      * @param uri the current uri
-     * @param structureId the structure id of tbe resource 
+     * @param structureId the structure id of tbe resource
      * @param navigationUri the current navigation URI
      * @param extensionMapping the mappings of file extensions to resource types
-     * @param serverTime the current time  
+     * @param serverTime the current time
+     * @param isShowEditorHelp the show editor help flag
      * @param toolbarVisible a flag to indicate whether the toolbar should be visible initially
-     * @param gwtBuildIds the map of GWT build ids 
+     * @param defaultWorkplaceLink the default link to use for opening the workplace
+     * @param aboutLink the link to the "About" page
+     * @param userInfo information about the current user
+     * @param uploadFileSizeLimit the file upload size limit
+     * @param isKeepAlive the keep-alive mode
+     * @param adeParameters the map of ADE configuration parameters
      */
     public CmsCoreData(
         String contentEditorUrl,
         String contentEditorBacklinkUrl,
-        String contentEditorDeleteLinkUrl,
         String loginUrl,
         String vfsPrefix,
+        String fileExplorerLink,
+        String workplaceResourcesPrefix,
+        String embeddedDialogsUrl,
         String siteRoot,
         String locale,
         String wpLocale,
@@ -176,14 +386,21 @@ public class CmsCoreData implements IsSerializable {
         CmsUUID structureId,
         Map<String, String> extensionMapping,
         long serverTime,
+        boolean isShowEditorHelp,
         boolean toolbarVisible,
-        Map<String, String> gwtBuildIds) {
+        String defaultWorkplaceLink,
+        String aboutLink,
+        UserInfo userInfo,
+        long uploadFileSizeLimit,
+        boolean isKeepAlive,
+        Map<String, String> adeParameters) {
 
         m_contentEditorUrl = contentEditorUrl;
         m_contentEditorBacklinkUrl = contentEditorBacklinkUrl;
-        m_contentEditorDeleteLinkUrl = contentEditorDeleteLinkUrl;
         m_loginURL = loginUrl;
         m_vfsPrefix = vfsPrefix;
+        m_workplaceResourcesPrefix = workplaceResourcesPrefix;
+        m_embeddedDialogsUrl = embeddedDialogsUrl;
         m_siteRoot = siteRoot;
         m_locale = locale;
         m_wpLocale = wpLocale;
@@ -191,9 +408,36 @@ public class CmsCoreData implements IsSerializable {
         m_navigationUri = navigationUri;
         m_extensionMapping = extensionMapping;
         m_serverTime = serverTime;
+        m_isShowEditorHelp = isShowEditorHelp;
         m_toolbarVisible = toolbarVisible;
         m_structureId = structureId;
-        m_gwtBuildIds = gwtBuildIds;
+        m_defaultWorkplaceLink = defaultWorkplaceLink;
+        m_aboutLink = aboutLink;
+        m_userInfo = userInfo;
+        m_uploadFileSizeLimit = uploadFileSizeLimit;
+        m_keepAlive = isKeepAlive;
+        m_adeParameters = adeParameters;
+        m_fileExplorerLink = fileExplorerLink;
+    }
+
+    /**
+     * Gets the "About" link.<p>
+     *
+     * @return the "about" link
+     */
+    public String getAboutLink() {
+
+        return m_aboutLink;
+    }
+
+    /**
+     * Gets the map of ADE configuration parameters.<p>
+     *
+     * @return the ADE configuration parameters
+     */
+    public Map<String, String> getAdeParameters() {
+
+        return m_adeParameters;
     }
 
     /**
@@ -207,16 +451,6 @@ public class CmsCoreData implements IsSerializable {
     }
 
     /**
-     * Returns the XML content editor delete-link URL.<p>
-     * 
-     * @return the XML content editor delete-link URL
-     */
-    public String getContentEditorDeleteLinkUrl() {
-
-        return m_contentEditorDeleteLinkUrl;
-    }
-
-    /**
      * Returns the XML content editor URL.<p>
      *
      * @return the XML content editor URL
@@ -227,6 +461,26 @@ public class CmsCoreData implements IsSerializable {
     }
 
     /**
+     * Gets the default link to use for opening the workplace.<p>
+     *
+     * @return the default workplace link
+     */
+    public String getDefaultWorkplaceLink() {
+
+        return m_defaultWorkplaceLink;
+    }
+
+    /**
+     * Returns the embeddedDialogsUrl.<p>
+     *
+     * @return the embeddedDialogsUrl
+     */
+    public String getEmbeddedDialogsUrl() {
+
+        return m_embeddedDialogsUrl;
+    }
+
+    /**
      * Returns the extensionMapping.<p>
      *
      * @return the extensionMapping
@@ -234,16 +488,6 @@ public class CmsCoreData implements IsSerializable {
     public Map<String, String> getExtensionMapping() {
 
         return m_extensionMapping;
-    }
-
-    /**
-     * Gets the map of GWT build ids.<p>
-     * 
-     * @return the map containing the GWT build ids 
-     */
-    public Map<String, String> getGwtBuildIds() {
-
-        return m_gwtBuildIds;
     }
 
     /**
@@ -268,8 +512,8 @@ public class CmsCoreData implements IsSerializable {
 
     /**
      * Returns the current navigation (sitemap) URI.<p>
-     *  
-     * @return the current navigation URI 
+     *
+     * @return the current navigation URI
      */
     public String getNavigationUri() {
 
@@ -278,8 +522,8 @@ public class CmsCoreData implements IsSerializable {
 
     /**
      * Returns the time of the server when the data was loaded.<p>
-     * 
-     * @return the time of the server when the data was loaded 
+     *
+     * @return the time of the server when the data was loaded
      */
     public long getServerTime() {
 
@@ -298,12 +542,22 @@ public class CmsCoreData implements IsSerializable {
 
     /**
      * Gets the structure id of the current resource.<p>
-     *  
-     * @return the structure id of the current resource 
+     *
+     * @return the structure id of the current resource
      */
     public CmsUUID getStructureId() {
 
         return m_structureId;
+    }
+
+    /**
+     * Returns the file upload size limit.<p>
+     *
+     * @return the file upload size limit
+     */
+    public long getUploadFileSizeLimit() {
+
+        return m_uploadFileSizeLimit;
     }
 
     /**
@@ -317,6 +571,16 @@ public class CmsCoreData implements IsSerializable {
     }
 
     /**
+     * Gets the information about the current user.<p>
+     *
+     * @return the information about the current user
+     */
+    public UserInfo getUserInfo() {
+
+        return m_userInfo;
+    }
+
+    /**
      * Returns the OpenCms VFS prefix.<p>
      *
      * @return the OpenCms VFS prefix
@@ -324,6 +588,16 @@ public class CmsCoreData implements IsSerializable {
     public String getVfsPrefix() {
 
         return m_vfsPrefix;
+    }
+
+    /**
+     * Returns the workplace resources path prefix.<p>
+     *
+     * @return the workplace resources path prefix
+     */
+    public String getWorkplaceResourcesPrefix() {
+
+        return m_workplaceResourcesPrefix;
     }
 
     /**
@@ -337,13 +611,52 @@ public class CmsCoreData implements IsSerializable {
     }
 
     /**
+     * Returns true if the session should be kept alive even without user actions.<p>
+     *
+     * @return true if keep-alive mode is active
+     */
+    public boolean isKeepAlive() {
+
+        return m_keepAlive;
+    }
+
+    /**
+     * Returns the show editor help flag.<p>
+     *
+     * @return the show editor help flag
+     */
+    public boolean isShowEditorHelp() {
+
+        return m_isShowEditorHelp;
+    }
+
+    /**
      * Returns true if the toolbar should be visible initially.<p>
-     * 
-     * @return true if the toolbar should be visible initially 
+     *
+     * @return true if the toolbar should be visible initially
      */
     public boolean isToolbarVisible() {
 
         return m_toolbarVisible;
     }
 
+    /**
+     * Returns the file explorer link prefix. Append resource site path for complete link.<p>
+     *
+     * @return the file explorer link prefix
+     */
+    protected String getFileExplorerLink() {
+
+        return m_fileExplorerLink;
+    }
+
+    /**
+     * Sets the show editor help flag.<p>
+     *
+     * @param show <code>true</code> to show editor help
+     */
+    protected void setShowEditorHelp(boolean show) {
+
+        m_isShowEditorHelp = show;
+    }
 }

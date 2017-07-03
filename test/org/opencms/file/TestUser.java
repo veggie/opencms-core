@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,6 +31,7 @@ import org.opencms.importexport.CmsExport;
 import org.opencms.importexport.CmsExportParameters;
 import org.opencms.importexport.CmsImportParameters;
 import org.opencms.main.OpenCms;
+import org.opencms.module.CmsModule.ExportMode;
 import org.opencms.report.CmsShellReport;
 import org.opencms.test.OpenCmsTestCase;
 import org.opencms.test.OpenCmsTestProperties;
@@ -52,7 +53,7 @@ public class TestUser extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestUser(String arg0) {
@@ -62,7 +63,7 @@ public class TestUser extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -82,7 +83,7 @@ public class TestUser extends OpenCmsTestCase {
             @Override
             protected void setUp() {
 
-                setupOpenCms("simpletest", "/sites/default/", false);
+                setupOpenCms("simpletest", "/", false);
             }
 
             @Override
@@ -97,7 +98,7 @@ public class TestUser extends OpenCmsTestCase {
 
     /**
      * Test user creation.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testUserCreation() throws Throwable {
@@ -116,7 +117,7 @@ public class TestUser extends OpenCmsTestCase {
 
     /**
      * Test import/export of additional user info.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testUserExport() throws Throwable {
@@ -130,18 +131,20 @@ public class TestUser extends OpenCmsTestCase {
         try {
             // export
             CmsUser before = cms.readUser("test");
-            new CmsExport(cms, new CmsShellReport(Locale.ENGLISH)).exportData(new CmsExportParameters(
-                exportFileName,
-                null,
-                false,
-                true,
-                false,
-                Collections.EMPTY_LIST,
-                false,
-                false,
-                0,
-                false,
-                false));
+            new CmsExport(cms, new CmsShellReport(Locale.ENGLISH)).exportData(
+                new CmsExportParameters(
+                    exportFileName,
+                    null,
+                    false,
+                    true,
+                    false,
+                    Collections.EMPTY_LIST,
+                    false,
+                    false,
+                    0,
+                    false,
+                    false,
+                    ExportMode.DEFAULT));
 
             // delete
             cms.deleteUser("test");
@@ -162,7 +165,7 @@ public class TestUser extends OpenCmsTestCase {
 
     /**
      * Test operations with additional user info.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testUserInfo() throws Throwable {
@@ -194,7 +197,7 @@ public class TestUser extends OpenCmsTestCase {
 
     /**
      * Test user creation.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testUserSelfManagement() throws Throwable {

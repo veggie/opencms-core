@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -62,12 +62,12 @@ import java.util.Locale;
 /**
  * A resource type wrapper for xml page files, which explodes the xml pages to folders.<p>
  *
- * Every resource of type "xmlpage" becomes a folder with the same name. That folder 
- * contains the locales of the xml page as folders too. In the locale folder there are 
+ * Every resource of type "xmlpage" becomes a folder with the same name. That folder
+ * contains the locales of the xml page as folders too. In the locale folder there are
  * the elements for that locale as files. The files have the names of the elements with the
  * extension "html". Additionaly there is a file in the root folder of that xml page that
  * contains the controlcode of the xml page. This file has the name "controlcode.xml".<p>
- * 
+ *
  * @since 6.5.6
  */
 public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
@@ -112,7 +112,8 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
                     ret.add(getResourceForLocale(xmlPage, locale));
                 }
 
-                int plainId = OpenCms.getResourceManager().getResourceType(CmsResourceTypePlain.getStaticTypeName()).getTypeId();
+                int plainId = OpenCms.getResourceManager().getResourceType(
+                    CmsResourceTypePlain.getStaticTypeName()).getTypeId();
                 // check temp file table to add virtual file
                 Iterator<String> iter2 = getVirtualFiles().iterator();
                 while (iter2.hasNext()) {
@@ -252,7 +253,8 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
         // creating new xml pages if type is a folder and the name ends with .html
         if (resourcename.endsWith(".html")
-            && (type == OpenCms.getResourceManager().getResourceType(CmsResourceTypeFolder.getStaticTypeName()).getTypeId())) {
+            && (type == OpenCms.getResourceManager().getResourceType(
+                CmsResourceTypeFolder.getStaticTypeName()).getTypeId())) {
 
             // mark in temp file table that the visual files does not exist yet
             Iterator<String> iter = getVirtualFiles().iterator();
@@ -324,7 +326,11 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
                 xml.addValue(name, CmsLocaleManager.getLocale(tokens[0]));
 
                 // set the content
-                xml.setStringValue(cms, name, CmsLocaleManager.getLocale(tokens[0]), getStringValue(cms, file, content));
+                xml.setStringValue(
+                    cms,
+                    name,
+                    CmsLocaleManager.getLocale(tokens[0]),
+                    getStringValue(cms, file, content));
 
                 // save the xml page
                 file.setContents(xml.marshal());
@@ -455,14 +461,19 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
     }
 
     /**
-     * @see org.opencms.file.wrapper.A_CmsResourceWrapper#lockResource(org.opencms.file.CmsObject, java.lang.String)
+     * @see org.opencms.file.wrapper.A_CmsResourceWrapper#lockResource(org.opencms.file.CmsObject, java.lang.String, boolean)
      */
     @Override
-    public boolean lockResource(CmsObject cms, String resourcename) throws CmsException {
+    public boolean lockResource(CmsObject cms, String resourcename, boolean temporary) throws CmsException {
 
         CmsResource res = findXmlPage(cms, resourcename);
         if (res != null) {
-            cms.lockResource(cms.getRequestContext().removeSiteRoot(res.getRootPath()));
+            String path = cms.getRequestContext().removeSiteRoot(res.getRootPath());
+            if (temporary) {
+                cms.lockResourceTemporary(path);
+            } else {
+                cms.lockResource(path);
+            }
             return true;
         }
 
@@ -819,10 +830,10 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Returns the OpenCms VFS uri of the style sheet of the resource.<p>
-     * 
+     *
      * @param cms the initialized CmsObject
      * @param res the resource where to read the style sheet for
-     * 
+     *
      * @return the OpenCms VFS uri of the style sheet of resource
      */
     protected String getUriStyleSheet(CmsObject cms, CmsResource res) {
@@ -832,8 +843,10 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
             String currentTemplate = getUriTemplate(cms, res);
             if (!"".equals(currentTemplate)) {
                 // read the stylesheet from the template file
-                result = cms.readPropertyObject(currentTemplate, CmsPropertyDefinition.PROPERTY_TEMPLATE, false).getValue(
-                    "");
+                result = cms.readPropertyObject(
+                    currentTemplate,
+                    CmsPropertyDefinition.PROPERTY_TEMPLATE,
+                    false).getValue("");
             }
         } catch (CmsException e) {
             // noop
@@ -843,10 +856,10 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Returns the OpenCms VFS uri of the template of the resource.<p>
-     * 
+     *
      * @param cms the initialized CmsObject
      * @param res the resource where to read the template for
-     * 
+     *
      * @return the OpenCms VFS uri of the template of the resource
      */
     protected String getUriTemplate(CmsObject cms, CmsResource res) {
@@ -865,14 +878,14 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Prepare the content of a xml page before returning.<p>
-     * 
+     *
      * Mainly adds the basic html structure and the css style sheet.<p>
-     * 
+     *
      * @param content the origin content of the xml page element
      * @param cms the initialized CmsObject
      * @param xmlPage the xml page resource
      * @param path the full path to set as the title in the html head
-     * 
+     *
      * @return the prepared content with the added html structure
      */
     protected String prepareContent(String content, CmsObject cms, CmsResource xmlPage, String path) {
@@ -928,16 +941,16 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
     }
 
     /**
-     * Returns the {@link CmsResource} of the xml page which belongs to 
+     * Returns the {@link CmsResource} of the xml page which belongs to
      * the given resource name (full path).<p>
-     * 
-     * It works up the path till a resource for the path exists in the VFS. 
-     * If the found resource is a xml page, this resource is returned. If 
-     * the path does not belong to a xml page <code>null</code> will be returned.<p> 
-     * 
+     *
+     * It works up the path till a resource for the path exists in the VFS.
+     * If the found resource is a xml page, this resource is returned. If
+     * the path does not belong to a xml page <code>null</code> will be returned.<p>
+     *
      * @param cms the initialized CmsObject
      * @param resourcename the name of the resource (full path) to check
-     * 
+     *
      * @return the found resource of type xml page or null if not found
      */
     private CmsResource findXmlPage(CmsObject cms, String resourcename) {
@@ -991,15 +1004,15 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Returns a virtual resource for an element inside a locale.<p>
-     * 
+     *
      * A new (virtual) resource is created with the given path and length. The
-     * new created resource uses the values of the origin resource of the xml page 
+     * new created resource uses the values of the origin resource of the xml page
      * where it is possible.<p>
-     * 
+     *
      * @param xmlPage the xml page resource with the element to create a virtual resource
      * @param path the full path to set for the resource
      * @param length the length of the element content
-     * 
+     *
      * @return a new created virtual {@link CmsResource}
      */
     private CmsResource getResourceForElement(CmsResource xmlPage, String path, int length) {
@@ -1008,7 +1021,8 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
         wrap.setRootPath(path);
         int plainId;
         try {
-            plainId = OpenCms.getResourceManager().getResourceType(CmsResourceTypePlain.getStaticTypeName()).getTypeId();
+            plainId = OpenCms.getResourceManager().getResourceType(
+                CmsResourceTypePlain.getStaticTypeName()).getTypeId();
         } catch (CmsLoaderException e) {
             // this should really never happen
             plainId = CmsResourceTypePlain.getStaticTypeId();
@@ -1022,12 +1036,12 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Creates a new virtual resource for the locale in the xml page as a folder.<p>
-     * 
+     *
      * The new created resource uses the values of the origin resource of the xml page where it is possible.<p>
-     * 
+     *
      * @param xmlPage the xml page resource with the locale to create a resource of
      * @param locale the locale in the xml page to use for the new resource
-     * 
+     *
      * @return a new created CmsResource
      */
     private CmsResource getResourceForLocale(CmsResource xmlPage, Locale locale) {
@@ -1036,7 +1050,8 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
         wrap.setRootPath(xmlPage.getRootPath() + "/" + locale.getLanguage() + "/");
         int plainId;
         try {
-            plainId = OpenCms.getResourceManager().getResourceType(CmsResourceTypePlain.getStaticTypeName()).getTypeId();
+            plainId = OpenCms.getResourceManager().getResourceType(
+                CmsResourceTypePlain.getStaticTypeName()).getTypeId();
         } catch (CmsLoaderException e) {
             // this should really never happen
             plainId = CmsResourceTypePlain.getStaticTypeId();
@@ -1049,13 +1064,13 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Returns the content as a string while using the correct encoding.<p>
-     * 
+     *
      * @param cms the initialized CmsObject
      * @param resource the resource where the content belongs to
      * @param content the byte array which should be converted into a string
-     * 
+     *
      * @return the content as a string
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     private String getStringValue(CmsObject cms, CmsResource resource, byte[] content) throws CmsException {
@@ -1073,14 +1088,14 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Returns the path inside a xml page.<p>
-     * 
+     *
      * The remaining path inside a xml page can be the locale and the element name
      * or the name of the control code file.<p>
-     * 
+     *
      * @param cms the initialized CmsObject
      * @param xmlPage the xml page where the resourcename belongs to
      * @param resourcename the full path of the resource (pointing inside the xml page)
-     * 
+     *
      * @return the remaining path inside the xml page without the leading slash
      */
     private String getSubPath(CmsObject cms, CmsResource xmlPage, String resourcename) {
@@ -1105,9 +1120,9 @@ public class CmsResourceWrapperXmlPage extends A_CmsResourceWrapper {
 
     /**
      * Returns a list with virtual file names for the xml page.<p>
-     * 
+     *
      * Actually that is only the name of the control code file.<p>
-     * 
+     *
      * @return a list containing strings with the names of the virtual files
      */
     private List<String> getVirtualFiles() {

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,7 +29,6 @@ package org.opencms.ade.galleries.client.preview;
 
 import org.opencms.ade.galleries.client.Messages;
 import org.opencms.ade.galleries.client.ui.CmsGalleryDialog;
-import org.opencms.ade.galleries.client.ui.css.I_CmsLayoutBundle;
 import org.opencms.ade.galleries.shared.CmsResourceInfoBean;
 import org.opencms.ade.galleries.shared.I_CmsGalleryProviderConstants.GalleryMode;
 
@@ -39,11 +38,11 @@ import com.google.gwt.user.client.Command;
 
 /**
  * Preview dialog handler.<p>
- * 
+ *
  * Delegates the actions of the preview controller to the preview dialog.<p>
- * 
+ *
  * @param <T> the resource info bean type
- * 
+ *
  * @since 8.0.0
  */
 public abstract class A_CmsPreviewHandler<T extends CmsResourceInfoBean> implements I_CmsPreviewHandler<T> {
@@ -56,7 +55,7 @@ public abstract class A_CmsPreviewHandler<T extends CmsResourceInfoBean> impleme
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param resourcePreview the resource preview instance
      */
     public A_CmsPreviewHandler(I_CmsResourcePreview<T> resourcePreview) {
@@ -72,8 +71,7 @@ public abstract class A_CmsPreviewHandler<T extends CmsResourceInfoBean> impleme
         if (m_resourcePreview.getPreviewDialog().getGalleryMode() == GalleryMode.editor) {
             CmsPreviewUtil.enableEditorOk(false);
         }
-        m_resourcePreview.getGalleryDialog().getParentPanel().addStyleName(
-            I_CmsLayoutBundle.INSTANCE.previewDialogCss().hidePreview());
+        m_resourcePreview.getGalleryDialog().setPreviewVisible(false);
     }
 
     /**

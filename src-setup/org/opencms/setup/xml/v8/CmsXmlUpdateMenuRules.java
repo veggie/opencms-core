@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,13 @@ import org.opencms.setup.xml.A_CmsXmlWorkplace;
 import org.opencms.setup.xml.CmsSetupXmlHelper;
 import org.opencms.setup.xml.CmsXmlUpdateAction;
 import org.opencms.util.CmsStringUtil;
+import org.opencms.workplace.explorer.menu.CmsMirAlwaysInvisible;
 import org.opencms.workplace.explorer.menu.CmsMirContainerpageInvisible;
+import org.opencms.workplace.explorer.menu.CmsMirEditProviderActive;
+import org.opencms.workplace.explorer.menu.CmsMirNonContainerpageInvisible;
+import org.opencms.workplace.explorer.menu.CmsMirRequireEditorRole;
+import org.opencms.workplace.explorer.menu.CmsMirRequireWorkplaceUserRole;
+import org.opencms.workplace.explorer.menu.CmsMirSitemapActive;
 import org.opencms.workplace.explorer.menu.CmsMirSitemapInvisible;
 
 import java.util.ArrayList;
@@ -49,7 +55,7 @@ import org.dom4j.Element;
 
 /**
  * XML updater class for adding context menu rules specific to ADE.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
@@ -64,8 +70,8 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
         /**
          * Creates a new instance.<p>
-         * 
-         * @param insertAfter the class of the menu item rule after which the new menu item rules should be inserted 
+         *
+         * @param insertAfter the class of the menu item rule after which the new menu item rules should be inserted
          */
         public UpdateInsertContainerpageRule(String insertAfter) {
 
@@ -80,12 +86,13 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
             Element elem = (Element)doc.selectSingleNode(xpath);
             if ((elem != null)
-                && (elem.selectSingleNode(CmsWorkplaceConfiguration.N_MENUITEMRULE
-                    + "[@"
-                    + I_CmsXmlConfiguration.A_CLASS
-                    + "='"
-                    + CmsMirSitemapInvisible.class.getName()
-                    + "']") == null)) {
+                && (elem.selectSingleNode(
+                    CmsWorkplaceConfiguration.N_MENUITEMRULE
+                        + "[@"
+                        + I_CmsXmlConfiguration.A_CLASS
+                        + "='"
+                        + CmsMirSitemapInvisible.class.getName()
+                        + "']") == null)) {
                 updateMenuRule(elem, m_insertAfter);
                 return true;
             }
@@ -166,8 +173,9 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
                 {"publishscheduled", "org.opencms.workplace.explorer.menu.CmsMirPrOtherInvisible"}};
 
             for (String[] nameAndClass : names) {
-                m_updateActions.put(xpathForMenuRule(nameAndClass[0]), new UpdateInsertContainerpageRule(
-                    nameAndClass[1]));
+                m_updateActions.put(
+                    xpathForMenuRule(nameAndClass[0]),
+                    new UpdateInsertContainerpageRule(nameAndClass[1]));
             }
             m_updateActions.put(xpathForMenuRule("containerpage"), new CmsXmlUpdateAction() {
 
@@ -182,12 +190,9 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
                                 "containerpage",
                                 "org.opencms.workplace.explorer.menu.CmsMirContainerPageActive"),
                             "");
-                        CmsSetupXmlHelper.setValue(
-                            doc,
-                            xpathForMenuItemRule(
-                                "containerpage",
-                                "org.opencms.workplace.explorer.menu.CmsMirAlwaysInvisible"),
-                            "");
+                        CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule(
+                            "containerpage",
+                            "org.opencms.workplace.explorer.menu.CmsMirAlwaysInvisible"), "");
                     }
                     return false;
                 }
@@ -207,12 +212,224 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
                                 "adecheckfile",
                                 "org.opencms.workplace.explorer.menu.CmsMirContainerPageActiveAndFileAvailable"),
                             "");
-                        CmsSetupXmlHelper.setValue(
-                            doc,
-                            xpathForMenuItemRule(
-                                "adecheckfile",
-                                "org.opencms.workplace.explorer.menu.CmsMirAlwaysInvisible"),
-                            "");
+                        CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule(
+                            "adecheckfile",
+                            "org.opencms.workplace.explorer.menu.CmsMirAlwaysInvisible"), "");
+                        return true;
+                    }
+                    return false;
+                }
+
+            });
+
+            m_updateActions.put(xpathForMenuRule("ade-undochanges"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    if (elem == null) {
+                        String[] classes = {
+                            "org.opencms.workplace.explorer.menu.CmsMirNonContainerpageInvisible",
+                            "org.opencms.workplace.explorer.menu.CmsMirPrOnlineInvisible",
+                            "org.opencms.workplace.explorer.menu.CmsMirPrOtherInvisible",
+                            "org.opencms.workplace.explorer.menu.CmsMirOtherSiteInactive",
+                            "org.opencms.workplace.explorer.menu.CmsMirPrSameUnlockedInactiveNotDeletedNoAl",
+                            "org.opencms.workplace.explorer.menu.CmsMirPrSameLockedActiveChangedAl",
+                            "org.opencms.workplace.explorer.menu.CmsMirPrSameOtherlockInvisible"};
+
+                        for (String className : classes) {
+                            CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule("ade-undochanges", className), "");
+                        }
+                        return true;
+                    }
+                    return false;
+
+                }
+            });
+
+            m_updateActions.put(xpathForMenuRule("containerpage-deleted"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    if (elem == null) {
+                        String[] classes = {
+                            "org.opencms.workplace.explorer.menu.CmsMirInvisibleIfNotDeleted",
+                            "org.opencms.workplace.explorer.menu.CmsMirNonContainerpageInvisible",
+                            "org.opencms.workplace.explorer.menu.CmsMirContainerPageActive"};
+                        for (String className : classes) {
+                            CmsSetupXmlHelper.setValue(
+                                doc,
+                                xpathForMenuItemRule("containerpage-deleted", className),
+                                "");
+                        }
+                        return true;
+                    }
+                    return false;
+
+                }
+            });
+
+            m_updateActions.put(xpathForMenuRule("containerpage-no-different-site"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    if (elem == null) {
+                        String[] classes = {
+                            "org.opencms.workplace.explorer.menu.CmsMirNonContainerpageInvisible",
+                            "org.opencms.workplace.explorer.menu.CmsMirOtherSiteInactive",
+                            "org.opencms.workplace.explorer.menu.CmsMirContainerPageActive"};
+                        for (String className : classes) {
+                            CmsSetupXmlHelper.setValue(
+                                doc,
+                                xpathForMenuItemRule("containerpage-no-different-site", className),
+                                "");
+                        }
+                        return true;
+                    }
+                    return false;
+
+                }
+            });
+
+            m_updateActions.put(xpathForMenuRule("editprovider"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    String[] classNames = new String[] {
+                        CmsMirEditProviderActive.class.getName(),
+                        CmsMirAlwaysInvisible.class.getName()};
+                    if (elem == null) {
+                        for (String classname : classNames) {
+                            CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule("editprovider", classname), "");
+                        }
+                        return true;
+                    }
+                    return false;
+
+                }
+            });
+
+            m_updateActions.put(xpathForMenuRule("sitemap"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    String[] classNames = new String[] {
+                        CmsMirSitemapActive.class.getName(),
+                        CmsMirAlwaysInvisible.class.getName()};
+
+                    if (elem == null) {
+                        for (String classname : classNames) {
+                            CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule("sitemap", classname), "");
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+            });
+
+            m_updateActions.put(xpathForMenuRule("sitemap-wpuser"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    String[] classNames = new String[] {
+                        CmsMirRequireWorkplaceUserRole.class.getName(),
+                        CmsMirSitemapActive.class.getName(),
+                        CmsMirAlwaysInvisible.class.getName()};
+
+                    if (elem == null) {
+                        for (String classname : classNames) {
+                            CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule("sitemap-wpuser", classname), "");
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+
+            });
+
+            m_updateActions.put(
+                xpathForMenuRule("containerpage-no-different-site-and-has-editor-role"),
+                new CmsXmlUpdateAction() {
+
+                    @Override
+                    public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                        Element elem = (Element)doc.selectSingleNode(xpath);
+                        String[] classNames = new String[] {
+                            CmsMirRequireEditorRole.class.getName(),
+                            CmsMirNonContainerpageInvisible.class.getName(),
+                            org.opencms.workplace.explorer.menu.CmsMirOtherSiteInactive.class.getName(),
+                            org.opencms.workplace.explorer.menu.CmsMirPrSameUnlockedInactiveNoAl.class.getName(),
+                            org.opencms.workplace.explorer.menu.CmsMirPrSameLockedActiveNotDeletedAlPermW.class.getName(),
+                            org.opencms.workplace.explorer.menu.CmsMirPrSameOtherlockInvisible.class.getName(),
+                            org.opencms.workplace.explorer.menu.CmsMirContainerPageActive.class.getName()};
+
+                        if (elem == null) {
+                            for (String classname : classNames) {
+                                CmsSetupXmlHelper.setValue(
+                                    doc,
+                                    xpathForMenuItemRule(
+                                        "containerpage-no-different-site-and-has-editor-role",
+                                        classname),
+                                    "");
+                            }
+                            return true;
+                        }
+                        return false;
+                    }
+
+                });
+
+            m_updateActions.put(xpathForMenuRule("containerpage-wpuser"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    String[] classNames = new String[] {
+                        CmsMirRequireWorkplaceUserRole.class.getName(),
+                        CmsMirNonContainerpageInvisible.class.getName(),
+                        org.opencms.workplace.explorer.menu.CmsMirContainerPageActive.class.getName()};
+
+                    if (elem != null) {
+                        // remove the already existing rule insert an updated list of item-rules
+                        elem.getParent().remove(elem);
+                    }
+                    for (String classname : classNames) {
+                        CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule("containerpage-wpuser", classname), "");
+                    }
+                    return true;
+                }
+
+            });
+
+            m_updateActions.put(xpathForMenuRule("containerpage-basic"), new CmsXmlUpdateAction() {
+
+                @Override
+                public boolean executeUpdate(Document doc, String xpath, boolean forReal) {
+
+                    Element elem = (Element)doc.selectSingleNode(xpath);
+                    String[] classNames = new String[] {
+                        org.opencms.workplace.explorer.menu.CmsMirNonContainerpageInvisible.class.getName(),
+                        org.opencms.workplace.explorer.menu.CmsMirContainerPageActive.class.getName()};
+
+                    if (elem == null) {
+                        for (String classname : classNames) {
+                            CmsSetupXmlHelper.setValue(doc, xpathForMenuItemRule("containerpage-basic", classname), "");
+                        }
+                        return true;
                     }
                     return false;
                 }
@@ -226,12 +443,11 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
     /**
      * Updates a single context menu entry's rules.<p>
-     * 
+     *
      * @param elem the parent element
-     *  
-     * @param className the class name 
+     *
+     * @param className the class name
      */
-    @SuppressWarnings("unchecked")
     protected void updateMenuRule(Element elem, String className) {
 
         if (elem == null) {
@@ -250,12 +466,12 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
     /**
      * Returns the xpath for a specific menu item rule.<p>
-     * 
+     *
      * @param name the name of the menu rule
-     *  
-     * @param className the class of the menu item rule 
-     * 
-     * @return the xpath for that menu item rule 
+     *
+     * @param className the class of the menu item rule
+     *
+     * @return the xpath for that menu item rule
      */
     protected String xpathForMenuItemRule(String name, String className) {
 
@@ -271,10 +487,10 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
     /**
      * Returns the xpath for a specific menu rule.<p>
-     * 
+     *
      * @param name the menu rule
-     * 
-     * @return the xpath for that menu rule 
+     *
+     * @return the xpath for that menu rule
      */
     protected String xpathForMenuRule(String name) {
 
@@ -292,10 +508,10 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
     /**
      * Returns the xpath for a specific explorer type.<p>
-     * 
-     * @param explorerType the explorer type 
-     * 
-     * @return the xpath for that explorer type 
+     *
+     * @param explorerType the explorer type
+     *
+     * @return the xpath for that explorer type
      */
     protected String xpathForType(String explorerType) {
 
@@ -314,10 +530,10 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
     /**
      * Creates a menu item rule element.<p>
-     * 
+     *
      * @param cls the class for the menu item rule
-     *  
-     * @return the menu item rule element 
+     *
+     * @return the menu item rule element
      */
     private Element createMenuItemRule(String cls) {
 
@@ -328,8 +544,8 @@ public class CmsXmlUpdateMenuRules extends A_CmsXmlWorkplace {
 
     /**
      * Returns the xpath for the explorertypes node.<p>
-     * 
-     * @return the xpath for the explorertypes node 
+     *
+     * @return the xpath for the explorertypes node
      */
     private String xpathForExplorerTypes() {
 

@@ -1,130 +1,85 @@
-.popup, .popupContent {}
+@external opencms-font-icon, html-face;
+
+.popup {}
 
 .mainContentWidget {
     background-color: value("constants.css.backgroundColorDialog");
     border: 1px solid value("constants.css.borderColor");
-    overflow: auto;
     padding: 0 2px;
     position: relative;
+    clear: both;
 }
 
 .dragAndDropMessage{
-	width: 60%;
+	width: 80%;
 	margin: 20px auto;
+	text-align: center;
 }
-
-.uploadFileInput {
-	position: absolute;
-	font-size: 40px;
-	right: -10px;
-	top: -10px;
-}
-
-.uploadButton {
-	overflow: hidden;
-	position: relative;
-}
-
-@if user.agent ie6 {
-    .uploadFileInput{
-        filter: literal("alpha(opacity = 0)");
-    }
-    .uploadButton {
-    	display: inline;
-    	height: literal("expression( (function(elem){elem.style.height = elem.firstChild.offsetHeight + 'px';})(this) )");
-    } 
-} @elif user.agent ie8 {
-	.uploadFileInput{
-		-ms-filter: "alpha(opacity = 0)";
-	}
-    .uploadButton {
-    	display: inline;
-    } 
-} @else {
-    .uploadFileInput{
-        opacity: 0;
-    }
-    .uploadButton {
-    	display: inline-block;
-    } 
-}
-
 
 .popupContent div.uploadDialogButton {
 	float: left;
 	margin: 0px;
 }
 
-
-
-
 .dialogInfo {
 	padding-bottom: 2px;
+}
+
+
+.dialogInfo .opencms-font-icon{
+	margin: 3px 0 5px 3px;
+	display: block;
+	float: left;
 }
 
 .summary {
 	padding-top: 3px;
 }
 
-.fileInfoTable {
-	width: 100%;
-}
 
-
-
-.progressInfo {
-	padding-top: 20px;
-	width: 100%;
-}
 
 .fileInputPanel {
 	overflow: hidden;
 	position: relative;
 }
 
-.dialogMessage {
-	line-height: 16px;
-	margin: 0px;
-}
-
-.dialogMessageImportant {
-	line-height: 16px;
-	margin: 0px;
-	color: value("constants.css.textColorImportant");
-}
 
 
-@sprite .warningIcon{
-	gwt-image: "gwtImages.warningBigImage";
-	margin: 0px 0px 0px 3px;
-	display: block;
-	float: left;
-}
-.warningMessage{
-	line-height: 16px;
-	margin: 0px 0px 0px 45px;
-}
-
-.loadingPanel {
-    left: 0;
-    top: 0;
+.unzipButtonUpFace::before, .unzipButtonDownFace::before { 
+	font-family: opencms-font;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
 	display: inline-block;
-    height: 100%;
-    position: absolute;
-    width: 100%;
-    z-index: value("constants.css.zIndexPopup");
-    background-color: value("constants.css.backgroundColorDialog");
-    text-align: center;
+	line-height: 1;
+	
+	border: 1px solid value("constants.css.textColorDisabledButton");
+    border-radius: 4px;
+    padding: 1px;
+    height: 11px;
+    width: 11px;
+    font-size: 11px;
+    line-height: 11px;
+    background-color: value("constants.css.backgroundColorInfo");
+    color: inherit;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
-.loadingText {
-	text-align: center;
+
+.unzipButton {
+	position: relative; 
+	bottom: 5px;
 }
-.loadingAnimation {
-	margin-top: 20px;
+
+.unzipButtonUpFace::before { 
+	content: " ";
+	position: relative;
+	top: 2px;
 }
-@sprite .loadingAnimation {
-	gwt-image: "gwtImages.loadingBigImage";
-	background-position: 50% 50%;
-    background-repeat: no-repeat;
-	display: inline-block;
+
+.unzipButtonDownFace::before {
+	content: "\e916";
 }

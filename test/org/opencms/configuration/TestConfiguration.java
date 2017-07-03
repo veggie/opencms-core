@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,6 +27,7 @@
 
 package org.opencms.configuration;
 
+import org.opencms.file.CmsResource;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.test.OpenCmsTestCase;
 import org.opencms.test.OpenCmsTestProperties;
@@ -43,14 +44,14 @@ import org.xml.sax.InputSource;
 
 /**
  * Tests for the OpenCms configuration handling.<p>
- * 
+ *
  * @since 6.0.0
  */
 public class TestConfiguration extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestConfiguration(String arg0) {
@@ -61,19 +62,25 @@ public class TestConfiguration extends OpenCmsTestCase {
     /**
      * Loads the configuration using the configuration manager,
      * if anyting goes wrong an exception is thrown and the test fails.<p>
-     * 
-     * 
+     *
+     *
      * @throws Exception if something goes wrong
      */
     public void testLoadXmlConfiguration() throws Exception {
 
         // get the file name of the input resource
-        String inputFile = OpenCmsTestProperties.getResourcePathFromClassloader("org/opencms/configuration/");
+        String inputFile = CmsResource.getParentFolder(
+            OpenCmsTestProperties.getResourcePathFromClassloader("org/opencms/configuration/opencms.xml"));
 
         // generate the configuration manager
         CmsConfigurationManager manager = new CmsConfigurationManager(inputFile);
+
         // now digest the XML
         manager.loadXmlConfiguration();
+        CmsWorkplaceConfiguration wpConfig = (CmsWorkplaceConfiguration)manager.getConfiguration(
+            CmsWorkplaceConfiguration.class);
+        wpConfig.getWorkplaceManager().getDefaultUserSettings().initPreferences(wpConfig.getWorkplaceManager());
+
         // generate an output XML format
         List<I_CmsXmlConfiguration> allConfigurations = new ArrayList<I_CmsXmlConfiguration>();
         allConfigurations.add(manager);
@@ -99,7 +106,7 @@ public class TestConfiguration extends OpenCmsTestCase {
             System.out.println("---");
 
             // it's better to not output the original doc, since spotting an error is easier
-            // if you compare console output to the original input file in your IDE 
+            // if you compare console output to the original input file in your IDE
 
             //            System.out.println("+++");
             //            System.out.println(CmsXmlUtils.marshal(inputDoc, CmsEncoder.ENCODING_UTF_8));

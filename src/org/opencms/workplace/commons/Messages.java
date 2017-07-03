@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,9 +31,9 @@ import org.opencms.i18n.A_CmsMessageBundle;
 import org.opencms.i18n.I_CmsMessageBundle;
 
 /**
- * Convenience class to access the localized messages of this OpenCms package.<p> 
- * 
- * @since 6.0.0 
+ * Convenience class to access the localized messages of this OpenCms package.<p>
+ *
+ * @since 6.0.0
  */
 public final class Messages extends A_CmsMessageBundle {
 
@@ -107,6 +107,9 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String ERR_MOVE_FAILED_TARGET_EXISTS_2 = "ERR_MOVE_FAILED_TARGET_EXISTS_2";
 
     /** Message constant for key in the resource bundle. */
+    public static final String ERR_MOVE_FORCES_OVERWRITE_EXISTING_RESOURCE_0 = "ERR_MOVE_FORCES_OVERWRITE_EXISTING_RESOURCE_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String ERR_MOVE_MULTI_0 = "ERR_MOVE_MULTI_0";
 
     /** Message constant for key in the resource bundle. */
@@ -114,6 +117,9 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String ERR_MOVE_ONTO_ITSELF_1 = "ERR_MOVE_ONTO_ITSELF_1";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String ERR_COPY_TARGET_PARENT_FOLDER_MISSING_1 = "ERR_COPY_TARGET_PARENT_FOLDER_MISSING_1";
 
     /** Message constant for key in the resource bundle. */
     public static final String ERR_PARSE_EXPIREDATE_1 = "ERR_PARSE_EXPIREDATE_1";
@@ -132,13 +138,10 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String ERR_PREF_UPLOAD_VARIANT_NOT_FOUND_0 = "ERR_PREF_UPLOAD_VARIANT_NOT_FOUND_0";
-
     /** Message constant for key in the resource bundle. */
     public static final String ERR_PROGRESS_INTERRUPTED_0 = "ERR_PROGRESS_INTERRUPTED_0";
-
     /** Message constant for key in the resource bundle. */
     public static final String ERR_PROGRESS_START_INVALID_LIST_0 = "ERR_PROGRESS_START_INVALID_LIST_0";
-
     /** Message constant for key in the resource bundle. */
     public static final String ERR_PROGRESS_START_THREAD_EXISTS_0 = "ERR_PROGRESS_START_THREAD_EXISTS_0";
 
@@ -378,6 +381,18 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_COPY_KEEP_PERMISSIONS_0 = "GUI_COPY_KEEP_PERMISSIONS_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_COPY_MOVE_MOVE_FILE_0 = "GUI_COPY_MOVE_MOVE_FILE_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_COPY_MOVE_MOVE_FOLDER_0 = "GUI_COPY_MOVE_MOVE_FOLDER_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_COPY_MOVE_MOVE_RESOURCES_0 = "GUI_COPY_MOVE_MOVE_RESOURCES_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_COPY_MOVE_TARGET_0 = "GUI_COPY_MOVE_TARGET_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_COPY_MULTI_2 = "GUI_COPY_MULTI_2";
@@ -761,6 +776,9 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String GUI_LABEL_VERSION_0 = "GUI_LABEL_VERSION_0";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_LABEL_WORKPLACE_2_VIEW_0 = "GUI_LABEL_WORKPLACE_2_VIEW_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_LINK_RELATION_LIST_NAME_0 = "GUI_LINK_RELATION_LIST_NAME_0";
 
     /** Message constant for key in the resource bundle. */
@@ -1043,7 +1061,16 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String GUI_PREF_EDITOR_BEST_0 = "GUI_PREF_EDITOR_BEST_0";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREF_ELEMENT_VIEW_0 = "GUI_PREF_ELEMENT_VIEW_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREF_EXPLORER_ELEMENT_VIEW_0 = "GUI_PREF_EXPLORER_ELEMENT_VIEW_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_PREF_FILES_PER_PAGE_0 = "GUI_PREF_FILES_PER_PAGE_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREF_GALLERY_SHOW_INVALID_DEFAULT_0 = "GUI_PREF_GALLERY_SHOW_INVALID_DEFAULT_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_PREF_LIST_ALL_PROJECTS_0 = "GUI_PREF_LIST_ALL_PROJECTS_0";
@@ -1101,6 +1128,18 @@ public final class Messages extends A_CmsMessageBundle {
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_PREF_RESTRICT_EXPLORER_VIEW_0 = "GUI_PREF_RESTRICT_EXPLORER_VIEW_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREF_REUSE_MODE_0 = "GUI_PREF_REUSE_MODE_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREF_REUSE_MODE_ASK_0 = "GUI_PREF_REUSE_MODE_ASK_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREF_REUSE_MODE_COPY_0 = "GUI_PREF_REUSE_MODE_COPY_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREF_REUSE_MODE_REUSE_0 = "GUI_PREF_REUSE_MODE_REUSE_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_PREF_SEARCH_RESULT_0 = "GUI_PREF_SEARCH_RESULT_0";
@@ -1391,6 +1430,12 @@ public final class Messages extends A_CmsMessageBundle {
     public static final String GUI_PUBLISH_SCHEDULED_PROJECT_NAME_2 = "GUI_PUBLISH_SCHEDULED_PROJECT_NAME_2";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_PUBLISH_SCHEDULED_DATEEMPTY_0 = "GUI_PUBLISH_SCHEDULED_DATEEMPTY_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PUBLISH_SCHEDULED_DATENOTFUTURE_0 = "GUI_PUBLISH_SCHEDULED_DATENOTFUTURE_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_PUBLISH_SCHEDULED_SETTINGS_1 = "GUI_PUBLISH_SCHEDULED_SETTINGS_1";
 
     /** Message constant for key in the resource bundle. */
@@ -1658,7 +1703,7 @@ public final class Messages extends A_CmsMessageBundle {
 
     /**
      * Returns an instance of this localized message accessor.<p>
-     * 
+     *
      * @return an instance of this localized message accessor
      */
     public static I_CmsMessageBundle get() {
@@ -1668,7 +1713,7 @@ public final class Messages extends A_CmsMessageBundle {
 
     /**
      * Returns the bundle name for this OpenCms package.<p>
-     * 
+     *
      * @return the bundle name for this OpenCms package
      */
     public String getBundleName() {

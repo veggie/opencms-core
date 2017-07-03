@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,9 +36,9 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
  * A bean holding all info to be displayed in {@link org.opencms.gwt.client.ui.CmsListItemWidget}s.<p>
- * 
+ *
  * @see org.opencms.gwt.client.ui.CmsListItemWidget
- * 
+ *
  * @since 8.0.0
  */
 public class CmsListInfoBean implements IsSerializable {
@@ -61,6 +61,8 @@ public class CmsListInfoBean implements IsSerializable {
      * Enum for the type of page icon which should be displayed.<p>
      */
     public enum StateIcon {
+        /** copy page icon. */
+        copy,
         /** export page icon. */
         export,
         /** secure page icon. */
@@ -75,11 +77,20 @@ public class CmsListInfoBean implements IsSerializable {
     /** The additional info. */
     private List<CmsAdditionalInfoBean> m_additionalInfo;
 
+    /** The detail resource type. */
+    private String m_detailResourceType;
+
+    /** Flag which indicates whether this was generated for a folder. */
+    private Boolean m_isFolder;
+
     /** The lock icon. */
     private LockIcon m_lockIcon;
 
     /** The lock icon title. */
     private String m_lockIconTitle;
+
+    /** Flag to control whether a resource state of 'changed' should be visualized with an overlay icon. */
+    private boolean m_markChangedState = true;
 
     /** The resource state. */
     private CmsResourceState m_resourceState;
@@ -97,7 +108,7 @@ public class CmsListInfoBean implements IsSerializable {
     private String m_title;
 
     /**
-     * Default constructor.<p> 
+     * Default constructor.<p>
      */
     public CmsListInfoBean() {
 
@@ -106,7 +117,7 @@ public class CmsListInfoBean implements IsSerializable {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param title the title
      * @param subtitle the subtitle
      * @param additionalInfo the additional info
@@ -119,8 +130,8 @@ public class CmsListInfoBean implements IsSerializable {
     }
 
     /**
-     * Sets a new additional info.<p> 
-     * 
+     * Sets a new additional info.<p>
+     *
      * @param name the additional info name
      * @param value the additional info value
      */
@@ -130,8 +141,8 @@ public class CmsListInfoBean implements IsSerializable {
     }
 
     /**
-     * Sets a new additional info.<p> 
-     * 
+     * Sets a new additional info.<p>
+     *
      * @param name the additional info name
      * @param value the additional info value
      * @param style the CSS style to apply to the info
@@ -152,6 +163,28 @@ public class CmsListInfoBean implements IsSerializable {
             m_additionalInfo = new ArrayList<CmsAdditionalInfoBean>();
         }
         return m_additionalInfo;
+    }
+
+    /**
+     * Returns the detail resource type.<p>
+     *
+     * @return the detail resource type
+     */
+    public String getDetailResourceType() {
+
+        return m_detailResourceType;
+    }
+
+    /**
+     * Returns a flag which indicates whether this info bean was generated for a folder.<p>
+     *
+     * This may not be set (i.e. null).
+     *
+     * @return a Boolean indicating whether this bean was generated for a folder
+     */
+    public Boolean getIsFolder() {
+
+        return m_isFolder;
     }
 
     /**
@@ -196,7 +229,7 @@ public class CmsListInfoBean implements IsSerializable {
 
     /**
      * Returns the state icon.<p>
-     * 
+     *
      * The state icon indicates if a resource is exported, secure etc.<p>
      *
      * @return the state Icon
@@ -228,12 +261,22 @@ public class CmsListInfoBean implements IsSerializable {
 
     /**
      * Returns if the bean has additional info elements.<p>
-     * 
+     *
      * @return <code>true</code> if the bean has additional info elements
      */
     public boolean hasAdditionalInfo() {
 
         return (m_additionalInfo != null) && (m_additionalInfo.size() > 0);
+    }
+
+    /**
+     * Returns true if the 'changed' resource state should be marked by an icon.<p>
+     *
+     * @return true if the 'changed' resource state should be marked by an icon.<p>
+     */
+    public boolean isMarkChangedState() {
+
+        return m_markChangedState;
     }
 
     /**
@@ -244,6 +287,26 @@ public class CmsListInfoBean implements IsSerializable {
     public void setAdditionalInfo(List<CmsAdditionalInfoBean> additionalInfo) {
 
         m_additionalInfo = additionalInfo;
+    }
+
+    /**
+     * Sets the detail resource type.<p>
+     *
+     * @param detailResourceType the detail resource type to set
+     */
+    public void setDetailResourceType(String detailResourceType) {
+
+        m_detailResourceType = detailResourceType;
+    }
+
+    /**
+     * Sets thE 'isFolder' flag.<p>
+     *
+     * @param isFolder the new value
+     */
+    public void setIsFolder(Boolean isFolder) {
+
+        m_isFolder = isFolder;
     }
 
     /**
@@ -264,6 +327,16 @@ public class CmsListInfoBean implements IsSerializable {
     public void setLockIconTitle(String lockIconTitle) {
 
         m_lockIconTitle = lockIconTitle;
+    }
+
+    /**
+     * Enables or disables the display of the 'changed' icon for the 'changed' resource state.<p>
+     *
+     * @param markChanged true if the 'changed' state should be displayed
+     */
+    public void setMarkChangedState(boolean markChanged) {
+
+        m_markChangedState = markChanged;
     }
 
     /**
@@ -288,7 +361,7 @@ public class CmsListInfoBean implements IsSerializable {
 
     /**
      * Sets the state icon.<p>
-     * 
+     *
      * The state icon indicates if a resource is exported, secure etc.<p>
      *
      * @param stateIcon the state icon to set

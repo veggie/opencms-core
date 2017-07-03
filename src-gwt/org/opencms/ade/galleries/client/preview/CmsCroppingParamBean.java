@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,12 +31,10 @@ import org.opencms.util.CmsStringUtil;
 
 /**
  * Scale parameter data bean.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsCroppingParamBean {
-
-    private static final String SCALE_FORMAT_NAME_PARAM = "__formatName";
 
     /** The scale parameter colon. */
     private static final String SCALE_PARAM_COLON = ":";
@@ -68,6 +66,9 @@ public class CmsCroppingParamBean {
     /** Scale parameter name. */
     private static final String SCALE_PARAM_TARGETWIDTH = "w";
 
+    /** Format parameter name. */
+    private static final String SCALE_FORMAT_NAME_PARAM = "format";
+
     /** The cropping height parameter. */
     private int m_cropHeight = I_CmsFormatRestriction.DIMENSION_NOT_SET;
 
@@ -83,8 +84,10 @@ public class CmsCroppingParamBean {
     /** The used format name. */
     private String m_formatName;
 
+    /** The original image height. */
     private int m_orgHeight = I_CmsFormatRestriction.DIMENSION_NOT_SET;
 
+    /** The original image width. */
     private int m_orgWidth = I_CmsFormatRestriction.DIMENSION_NOT_SET;
 
     /** The target height. */
@@ -103,7 +106,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Copy constructor.<p>
-     * 
+     *
      * @param copy the copy values to use
      */
     public CmsCroppingParamBean(CmsCroppingParamBean copy) {
@@ -119,8 +122,8 @@ public class CmsCroppingParamBean {
 
     /**
      * Constructor.<p>
-     * 
-     * @param orgHeight the original image height 
+     *
+     * @param orgHeight the original image height
      * @param orgWidth the original image width
      */
     public CmsCroppingParamBean(int orgHeight, int orgWidth) {
@@ -131,9 +134,9 @@ public class CmsCroppingParamBean {
 
     /**
      * Parses an image scale parameter and returns the parsed data.<p>
-     * 
+     *
      * @param selectedPath the image path including the scale parameter
-     * 
+     *
      * @return the cropping data
      */
     public static CmsCroppingParamBean parseImagePath(String selectedPath) {
@@ -170,9 +173,9 @@ public class CmsCroppingParamBean {
 
     /**
      * Parses an image scale parameter and returns the parsed data.<p>
-     * 
+     *
      * @param param the image path including the scale parameter
-     * 
+     *
      * @return the cropping data
      */
     public static CmsCroppingParamBean parseScaleParam(String param) {
@@ -213,21 +216,22 @@ public class CmsCroppingParamBean {
     }
 
     /**
-     * Parses a single scale value. Returning <code>-1</code> --> {@link I_CmsFormatRestriction.DIMENSION_NOT_SET} invalid parameters.<p>
-     * 
+     * Parses a single scale value. Returning <code>-1</code> -->
+     * {@link I_CmsFormatRestriction#DIMENSION_NOT_SET} invalid parameters.<p>
+     *
      * @param paramName the parameter name
      * @param param the parameter
-     * 
+     *
      * @return the value
      */
     private static native int parseValue(String paramName, String param)/*-{
-        param = param.substr(paramName.length + 1);
-        var result = parseInt(param);
-        if (isNaN(result)) {
-            return I_CmsFormatRestriction.DIMENSION_NOT_SET;
-        }
-        return result;
-    }-*/;
+                                                                        param = param.substr(paramName.length + 1);
+                                                                        var result = parseInt(param);
+                                                                        if (isNaN(result)) {
+                                                                        return I_CmsFormatRestriction.DIMENSION_NOT_SET;
+                                                                        }
+                                                                        return result;
+                                                                        }-*/;
 
     /**
      * Returns the cropping height parameter.<p>
@@ -301,7 +305,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns the resulting image ratio.<p>
-     * 
+     *
      * @return the image ratio
      */
     public double getRatio() {
@@ -317,10 +321,10 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns a cropping bean with a restricted maximum target size.<p>
-     * 
+     *
      * @param maxHeight the max height
      * @param maxWidth the max width
-     * 
+     *
      * @return the cropping bean
      */
     public CmsCroppingParamBean getRestrictedSizeParam(int maxHeight, int maxWidth) {
@@ -350,10 +354,10 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns the scale parameter to this bean for a restricted maximum target size.<p>
-     * 
+     *
      * @param maxHeight the max height
      * @param maxWidth the max width
-     * 
+     *
      * @return the scale parameter
      */
     public String getRestrictedSizeScaleParam(int maxHeight, int maxWidth) {
@@ -371,7 +375,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns the resulting height of the cropped image.<p>
-     * 
+     *
      * @return the height
      */
     public int getResultingHeight() {
@@ -389,7 +393,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns the resulting width of the cropped image.<p>
-     * 
+     *
      * @return the width
      */
     public int getResultingWidth() {
@@ -407,7 +411,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns the scale parameter.<p>
-     * 
+     *
      * @return the scale parameter
      */
     public String getScaleParam() {
@@ -465,7 +469,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns if contained parameters indicate a cropped image.<p>
-     * 
+     *
      * @return <code>true</code> if contained parameters indicate a cropped image
      */
     public boolean isCropped() {
@@ -475,12 +479,13 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns if the given cropping parameters would scale the image.<p>
-     *  
+     *
      * @return <code>true</code> if the image is scaled
      */
     public boolean isScaled() {
 
-        return !(((m_targetHeight == m_orgHeight) || (m_targetHeight == -1)) && ((m_targetWidth == m_orgWidth) || (m_targetWidth == -1)));
+        return !(((m_targetHeight == m_orgHeight) || (m_targetHeight == -1))
+            && ((m_targetWidth == m_orgWidth) || (m_targetWidth == -1)));
     }
 
     /**
@@ -601,7 +606,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns the resulting target height if set, otherwise '-1'.<p>
-     * 
+     *
      * @return the height
      */
     private int getResultingTargetHeight() {
@@ -619,7 +624,7 @@ public class CmsCroppingParamBean {
 
     /**
      * Returns the resulting target width if set, otherwise '-1'.<p>
-     * 
+     *
      * @return the width
      */
     private int getResultingTargetWidth() {

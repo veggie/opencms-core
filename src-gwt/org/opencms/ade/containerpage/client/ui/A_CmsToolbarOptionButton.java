@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,9 +35,9 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 
 /**
- * Abstract button class implementing common methods of {@link org.opencms.gwt.client.ui.I_CmsToolbarButton} 
+ * Abstract button class implementing common methods of {@link org.opencms.gwt.client.ui.I_CmsToolbarButton}
  * for container-page tool-bar buttons with element functions.<p>
- * 
+ *
  * @since 8.0.0
  */
 public abstract class A_CmsToolbarOptionButton extends A_CmsToolbarButton<CmsContainerpageHandler> {
@@ -52,12 +52,14 @@ public abstract class A_CmsToolbarOptionButton extends A_CmsToolbarButton<CmsCon
 
             CmsElementOptionButton source = (CmsElementOptionButton)event.getSource();
             source.getToolbarButton().onElementClick(event, source.getContainerElement());
+            source.getContainerElement().getElementOptionBar().removeHighlighting();
+            source.clearHoverState();
         }
     };
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param buttonData the button data
      * @param handler the container-page handler
      */
@@ -68,10 +70,10 @@ public abstract class A_CmsToolbarOptionButton extends A_CmsToolbarButton<CmsCon
 
     /**
      * Creates an element options button associated with this button and assigns the click-handler.<p>
-     * If this method returns null, no option button should be shown.<p> 
-     * 
+     * If this method returns null, no option button should be shown.<p>
+     *
      * @param element the element to create the button for
-     * 
+     *
      * @return the created button
      */
     public CmsElementOptionButton createOptionForElement(CmsContainerPageElementPanel element) {
@@ -81,16 +83,14 @@ public abstract class A_CmsToolbarOptionButton extends A_CmsToolbarButton<CmsCon
         }
         CmsElementOptionButton button = new CmsElementOptionButton(this, element);
         button.addClickHandler(m_elementClickHandler);
-        //        button.setEnabled(hasPermissions(element));
-        // TODO: if element option is not allowed, set reason as button title
         return button;
     }
 
     /**
      * Checks whether an option button should be shown for a container page element.<p>
-     * 
+     *
      * @param element a container page element
-     * @return true if the option should be shown for the given element 
+     * @return true if the option should be shown for the given element
      */
     public boolean isOptionAvailable(CmsContainerPageElementPanel element) {
 
@@ -99,7 +99,7 @@ public abstract class A_CmsToolbarOptionButton extends A_CmsToolbarButton<CmsCon
 
     /**
      * Method is executed when the element option button is clicked.<p>
-     * 
+     *
      * @param event the mouse event (stop propagation if appropriate)
      * @param element the element the option button is associated to
      */
@@ -110,8 +110,7 @@ public abstract class A_CmsToolbarOptionButton extends A_CmsToolbarButton<CmsCon
      */
     public void onToolbarActivate() {
 
-        showSingleElementOption(true);
-
+        // nothing to do
     }
 
     /**
@@ -119,7 +118,6 @@ public abstract class A_CmsToolbarOptionButton extends A_CmsToolbarButton<CmsCon
      */
     public void onToolbarDeactivate() {
 
-        showSingleElementOption(false);
-
+        // nothing to do
     }
 }

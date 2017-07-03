@@ -1,4 +1,4 @@
-<%@ page import="org.opencms.jsp.*" %><%
+<%@ page import="org.opencms.jsp.*,org.opencms.util.*,java.util.*" %><%
 CmsJspActionElement cms = new CmsJspActionElement(pageContext, request, response);
 %>
 
@@ -25,7 +25,26 @@ function GetAttribute( element, attName, valueIfNull )
    return ( oValue == null ? valueIfNull : oValue ) ;
 }
 
-<%= cms.getContent("/system/workplace/resources/editors/tinymce/jscripts/tiny_mce/tiny_mce_popup.js") %>
+<%
+String integratorArgsParam = request.getParameter("integratorArgs");
+if (integratorArgsParam == null) {
+    integratorArgsParam = ""; 
+}
+Map<String, String> integratorArgs = CmsStringUtil.splitAsMap(integratorArgsParam,  "|", ":");
+String mode = integratorArgs.get("mode");
+String embeddedConfigurationName=null;
+if ("imagegallery".equals(mode)) {
+    embeddedConfigurationName = "imageGalleryConfig";
+} else if ("downloadgallery".equals(mode)){
+    embeddedConfigurationName = "downloadGalleryConfig"; 
+}
+pageContext.setAttribute("embeddedConfigurationName", embeddedConfigurationName); 
+%>
+
+
+
+
+
 /**
  * The JavaScript functions of this file serve as an interface between the API of the TinyMCE and the gallery dialog.<p>
  *
@@ -37,8 +56,10 @@ function GetAttribute( element, attName, valueIfNull )
  * Returning <code>true</code> when all data has been set and the dialog should be closed.<p>
  */
 /* absolute path to the JSP that displays the image in original size */
-var vfsPopupUri = "<%= cms.link("/system/workplace/editors/fckeditor/plugins/ocmsimage/popup.html") %>";
+var vfsPopupUri = "<%= cms.link("/system/modules/org.opencms.jquery/pages/imagePopup.html") %>";
 var showSelect = "true";
+
+
 
 /** The editor frame. */
 var parentDialog=window.parent;
@@ -46,13 +67,17 @@ var parentDialog=window.parent;
 // remove loading overlay and get editor reference
 /** The editor instance. */
 var editor=parentDialog.tinymce.activeEditor;
+
+// this is used in CmsGalleryController
+window.embeddedConfiguration = editor.settings["${embeddedConfigurationName}"];
+
 var tinymce = parentDialog.tinymce;
 
 /** The fck editor configuration. */
 var editorConfig= {};
-
+ 
 /* Absolute path to the JSP that displays the image in original size. */
-var imagePopupUri = "<%= cms.link("/system/workplace/editors/fckeditor/plugins/ocmsimage/popup.html") %>";
+var imagePopupUri = "<%= cms.link("/system/modules/org.opencms.jquery/pages/imagePopup.html") %>";
 
 // some string constants
 
@@ -81,7 +106,7 @@ var Ok =function(){
  * Closes the dialog without setting any data.<p>
  */
 function closeDialog(){
-   tinyMCEPopup.close();
+   editor.windowManager.close();
 }
 
 /**
@@ -267,7 +292,7 @@ function _collectAttributes(element, attributes){
             value=GetAttribute(element, 'class', null_marker);
         }
         if (value!=null_marker){
-            if (attributeNames[i]=='style'){
+            if (attributeNames[i]=='style' && hasEnhancedImageOptions()){
                 value= value.replace(/margin-right:\s*\d+px;/, "");
                 value= value.replace(/margin-bottom:\s*\d+px;/, "");
                 value= value.replace(/margin-left:\s*\d+px;/, "");
@@ -347,6 +372,10 @@ function getLinkTarget(){
     return target;
 }
 
+function _triggerChangeEvent(){
+   editor.execCommand("mceAddUndoLevel");
+}
+
 /**
  * Inserts or updates a selected image, setting the given path and tag attributes.<p>
  * 
@@ -356,8 +385,6 @@ function getLinkTarget(){
  * @return void
  */
 function setImage(path, attributes){
-    // restore the selection; needed because IE forgets the selection otherwise 
-    tinyMCEPopup.restoreSelection();
     var image=_getSelectedImage();
     
     if (image){
@@ -476,6 +503,8 @@ function setImage(path, attributes){
     }
     editor.selection.collapse(false);
     editor.execCommand("mceRepaint");
+    // the editor may not have triggered the change event yet, force it
+    _triggerChangeEvent();
 }
 
 /**
@@ -563,7 +592,6 @@ function setImageLink(path, attributes, linkPath, target){
  * @return void
  */
 function setLink(path, title, target){
-   tinyMCEPopup.restoreSelection();
     if (_hasSelectedText()){
         var a = _selectionMoveToAncestorNode('A') ;
         if (a) {
@@ -657,4 +685,3 @@ function _setInnerText(element, value){
         element.textContent = value;
     }
 }
-

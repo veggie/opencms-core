@@ -1,36 +1,28 @@
-@external hidePreview;
+@external hidePreview, previewVisible;
+
+.previewVisible{}
 
 /* The height and width are set as inline style. */
 div.previewDialog {
 	position:absolute;
-	top:0px;
+	top: 28px;
 	left:0px;
 	right: 0px;
 	bottom: 0px;
 	display: block;
 	background-color: value("constants.css.backgroundColorDialog");
+	z-index: value("constants.css.zIndexInline");
 }
-.previewDialog * {
-	margin: 0;
-	padding: 0;
-	color: value("constants.css.textColor");
-	font-family: value("constants.css.fontFamily");
-	font-size: value("constants.css.fontSize");
-	line-height: value("constants.css.lineHeight");
-	background: transparent;
-	text-align: left;
-	height: auto;
-	width: auto;
-	min-height: 0;
-	max-height: none;
-	min-width: 0;
-	max-width: none;
+div.previewDialog div.previewTitle{
+	position:absolute;
+	top: -28px;
+	left:0px;
+	display: block;
 }
+
 .hidePreview .previewDialog{
 	display: none;
 }
-
-.hiding{}
 
 .hiding .hiding{
 	display: none;	
@@ -40,18 +32,19 @@ div.previewDialog {
 	position: absolute;
 	top:0px;
 	right:0px;
-	margin:2px;
+	margin:6px;
 }
 
 /* Preview panel */
 .previewHolder {		
 	border:1px solid value("constants.css.borderColor");	
 	margin:1px;
+	overflow: auto;
 }
 
 .previewPanel {	
-	height:100%;	
 	line-height: inherit;
+	height:100%;
 }
 
 .imagePanel {
@@ -68,8 +61,8 @@ div.previewDialog {
 
 .previewButtonBar{
 	position: absolute;
-	bottom:0px;
-	right:0px;
+	bottom:4px;
+	right:3px;
 	margin:2px;
 }
 
@@ -85,7 +78,7 @@ div.previewDialog {
 
 /* Properties tab. */
 .propertiesList {	
-	height:60px; /* Change the height on resize */
+	height:80px; /* Change the height on resize */
 	overflow: auto;
 	position: relative;
 	margin:0px;
@@ -99,6 +92,7 @@ div.previewDialog {
     height: 0;
     clear: both;
     visibility: hidden;
+    line-height: 1px;
 }
 
 table.infoTable{
@@ -106,7 +100,12 @@ table.infoTable{
 	border: none;
 	padding: 3px;
 	clear: both;
-	table-layout: fixed;
+}
+
+table.infoTable div{
+	overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 table.infoTable tr, table.infoTable td{
@@ -142,29 +141,8 @@ table.infoTable tr, table.infoTable td{
 }
 
 /* Line with format select box. */
-.formatsLine {
-	margin:0 0 8px;
-}
-
-/** Line with size infos. */
-.formatsLineSize {
+.formatsLine, .formatsLineSize {
 	margin:0 0 3px;
-}
-
-.formatsLineSize .formatButton{
-	padding-top:1px;
-	padding-bottom:1px;
-	line-height: 12px;
-}
-
-.formatsLineSize .formatButton div{
-	line-height: 12px;
-	height: 12px;
-	vertical-align: baseline;
-}
-
-.formatsLineSize .formatButton div span{
-	vertical-align: baseline;
 }
 
 .formatButton{
@@ -187,18 +165,6 @@ table.infoTable tr, table.infoTable td{
 	font-weight:bold;
 }
 
-@if user.agent ie6 {
-	.formatLabel, .formatText, .formatSelectBox{
-		display:inline;
-		zoom:1;
-	}
-} @else {
-	.formatLabel, .formatText, .formatSelectBox{
-		display: inline-block;
-	}	
-}
-
-div.buttonPadding {
-	padding-top: 2px !important;
-	padding-bottom: 2px !important;
+.formatLabel, .formatText, .formatSelectBox{
+	display: inline-block;
 }

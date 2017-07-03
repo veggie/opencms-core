@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,14 +33,14 @@ import org.opencms.workplace.explorer.CmsResourceUtil;
 
 /**
  * Base implementation of the menu item rule.<p>
- * 
- * This was introduced because of the possible sub-menus. 
- * Most rules are not sub-menu aware, therefore they do not need to implement 
- * {@link #getVisibility(CmsObject, CmsResourceUtil[], I_CmsMenuItemRule[])}. 
- * This default base implementation just calls the standard visibility method 
+ *
+ * This was introduced because of the possible sub-menus.
+ * Most rules are not sub-menu aware, therefore they do not need to implement
+ * {@link #getVisibility(CmsObject, CmsResourceUtil[], I_CmsMenuItemRule[])}.
+ * This default base implementation just calls the standard visibility method
  * discarding the additional rules.<p>
- * 
- * @since 6.7.2 
+ *
+ * @since 6.7.2
  */
 public abstract class A_CmsMenuItemRule implements I_CmsMenuItemRule {
 
@@ -55,12 +55,12 @@ public abstract class A_CmsMenuItemRule implements I_CmsMenuItemRule {
 
     /**
      * Gets the visibility depending on resource utilities and the current menu item data.<p>
-     * 
-     * @param cms the CMS context 
-     * @param resourceUtil the resource utilities 
-     * @param menuItem the context menu item 
-     * 
-     * @return the visibility 
+     *
+     * @param cms the CMS context
+     * @param resourceUtil the resource utilities
+     * @param menuItem the context menu item
+     *
+     * @return the visibility
      */
     public CmsMenuItemVisibilityMode getVisibility(
         CmsObject cms,

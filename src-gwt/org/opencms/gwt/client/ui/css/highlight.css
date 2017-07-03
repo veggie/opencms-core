@@ -4,20 +4,8 @@
 	background: transparent;
 }
 
-
-/** Opacity filter somehow hides the hightlighting in IE7 and IE8, will not use it for now. */
-@if user.agent ie6 {
-/*	.highlightBox {
-		filter: literal("progid:DXImageTransform.Microsoft.Alpha( Opacity=60, FinishOpacity=0, Style=0, StartX=0,  FinishX=100, StartY=0, FinishY=100)");
-	}  */
-} @elif user.agent ie8 {
-/*	.highlightBox {
-		-ms-filter: "progid:DXImageTransform.Microsoft.Alpha( Opacity=60, FinishOpacity=0, Style=0, StartX=0,  FinishX=100, StartY=0, FinishY=100)";
-	}  */
-} @else {
-	.highlightBox {
-		opacity: 0.6;
-	}
+.highlightBox {
+	opacity: 0.7;
 }
 
 .highlightBox div{
@@ -26,29 +14,137 @@
 	left: 0px;
 }
 
-
-@sprite .colorRed .borderLeft{
-	gwt-image: 'borders.leftChangedBorderHighlight';
-}
-@sprite .colorRed .borderTop{
-	gwt-image: 'borders.topChangedBorderHighlight';
-}
-@sprite .colorRed .borderBottom{
-	gwt-image: 'borders.bottomChangedBorderHighlight';
-}
-@sprite .colorRed .borderRight{
-	gwt-image: 'borders.rightChangedBorderHighlight';
+.highlightBox .borderLeft, .highlightBox .borderRight{
+	width: 2px;
 }
 
-@sprite .colorBlue .borderLeft{
-	gwt-image: 'borders.leftNewBorderHighlight';
+.highlightBox .borderTop, .highlightBox .borderBottom{
+	height: 2px
 }
-@sprite .colorBlue .borderTop{
-	gwt-image: 'borders.topNewBorderHighlight';
+
+@if user.agent safari {
+	.animated .borderLeft{
+		-webkit-animation: moveDown 1s linear normal infinite;
+	}
+	
+	.animated .borderRight{
+		-webkit-animation: moveDown 1s linear reverse infinite;
+	}
+	
+	.animated .borderTop{
+		-webkit-animation: moveRight 1s linear reverse infinite;
+	}
+	
+	.animated .borderBottom{
+		-webkit-animation: moveRight 1s linear normal infinite;
+	}	
+	
+	@-webkit-keyframes moveRight {
+		0% {background-position: 0px 50%;}
+		100% {background-position: 16px 50%;}
+	}
+
+	@-webkit-keyframes moveDown {
+		0% {background-position: 50% 8px;}
+		100% {background-position: 50% 24px;}
+	}
+} @else {
+	.animated .borderLeft{
+		animation: moveDown 1s linear normal infinite;
+	}
+	
+	.animated .borderRight{
+		animation: moveDown 1s linear reverse infinite;
+	}
+	
+	.animated .borderTop{
+		animation: moveRight 1s linear reverse infinite;
+	}
+	
+	.animated .borderBottom{
+		animation: moveRight 1s linear normal infinite;
+	}	
+	
+	@keyframes moveRight {
+		0% {background-position: 0px 50%;}
+		100% {background-position: 16px 50%;}
+	}
+
+	@keyframes moveDown {
+		0% {background-position: 50% 8px;}
+		100% {background-position: 50% 24px;}
+	}
 }
-@sprite .colorBlue .borderBottom{
-	gwt-image: 'borders.bottomNewBorderHighlight';
+
+
+
+.colorSolidGrey .borderLeft, .colorSolidGrey .borderRight, .colorSolidGrey .borderTop, .colorSolidGrey .borderBottom{
+	background: rgba(181,189,200,1);
 }
-@sprite .colorBlue .borderRight{
-	gwt-image: 'borders.rightNewBorderHighlight';
+
+.colorGrey .borderLeft, .colorGrey .borderRight{
+	background: linear-gradient(
+  		to bottom,
+  		rgba(181,189,200,1) ,
+  		rgba(181,189,200,1)  50%,
+  		rgba(125,185,232,0) 50%,
+  		rgba(125,185,232,0)
+	);
+	background-size: 100% 16px;
+}
+
+.colorGrey .borderTop, .colorGrey .borderBottom{
+	background: linear-gradient(
+  		to right,
+  		rgba(181,189,200,1) ,
+  		rgba(181,189,200,1)  50%,
+  		rgba(125,185,232,0) 50%,
+  		rgba(125,185,232,0)
+	);
+	background-size: 16px  100%;
+}
+
+
+.colorRed .borderLeft, .colorRed .borderRight{
+	background: linear-gradient(
+  		to bottom,
+  		rgba(179,27,52,1),
+  		rgba(179,27,52,1) 50%,
+  		rgba(125,185,232,0) 50%,
+  		rgba(125,185,232,0)
+	);
+	background-size: 100% 16px;
+}
+
+.colorRed .borderTop, .colorRed .borderBottom{
+	background: linear-gradient(
+  		to right,
+  		rgba(179,27,52,1),
+  		rgba(179,27,52,1) 50%,
+  		rgba(125,185,232,0) 50%,
+  		rgba(125,185,232,0)
+	);
+	background-size: 16px  100%;
+}
+
+.colorBlue .borderLeft, .colorBlue .borderRight{
+	background: linear-gradient(
+  		to bottom,
+  		rgba(135,224,253,1),
+  		rgba(135,224,253,1)  50%,
+  		rgba(125,185,232,0) 50%,
+  		rgba(125,185,232,0)
+	);
+	background-size: 100% 16px;
+}
+
+.colorBlue .borderTop, .colorBlue .borderBottom{
+	background: linear-gradient(
+  		to right,
+  		rgba(135,224,253,1),
+  		rgba(135,224,253,1)  50%,
+  		rgba(125,185,232,0) 50%,
+  		rgba(125,185,232,0)
+	);
+	background-size: 16px  100%;
 }

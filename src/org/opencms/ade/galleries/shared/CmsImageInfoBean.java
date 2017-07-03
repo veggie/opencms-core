@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,7 +29,7 @@ package org.opencms.ade.galleries.shared;
 
 /**
  * Bean holding image info to be display in the resource preview dialog.<p>
- * 
+ *
  * @since 8.0.
  */
 public class CmsImageInfoBean extends CmsResourceInfoBean {
@@ -46,6 +46,9 @@ public class CmsImageInfoBean extends CmsResourceInfoBean {
     /** The selected image path (used for editor and widget mode). */
     private String m_selectedPath;
 
+    /** The view link for displaying the image. */
+    private String m_viewLink;
+
     /** The image width. */
     private int m_width;
 
@@ -61,7 +64,7 @@ public class CmsImageInfoBean extends CmsResourceInfoBean {
 
     /**
      * Returns the structure id hash.<p>
-     * 
+     *
      * @return the hash
      */
     public int getHash() {
@@ -90,6 +93,16 @@ public class CmsImageInfoBean extends CmsResourceInfoBean {
     }
 
     /**
+     * The view link for displaying the image.<p>
+     *
+     * @return the link for displaying the image
+     */
+    public String getViewLink() {
+
+        return m_viewLink;
+    }
+
+    /**
      * Returns the width.<p>
      *
      * @return the width
@@ -111,7 +124,7 @@ public class CmsImageInfoBean extends CmsResourceInfoBean {
 
     /**
      * Sets the hash.<p>
-     * 
+     *
      * @param hash the hash
      */
     public void setHash(int hash) {
@@ -137,6 +150,16 @@ public class CmsImageInfoBean extends CmsResourceInfoBean {
     public void setSelectedPath(String selectedPath) {
 
         m_selectedPath = selectedPath;
+    }
+
+    /**
+     * Sets the link for displaying the image.<p>
+     *
+     * @param viewLink the link for displaying the image
+     */
+    public void setViewLink(String viewLink) {
+
+        m_viewLink = viewLink;
     }
 
     /**

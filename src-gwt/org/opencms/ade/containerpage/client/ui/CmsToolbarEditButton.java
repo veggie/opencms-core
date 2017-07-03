@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,23 +27,24 @@
 
 package org.opencms.ade.containerpage.client.ui;
 
+import org.opencms.ade.containerpage.client.CmsContainerpageController;
 import org.opencms.ade.containerpage.client.CmsContainerpageHandler;
+import org.opencms.ade.containerpage.client.ui.css.I_CmsLayoutBundle;
 import org.opencms.gwt.client.ui.I_CmsButton;
-import org.opencms.gwt.client.util.CmsDomUtil;
 import org.opencms.util.CmsStringUtil;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 
 /**
  * The edit button holding all edit related methods.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsToolbarEditButton extends A_CmsToolbarOptionButton {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param handler the container-page handler
      */
     public CmsToolbarEditButton(CmsContainerpageHandler handler) {
@@ -58,8 +59,22 @@ public class CmsToolbarEditButton extends A_CmsToolbarOptionButton {
     public CmsElementOptionButton createOptionForElement(CmsContainerPageElementPanel element) {
 
         CmsElementOptionButton button = super.createOptionForElement(element);
-        if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(element.getNoEditReason())) {
-            button.disable(element.getNoEditReason());
+        button.setImageClass(I_CmsButton.ButtonData.SELECTION.getIconClass());
+        if (!CmsContainerpageController.get().getData().isModelGroup() && element.isModelGroup()) {
+            button.disable("");
+        } else if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(element.getNoEditReason())) {
+            if (element.hasWritePermission()
+                && !((element instanceof CmsGroupContainerElementPanel)
+                    && ((CmsGroupContainerElementPanel)element).isInheritContainer())) {
+                // if the user has write permissions, the lock report dialog will be accessible through this button
+                button.setImageClass(
+                    I_CmsButton.ButtonData.SELECTION.getIconClass()
+                        + " "
+                        + I_CmsLayoutBundle.INSTANCE.containerpageCss().lockedElement());
+                button.setTitle(element.getNoEditReason());
+            } else {
+                button.disable(element.getNoEditReason());
+            }
         }
         return button;
     }
@@ -70,10 +85,33 @@ public class CmsToolbarEditButton extends A_CmsToolbarOptionButton {
     @Override
     public void onElementClick(ClickEvent event, CmsContainerPageElementPanel element) {
 
-        CmsDomUtil.ensureMouseOut(element.getElementOptionBar().getElement());
-        getHandler().openEditorForElement(element);
+        if (CmsStringUtil.isEmptyOrWhitespaceOnly(element.getNoEditReason())) {
+            openEditor(element);
+        } else {
+            openLockReport(element);
+        }
         event.stopPropagation();
         event.preventDefault();
 
+    }
+
+    /**
+     * Opens the element editor.<p>
+     *
+     * @param element the element
+     */
+    private void openEditor(CmsContainerPageElementPanel element) {
+
+        getHandler().openEditorForElement(element, false);
+    }
+
+    /**
+     * Opens the lock report for locked elements.<p>
+     *
+     * @param element the element
+     */
+    private void openLockReport(CmsContainerPageElementPanel element) {
+
+        getHandler().openLockReportForElement(element);
     }
 }

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -41,10 +41,10 @@ import java.util.Map.Entry;
 import org.apache.commons.codec.binary.Base64;
 
 /**
- * 
+ *
  * Utilities to handle basic data types.<p>
- * 
- * @since 6.5.6 
+ *
+ * @since 6.5.6
  */
 public final class CmsDataTypeUtil {
 
@@ -58,19 +58,19 @@ public final class CmsDataTypeUtil {
 
     /**
      * Returns the deserialized (if needed) object.<p>
-     * 
+     *
      * @param data the data to deserialize
      * @param type the data type
-     * 
+     *
      * @return the deserialized object
-     * 
-     * @throws IOException if the inputstream fails 
+     *
+     * @throws IOException if the inputstream fails
      * @throws ClassNotFoundException if the serialized object fails
      */
     public static Object dataDeserialize(byte[] data, String type) throws IOException, ClassNotFoundException {
 
         // check the type of the stored data
-        Class clazz = Class.forName(type);
+        Class<?> clazz = Class.forName(type);
 
         if (isParseable(clazz)) {
             // this is parseable data
@@ -85,13 +85,13 @@ public final class CmsDataTypeUtil {
 
     /**
      * Returns a ready to export string representation of the given object.<p>
-     * 
+     *
      * For not parseable objects, base64 encoded string with the serialized object is generated.<p>
-     * 
+     *
      * @param data the object to export
-     * 
-     * @return the string representation 
-     * 
+     *
+     * @return the string representation
+     *
      * @throws IOException  if something goes wrong
      */
     public static String dataExport(Object data) throws IOException {
@@ -108,18 +108,18 @@ public final class CmsDataTypeUtil {
 
     /**
      * Returns the import data object.<p>
-     * 
+     *
      * @param value the exported value
      * @param type the expected data type
-     * 
+     *
      * @return the import data object
-     * 
+     *
      * @throws ClassNotFoundException if something goes wrong
      * @throws IOException if something goes wrong
      */
     public static Object dataImport(String value, String type) throws ClassNotFoundException, IOException {
 
-        Class clazz = Class.forName(type);
+        Class<?> clazz = Class.forName(type);
         if (CmsDataTypeUtil.isParseable(clazz)) {
             return CmsDataTypeUtil.parse(value, clazz);
         }
@@ -129,11 +129,11 @@ public final class CmsDataTypeUtil {
 
     /**
      * Serialize the given data.<p>
-     * 
+     *
      * @param data the data to serialize
-     * 
+     *
      * @return byte[] the serailized data
-     * 
+     *
      * @throws IOException if something goes wrong
      */
     public static byte[] dataSerialize(Object data) throws IOException {
@@ -147,10 +147,11 @@ public final class CmsDataTypeUtil {
         ObjectOutputStream oout = new ObjectOutputStream(bout);
         Object obj = data;
         if (data instanceof Map) {
-            Hashtable ht = new Hashtable();
-            Iterator it = ((Map)data).entrySet().iterator();
+            Hashtable<Object, Object> ht = new Hashtable<Object, Object>();
+            @SuppressWarnings("unchecked")
+            Iterator<Entry<Object, Object>> it = ((Map<Object, Object>)data).entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry entry = (Entry)it.next();
+                Entry<Object, Object> entry = it.next();
                 if ((entry.getKey() != null) && (entry.getValue() != null)) {
                     ht.put(entry.getKey(), entry.getValue());
                 }
@@ -164,9 +165,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(boolean data) {
@@ -176,9 +177,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(byte data) {
@@ -188,9 +189,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(char data) {
@@ -200,9 +201,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(Date data) {
@@ -212,9 +213,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(double data) {
@@ -224,9 +225,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(float data) {
@@ -236,9 +237,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(int data) {
@@ -248,9 +249,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(long data) {
@@ -260,9 +261,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value depending on the data type.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(Object data) {
@@ -270,7 +271,7 @@ public final class CmsDataTypeUtil {
         if (data == null) {
             return null;
         }
-        Class clazz = data.getClass();
+        Class<?> clazz = data.getClass();
         if (clazz.equals(Date.class)) {
             return format(((Date)data).getTime());
         }
@@ -279,9 +280,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Formats the given data into a string value.<p>
-     * 
+     *
      * @param data the data to format
-     * 
+     *
      * @return a string representation of the given data
      */
     public static String format(short data) {
@@ -291,12 +292,12 @@ public final class CmsDataTypeUtil {
 
     /**
      * Checks if the given class is representable as a string.<p>
-     * 
+     *
      * @param clazz the type to test
-     * 
+     *
      * @return if the given class is representable as a string
      */
-    public static boolean isParseable(Class clazz) {
+    public static boolean isParseable(Class<?> clazz) {
 
         boolean parseable = false;
         parseable = parseable || (clazz.equals(byte.class));
@@ -323,9 +324,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Converts Number to int.<p>
-     * 
+     *
      * @param n the number object
-     * 
+     *
      * @return Number.inValue(), 0 - if the parameter is null
      */
     public static int numberToInt(Number n) {
@@ -336,13 +337,13 @@ public final class CmsDataTypeUtil {
     /**
      * Returns an object of the given type (or a wrapper for base types)
      * with the value of the given data.<p>
-     * 
+     *
      * @param data the data to parse
      * @param clazz the data type
-     * 
+     *
      * @return the value of the given data
      */
-    public static Object parse(String data, Class clazz) {
+    public static Object parse(String data, Class<?> clazz) {
 
         if (data == null) {
             return null;
@@ -382,9 +383,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a boolean.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Boolean parseBoolean(String data) {
@@ -394,9 +395,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a byte.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Byte parseByte(String data) {
@@ -406,9 +407,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a char.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Character parseChar(String data) {
@@ -418,9 +419,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a date.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Date parseDate(String data) {
@@ -430,9 +431,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a double.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Double parseDouble(String data) {
@@ -442,9 +443,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a float.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Float parseFloat(String data) {
@@ -454,9 +455,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as an integer.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Integer parseInt(String data) {
@@ -466,9 +467,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a long.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Long parseLong(String data) {
@@ -478,9 +479,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as a short.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static Short parseShort(String data) {
@@ -490,9 +491,9 @@ public final class CmsDataTypeUtil {
 
     /**
      * Parses the given data as an uuid.<p>
-     * 
+     *
      * @param data the data to parse
-     * 
+     *
      * @return the converted data value
      */
     public static CmsUUID parseUUID(String data) {

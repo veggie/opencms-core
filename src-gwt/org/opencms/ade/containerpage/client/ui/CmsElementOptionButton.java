@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,7 +34,7 @@ import org.opencms.gwt.client.ui.I_CmsButton.ButtonStyle;
 
 /**
  * An optional container element button.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsElementOptionButton extends CmsPushButton implements I_CmsDragHandle {
@@ -47,17 +47,16 @@ public class CmsElementOptionButton extends CmsPushButton implements I_CmsDragHa
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param toolbarButton the tool-bar button associated with this button, providing all necessary information
      * @param element the element to create this button for
      */
     public CmsElementOptionButton(A_CmsToolbarOptionButton toolbarButton, CmsContainerPageElementPanel element) {
 
         super();
-        setImageClass(toolbarButton.getIconClass());
-        setButtonStyle(ButtonStyle.TRANSPARENT, null);
+        setImageClass(toolbarButton.getButtonData().getSmallIconClass());
+        setButtonStyle(ButtonStyle.FONT_ICON, null);
         setTitle(toolbarButton.getTitle());
-        addStyleName(toolbarButton.getIconClass());
         m_toolbarButton = toolbarButton;
         m_dragElement = element;
     }
@@ -73,21 +72,21 @@ public class CmsElementOptionButton extends CmsPushButton implements I_CmsDragHa
     }
 
     /**
-     * Returns the associated tool-bar button.<p>
-     * 
-     * @return the associated tool-bar button
-     */
-    public A_CmsToolbarOptionButton getToolbarButton() {
-
-        return m_toolbarButton;
-    }
-
-    /**
      * @see org.opencms.gwt.client.dnd.I_CmsDragHandle#getDraggable()
      */
     public I_CmsDraggable getDraggable() {
 
         return m_dragElement;
+    }
+
+    /**
+     * Returns the associated tool-bar button.<p>
+     *
+     * @return the associated tool-bar button
+     */
+    public A_CmsToolbarOptionButton getToolbarButton() {
+
+        return m_toolbarButton;
     }
 
 }

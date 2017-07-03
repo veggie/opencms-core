@@ -2,94 +2,158 @@
 
 <export>
 	<info>
-		<creator>Admin</creator>
-		<opencms_version>8.0.2</opencms_version>
-		<createdate>Wed, 29 Jun 2011 08:58:42 GMT</createdate>
 		<infoproject>Offline</infoproject>
-		<export_version>7</export_version>
+		<export_version>10</export_version>
 	</info>
 	<module>
 		<name>org.opencms.ade.config</name>
-		<nicename><![CDATA[OpenCms 8 ADE Configuration]]></nicename>
+		<nicename><![CDATA[OpenCms ADE Configuration]]></nicename>
 		<group>OpenCms ADE</group>
-		<class />
-		<description><![CDATA[<p>This module contains configuration resources for OpenCms websites</p>
-		<p><i>(c) 2012 by Alkacon Software GmbH (http://www.alkacon.com).</i></p>]]></description>
-		<version>8.0.4</version>
-		<authorname><![CDATA[Alkacon Software GmbH]]></authorname>
+		<class/>
+		<import-script><![CDATA[
+# sets access control entries  and properties on folders not exclusively belonging to this module
+chacc '/system/userimages/' 'ROLE' 'ELEMENT_AUTHOR' '+I+O+R'
+		]]></import-script>
+		<export-mode name="reduced"/>
+		<description><![CDATA[Configuration for OpenCms websites.<br>
+<i>&copy; 2017 by Alkacon Software GmbH &amp; Co. KG (http://www.alkacon.com).</i>]]></description>
+		<version>10.5.1</version>
+		<authorname><![CDATA[Alkacon Software GmbH &amp; Co. KG]]></authorname>
 		<authoremail><![CDATA[sales@alkacon.com]]></authoremail>
-		<datecreated />
-		<userinstalled />
-		<dateinstalled />
-		<dependencies />
+		<datecreated/>
+		<userinstalled/>
+		<dateinstalled/>
+		<dependencies>
+			<dependency name="org.opencms.gwt" version="10.0.0"/>
+			<dependency name="org.opencms.workplace" version="10.0.0"/>
+		</dependencies>
 		<exportpoints>
-			<exportpoint uri="/system/modules/org.opencms.ade.config/classes/"
-				destination="WEB-INF/classes/" />
+			<exportpoint uri="/system/modules/org.opencms.ade.config/classes/" destination="WEB-INF/classes/"/>
 		</exportpoints>
 		<resources>
-			<resource uri="/system/modules/org.opencms.ade.config/" />
-			<resource uri="/system/workplace/resources/filetypes/configfolder.png" />
-			<resource
-				uri="/system/workplace/resources/filetypes/configfolder_big.png" />
-			<resource uri="/system/workplace/resources/filetypes/module_config.png" />
-			<resource
-				uri="/system/workplace/resources/filetypes/module_config_big.png" />
-			<resource uri="/system/workplace/resources/filetypes/sitemap_config.png" />
-			<resource
-				uri="/system/workplace/resources/filetypes/sitemap_config_big.png" />
-			<resource uri="/system/workplace/resources/filetypes/containerpage.png" />
-			<resource
-				uri="/system/workplace/resources/filetypes/containerpage_big.png" />
-			<resource uri="/system/workplace/resources/filetypes/elementgroup.png" />
-			<resource
-				uri="/system/workplace/resources/filetypes/elementgroup_big.png" />
-			<resource
-				uri="/system/workplace/resources/filetypes/containerpage_template.png" />
-			<resource
-				uri="/system/workplace/resources/filetypes/containerpage_template_big.png" />
+			<resource uri="/system/modules/org.opencms.ade.config/"/>
+			<resource uri="/system/userimages/temp/"/>
+			<resource uri="/system/shared/templatecontexts.json"/>
+			<resource uri="/system/workplace/commons/gallery.jsp"/>
+			<resource uri="/system/workplace/commons/open_ade_gallery.jsp"/>
+			<resource uri="/system/workplace/commons/postupload_basicproperties.jsp"/>
+			<resource uri="/system/workplace/commons/postupload_useconfig.jsp"/>
+			<resource uri="/system/workplace/commons/postupload.jsp"/>
+			<resource uri="/system/workplace/commons/properties.jsp"/>
+			<resource uri="/system/workplace/commons/direct_publish.jsp"/>
+			<resource uri="/system/workplace/commons/publish_project.jsp"/>
+			<resource uri="/system/workplace/commons/publish.jsp"/>
+			<resource uri="/system/workplace/commons/download-aliases.jsp"/>
+			<resource uri="/system/workplace/commons/import-aliases.jsp"/>
+			<resource uri="/system/workplace/commons/sitemap.jsp"/>
+			<resource uri="/system/workplace/commons/upload.jsp"/>
+			<resource uri="/system/workplace/commons/uploadAction.jsp"/>
+			<resource uri="/system/workplace/resources/commons/notemplate.png"/>
+			<resource uri="/system/workplace/resources/filetypes/category.png"/>
+			<resource uri="/system/workplace/resources/filetypes/category_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/configfolder.png"/>
+			<resource uri="/system/workplace/resources/filetypes/configfolder_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/containerpage.png"/>
+			<resource uri="/system/workplace/resources/filetypes/containerpage_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/containerpage_template.png"/>
+			<resource uri="/system/workplace/resources/filetypes/containerpage_template_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/elementgroup.png"/>
+			<resource uri="/system/workplace/resources/filetypes/elementgroup_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/formatter_config.png"/>
+			<resource uri="/system/workplace/resources/filetypes/formatter_config_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/function.png"/>
+			<resource uri="/system/workplace/resources/filetypes/function_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/htmlredirect.png"/>
+			<resource uri="/system/workplace/resources/filetypes/htmlredirect_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/image_xml.png"/>
+			<resource uri="/system/workplace/resources/filetypes/image_xml_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/inheritancegroup.png"/>
+			<resource uri="/system/workplace/resources/filetypes/inheritancegroup_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelgroup_copy.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelgroup_copy_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelgroup_reuse.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelgroup_reuse_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelpage.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelpage_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelpage_groups.png"/>
+			<resource uri="/system/workplace/resources/filetypes/modelpage_groups_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/module_config.png"/>
+			<resource uri="/system/workplace/resources/filetypes/module_config_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/navlevel.png"/>
+			<resource uri="/system/workplace/resources/filetypes/navlevel_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/sitemap_config.png"/>
+			<resource uri="/system/workplace/resources/filetypes/sitemap_config_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/subsitemap.png"/>
+			<resource uri="/system/workplace/resources/filetypes/subsitemap_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/localization.png"/>
+			<resource uri="/system/workplace/resources/filetypes/localization_big.png"/>
+			<resource uri="/system/workplace/resources/filetypes/localization_descriptor.png"/>
+			<resource uri="/system/workplace/resources/filetypes/localization_descriptor_big.png"/>
 		</resources>
-		<parameters />
+		<excluderesources/>
+		<parameters/>
 		<resourcetypes>
-			<type class="org.opencms.file.types.CmsResourceTypeXmlContainerPage"
-				name="containerpage" id="13">
-				<param name="formatter_gallery_preview">/system/workplace/editors/ade/container-preview-formatter.jsp
-				</param>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlContainerPage" name="containerpage" id="13">
+				<param name="formatter_gallery_preview">/system/workplace/editors/ade/container-preview-formatter.jsp</param>
 			</type>
-			<type class="org.opencms.file.types.CmsResourceTypeXmlContent"
-				name="groupcontainer" id="17">
-				<param name="schema">/system/modules/org.opencms.ade.containerpage/schemas/group_container.xsd
-				</param>
-			</type>
-			<type class="org.opencms.file.types.CmsResourceTypeJsp" name="containerpage_template"
-				id="21" />
-			<type class="org.opencms.file.types.CmsResourceTypeXmlContent"
-				name="function" id="22">
-				<param name="schema">/system/modules/org.opencms.ade.containerpage/schemas/function.xsd
-				</param>
-			</type>
-			<type class="org.opencms.file.types.CmsResourceTypeXmlContent"
-				name="htmlredirect" id="15">
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration" name="groupcontainer" id="17">
 				<properties>
 					<property>
-						<name>template-elements</name>
-						<value type="shared"><![CDATA[/system/modules/org.opencms.ade.sitemap/pages/redirect-detail.jsp]]></value>
+						<name>search.exclude</name>
+						<value><![CDATA[true]]></value>
+					</property>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
 					</property>
 				</properties>
-				<param name="schema">/system/modules/org.opencms.ade.sitemap/schemas/redirect.xsd
-				</param>
+				<param name="schema">/system/modules/org.opencms.ade.containerpage/schemas/group_container.xsd</param>
 			</type>
-			<type class="org.opencms.file.types.CmsResourceTypeFolderExtended"
-				name="subsitemap" id="23" />
-			<type class="org.opencms.file.types.CmsResourceTypeFolderExtended"
-				name="content_folder" id="24">
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration" name="elementview" id="310">
+				<properties>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[true]]></value>
+					</property>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/element_view.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeJsp" name="containerpage_template" id="21"/>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlContent" name="function" id="22">
+				<param name="schema">/system/modules/org.opencms.ade.containerpage/schemas/function.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeHtmlRedirect" name="htmlredirect" id="15">
+				<properties>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.sitemap/schemas/redirect.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeFolderSubSitemap" name="subsitemap" id="23"/>
+			<type class="org.opencms.file.types.CmsResourceTypeFolderExtended" name="content_folder" id="24">
 				<copy-resources>
-					<copy-resource
-						source="/system/modules/org.opencms.ade.config/copyresources/sitemap.config"
-						target="${resource.folder.path}/.config" type="new" />
+					<copy-resource source="/system/modules/org.opencms.ade.config/copyresources/sitemap.config" target="${resource.folder.path}/.config" type="new"/>
 				</copy-resources>
 			</type>
-			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration"
-				name="sitemap_config" id="14">
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration" name="sitemap_config" id="14">
 				<properties>
 					<property>
 						<name>locale-available</name>
@@ -99,12 +163,14 @@
 						<name>locale</name>
 						<value><![CDATA[en]]></value>
 					</property>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
 				</properties>
-				<param name="schema">/system/modules/org.opencms.ade.config/schemas/sitemap_config.xsd
-				</param>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/sitemap_config.xsd</param>
 			</type>
-			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration"
-				name="module_config" id="28">
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration" name="module_config" id="28">
 				<properties>
 					<property>
 						<name>locale-available</name>
@@ -114,191 +180,426 @@
 						<name>locale</name>
 						<value><![CDATA[en]]></value>
 					</property>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
 				</properties>
-				<param name="schema">/system/modules/org.opencms.ade.config/schemas/module_config.xsd
-				</param>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/module_config.xsd</param>
 			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration" name="formatter_config" id="308">
+				<properties>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/formatters/new_formatter.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeSeoFile" name="seo_file" id="305">
+				<properties>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/seo_file.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration" name="inheritance_group" id="303">
+				<properties>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[true]]></value>
+					</property>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.containerpage/schemas/inheritance_group.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlContent" name="inheritance_config" id="304">
+				<properties>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.containerpage/schemas/inheritance_config.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlContent" name="xmlvfsbundle" id="306">
+				<properties>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/xmlvfsbundle.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypePlain" name="propertyvfsbundle" id="307">
+				<properties>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
+				</properties>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration" name="sitemap_master_config" id="313">
+				<properties>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[true]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/sitemap_master_config.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlContainerPage" name="modelgroup" id="314">
+				<properties>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[true]]></value>
+					</property>
+				</properties>
+				<param name="formatter_gallery_preview">/system/workplace/editors/ade/container-preview-formatter.jsp</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeMacroFormatter" name="macro_formatter" id="315">
+				<properties>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>cache</name>
+						<value><![CDATA[container-element;locale;uri]]></value>
+					</property>
+					<property>
+						<name>search.exclude</name>
+						<value><![CDATA[all]]></value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/formatters/macro_formatter.xsd</param>
+			</type>
+			<type class="org.opencms.file.types.CmsResourceTypeXmlAdeConfiguration"
+				name="bundledescriptor" id="320">
+				<properties>
+					<property>
+						<name>locale-available</name>
+						<value><![CDATA[en]]></value>
+					</property>
+					<property>
+						<name>locale</name>
+						<value><![CDATA[en]]></value>
+					</property>				
+					<property>
+						<name>search.exclude</name>
+						<value>all</value>
+					</property>
+				</properties>
+				<param name="schema">/system/modules/org.opencms.ade.config/schemas/bundledescriptor.xsd
+				</param>
+			</type>			
 		</resourcetypes>
 		<explorertypes>
-
-			<explorertype name="subsitemap" key="fileicon.subsitemap"
-				icon="subsitemap.png" bigicon="subsitemap_big.png" reference="folder">
-				<newresource page="extendedfolder"
-					uri="newresource.jsp?newresourcetype=subsitemap" order="490"
-					autosetnavigation="false" autosettitle="false" info="desc.subsitemap" />
+			<explorertype name="subsitemap" key="fileicon.subsitemap" icon="subsitemap.png" bigicon="subsitemap_big.png" reference="folder">
+				<newresource page="extendedfolder" uri="newresource.jsp?newresourcetype=subsitemap" order="490" autosetnavigation="false" autosettitle="false" info="desc.subsitemap"/>
 			</explorertype>
-			<explorertype name="htmlredirect" key="fileicon.htmlredirect"
-				icon="htmlredirect.png" bigicon="htmlredirect_big.png" reference="xmlcontent">
-				<newresource
-					uri="newresource_xmlcontent.jsp?newresourcetype=htmlredirect"
-					order="27" autosetnavigation="true" autosettitle="true"
-					info="desc.htmlredirect" />
+			<explorertype name="modelpage" key="fileicon.modelpage" icon="modelpage.png" bigicon="modelpage_big.png" reference="folder">
+				<newresource page="none" uri="" order="490" autosetnavigation="false" autosettitle="false" info=""/>
+			</explorertype>
+			<explorertype name="category" key="fileicon.category" icon="category.png" bigicon="category_big.png" reference="folder">
+				<newresource page="none" uri="" order="490" autosetnavigation="false" autosettitle="false" info=""/>
+			</explorertype>
+			<explorertype name="htmlredirect" key="fileicon.htmlredirect" icon="htmlredirect.png" bigicon="htmlredirect_big.png" reference="xmlcontent">
+				<newresource uri="newresource_xmlcontent.jsp?newresourcetype=htmlredirect" order="27" autosetnavigation="true" autosettitle="true" info="desc.htmlredirect"/>
 				<accesscontrol>
-					<accessentry principal="ROLE.WORKPLACE_USER"
-						permissions="+r+v+w+c" />
+					<accessentry principal="ROLE.EDITOR" permissions="+r+v+w+c"/>
 				</accesscontrol>
 			</explorertype>
-
-
-			<explorertype name="containerpage" key="fileicon.containerpage"
-				icon="containerpage.png" bigicon="containerpage_big.png" reference="xmlcontent">
-				<newresource
-					uri="newresource_xmlcontent.jsp?newresourcetype=containerpage"
-					order="25" autosetnavigation="false" autosettitle="false"
-					info="desc.containerpage" />
+			<explorertype name="containerpage" key="fileicon.containerpage" icon="containerpage.png" bigicon="containerpage_big.png" reference="xmlcontent">
+				<newresource uri="newresource_xmlcontent.jsp?newresourcetype=containerpage" order="25" autosetnavigation="false" autosettitle="false" info="desc.containerpage"/>
 				<accesscontrol>
-					<accessentry principal="ROLE.WORKPLACE_USER"
-						permissions="+r+v+w+c" />
+					<accessentry principal="ROLE.EDITOR" permissions="+r+v+w+c"/>
+					<accessentry principal="ROLE.ELEMENT_AUTHOR" permissions="+r+v+w"/>
 				</accesscontrol>
 				<editoptions>
 					<defaultproperties enabled="true" shownavigation="true">
-						<defaultproperty name="Title" />
-						<defaultproperty name="Keywords" />
-						<defaultproperty name="Description" />
+						<defaultproperty name="Title"/>
+						<defaultproperty name="Keywords"/>
+						<defaultproperty name="Description"/>
 					</defaultproperties>
 					<contextmenu>
-						<entry key="GUI_EXPLORER_CONTEXT_LOCK_0" uri="commons/lock.jsp"
-							rule="lock" />
-						<entry key="GUI_EXPLORER_CONTEXT_OVERRIDELOCK_0" uri="commons/lockchange.jsp"
-							rule="changelock" />
-						<entry key="GUI_EXPLORER_CONTEXT_UNLOCK_0" uri="commons/unlock.jsp"
-							rule="unlock" />
-						<separator />
-						<entry key="GUI_EXPLORER_CONTEXT_COPYTOPROJECT_0" uri="commons/copytoproject.jsp"
-							rule="copytoproject" />
-						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_0" uri="commons/publishresource.jsp"
-							rule="directpublish" />
-						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_SCHEDULED_0" uri="commons/publishscheduledresource.jsp"
-							rule="publishscheduled" />
-						<separator />
-						<entry key="GUI_EXPLORER_CONTEXT_EDIT_0" uri="editors/editor.jsp"
-							target="_top" rule="standard" />
-						<separator />
-						<entry key="GUI_EXPLORER_CONTEXT_COPY_0" uri="commons/copy.jsp"
-							rule="copy" />
-						<entry key="GUI_EXPLORER_CONTEXT_MOVE_0" uri="commons/move.jsp"
-							rule="standard" />
-						<entry key="GUI_EXPLORER_CONTEXT_DELETE_0" uri="commons/delete.jsp"
-							rule="standard" />
-						<entry key="GUI_EXPLORER_CONTEXT_UNDOCHANGES_0" uri="commons/undochanges.jsp"
-							rule="undochanges" />
-						<entry key="GUI_EXPLORER_CONTEXT_UNDELETE_0" uri="commons/undelete.jsp"
-							rule="undelete" />
-						<separator />
+						<entry key="GUI_EXPLORER_CONTEXT_LOCK_0" uri="commons/lock.jsp" rule="lock"/>
+						<entry key="GUI_EXPLORER_CONTEXT_OVERRIDELOCK_0" uri="commons/lockchange.jsp" rule="changelock"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNLOCK_0" uri="commons/unlock.jsp" rule="unlock"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_COPYTOPROJECT_0" uri="commons/copytoproject.jsp" rule="copytoproject"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_0" uri="/system/workplace/commons/direct_publish.jsp" rule="directpublish"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_SCHEDULED_0" uri="commons/publishscheduledresource.jsp" rule="publishscheduled"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_EDIT_0" uri="editors/editor.jsp" target="_top" rule="standard"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_COPY_0" uri="commons/copy.jsp" rule="copy"/>
+						<entry key="GUI_EXPLORER_CONTEXT_MOVE_0" uri="commons/move.jsp" rule="standard"/>
+						<entry key="GUI_EXPLORER_CONTEXT_DELETE_0" uri="commons/delete.jsp" rule="standard"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNDOCHANGES_0" uri="commons/undochanges.jsp" rule="undochanges"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNDELETE_0" uri="commons/undelete.jsp" rule="undelete"/>
+						<separator/>
 						<entry key="GUI_EXPLORER_CONTEXT_RELATIONS_0" rule="substandard">
-							<entry key="GUI_EXPLORER_CONTEXT_LINKRELATIONTO_0"
-								uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Flinkrelationtarget"
-								rule="standard" />
-							<entry key="GUI_EXPLORER_CONTEXT_LINKRELATIONFROM_0"
-								uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Flinkrelationsource"
-								rule="standard" />
-							<separator />
-							<entry key="GUI_EXPLORER_CONTEXT_SHOWSIBLINGS_0"
-								uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fsiblings"
-								rule="showsiblings" />
-							<separator />
-							<entry key="GUI_EXPLORER_CONTEXT_CATEGORIES_0"
-								uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fcategories"
-								rule="standard" />
-						</entry>
-						<separator />
-						<entry key="GUI_EXPLORER_CONTEXT_ACCESS_0" uri="commons/chacc.jsp"
-							rule="permissions" />
-						<entry key="GUI_EXPLORER_CONTEXT_CHNAV_0" uri="commons/chnav.jsp"
-							rule="standard" />
-						<separator />
+							<entry key="GUI_EXPLORER_CONTEXT_LINKRELATIONTO_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Flinkrelationtarget" rule="standard"/>
+							<entry key="GUI_EXPLORER_CONTEXT_LINKRELATIONFROM_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Flinkrelationsource" rule="standard"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_SHOWSIBLINGS_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fsiblings" rule="showsiblings"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_CATEGORIES_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fcategories" rule="standard"/></entry>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_ACCESS_0" uri="commons/chacc.jsp" rule="permissions"/>
+						<entry key="GUI_EXPLORER_CONTEXT_CHNAV_0" uri="commons/chnav.jsp" rule="standard"/>
+						<separator/>
 						<entry key="GUI_EXPLORER_CONTEXT_ADVANCED_0" rule="substandard">
-							<entry key="GUI_EXPLORER_CONTEXT_TOUCH_0" uri="commons/touch.jsp"
-								rule="standard" />
-							<entry key="GUI_EXPLORER_CONTEXT_AVAILABILITY_0" uri="commons/availability.jsp"
-								rule="standard" />
-							<separator />
-							<entry key="GUI_EXPLORER_CONTEXT_SECURE_0" uri="commons/secure.jsp"
-								rule="standard" />
-							<entry key="GUI_EXPLORER_CONTEXT_TYPE_0" uri="commons/chtype.jsp"
-								rule="standard" />
-							<separator />
-							<entry key="GUI_EXPLORER_CONTEXT_EDITCONTROLFILE_0" uri="editors/editor.jsp?editastext=true"
-								target="_top" rule="editcontrolcode" />
+							<entry key="GUI_EXPLORER_CONTEXT_TOUCH_0" uri="commons/touch.jsp" rule="standard"/>
+							<entry key="GUI_EXPLORER_CONTEXT_AVAILABILITY_0" uri="commons/availability.jsp" rule="standard"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_SECURE_0" uri="commons/secure.jsp" rule="standard"/>
+							<entry key="GUI_EXPLORER_CONTEXT_TYPE_0" uri="commons/chtype.jsp" rule="standard"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_EDITCONTROLFILE_0" uri="editors/editor.jsp?editastext=true" target="_top" rule="editcontrolcode"/></entry>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_HISTORY_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fhistory" rule="nondeleted"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PROPERTY_0" uri="/system/workplace/commons/properties.jsp" rule="nondeleted"/>
+						<entry key="GUI_ACTION_SWITCH_SITE_0" name="org.opencms.gwt.client.ui.contextmenu.CmsEmbeddedAction" params="dialogId=org.opencms.ui.actions.CmsSiteDialogAction" rule="containerpage-basic"/>
+						<entry key="GUI_EXPLORER_CONTEXT_ADVANCED_PROPERTIES_0" name="org.opencms.gwt.client.ui.contextmenu.CmsEditProperties" rule="containerpage-no-different-site-and-has-editor-role"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PREVIEW_0" name="org.opencms.gwt.client.ui.contextmenu.CmsPreview" rule="containerpage"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PAGE_INFO_0" name="org.opencms.gwt.client.ui.contextmenu.CmsResourceInfo" rule="containerpage"/>
+						<entry key="SHOWLOCALE" name="showlocale" rule="containerpage"/>
+						<entry key="TEMPLATECONTEXTS" name="templatecontexts" rule="containerpage"/>
+						<entry key="VIEWONLINE" name="viewonline" rule="containerpage"/>
+						<entry key="SELECTELEMENTVIEW" name="selectelementview" rule="containerpage"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNDOCHANGES_0" name="org.opencms.gwt.client.ui.contextmenu.CmsRestore" rule="ade-undochanges"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNDELETE_0" name="org.opencms.gwt.client.ui.contextmenu.CmsUndelete" rule="containerpage-deleted"/>
+						<entry key="EDITSMALLELEMENTS" name="editsmallelements" rule="containerpage"/>
+						<entry key="GUI_EXPLORER_CONTEXT_ADE_ADVANCED_0" rule="containerpage-basic">
+							<entry key="GUI_EXPLORER_CONTEXT_AVAILABILITY_0" name="org.opencms.gwt.client.ui.contextmenu.CmsEmbeddedAction" params="dialogId=org.opencms.ui.actions.CmsAvailabilityDialogAction" rule="containerpage-no-different-site-and-has-editor-role"/>
+							<entry key="GUI_EXPLORER_CONTEXT_LOCK_REPORT_0" name="org.opencms.gwt.client.ui.contextmenu.CmsLockReport" rule="containerpage"/>
+							<entry key="GUI_EXPLORER_CONTEXT_CATEGORIES_0" name="org.opencms.gwt.client.ui.contextmenu.CmsCategories" rule="containerpage-no-different-site-and-has-editor-role"/>
+							<entry key="GUI_EXPLORER_CONTEXT_SEO_0" name="org.opencms.gwt.client.ui.contextmenu.CmsOpenSeoDialog" rule="containerpage-no-different-site-and-has-editor-role"/>
 						</entry>
-						<separator />
-						<entry key="GUI_EXPLORER_CONTEXT_HISTORY_0"
-							uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fhistory"
-							rule="nondeleted" />
-						<entry key="GUI_EXPLORER_CONTEXT_PROPERTY_0" uri="commons/property.jsp"
-							rule="nondeleted" />
-						<entry key="GUI_EXPLORER_CONTEXT_AVAILABILITY_0"
-							name="org.opencms.gwt.client.ui.contextmenu.CmsAvailabilityDialog"
-							rule="containerpage" />
-						<entry key="GUI_EXPLORER_CONTEXT_SHOW_WORKPLACE_0"
-							name="org.opencms.gwt.client.ui.contextmenu.CmsShowWorkplace"
-							rule="containerpage" />
-						<entry key="GUI_EXPLORER_CONTEXT_ADVANCED_PROPERTIES_0"
-							name="org.opencms.gwt.client.ui.contextmenu.CmsEditProperties"
-							rule="containerpage" />
-						<entry key="GUI_EXPLORER_CONTEXT_LOGOUT_0" name="org.opencms.gwt.client.ui.contextmenu.CmsLogout"
-							rule="containerpage" />
+						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_QUEUE_0" name="org.opencms.gwt.client.ui.contextmenu.CmsEmbeddedAction" params="dialogId=org.opencms.ui.actions.CmsPublishQueueDialogAction" rule="containerpage-basic"/>
+						<entry key="GUI_EXPLORER_CONTEXT_ABOUT_0" name="org.opencms.gwt.client.ui.contextmenu.CmsAbout" rule="containerpage-basic"/>
 					</contextmenu>
 				</editoptions>
 			</explorertype>
-			<explorertype name="groupcontainer" key="fileicon.groupcontainer"
-				icon="elementgroup.png" bigicon="elementgroup_big.png" reference="xmlcontent">
-				<newresource
-					uri="newresource_xmlcontent.jsp?newresourcetype=groupcontainer"
-					order="26" autosetnavigation="false" autosettitle="false"
-					info="desc.groupcontainer" />
+			<explorertype name="groupcontainer" key="fileicon.groupcontainer" icon="elementgroup.png" bigicon="elementgroup_big.png" reference="xmlcontent">
+				<newresource uri="newresource_xmlcontent.jsp?newresourcetype=groupcontainer" order="26" autosetnavigation="false" autosettitle="false" info="desc.groupcontainer"/>
 				<accesscontrol>
-					<accessentry principal="ROLE.WORKPLACE_USER"
-						permissions="+r+v+w+c" />
+					<accessentry principal="ROLE.ELEMENT_AUTHOR" permissions="+r+v+w+c"/>
 				</accesscontrol>
 			</explorertype>
-			<explorertype name="function" key="fileicon.function"
-				icon="function.png" bigicon="function_big.png" reference="xmlcontent">
-				<newresource page="structurecontent"
-					uri="newresource_xmlcontent.jsp?newresourcetype=function" order="999"
-					autosetnavigation="false" autosettitle="false" info="desc.function" />
+			<explorertype name="elementview" key="fileicon.elementview" icon="function.png" bigicon="function_big.png" reference="xmlcontent">
+				<newresource page="otheroptions" uri="newresource_xmlcontent.jsp?newresourcetype=elementview" order="999" autosetnavigation="false" autosettitle="false" info="desc.elementview"/>
 				<accesscontrol>
-					<accessentry principal="ROLE.WORKPLACE_USER"
-						permissions="+r+v-w-c" />
-					<accessentry principal="ROLE.DEVELOPER" permissions="+r+v+w+c" />
+					<accessentry principal="ROLE.DEVELOPER" permissions="+r+v+w+c"/>
+					<accessentry principal="ROLE.WORKPLACE_USER" permissions="+r+v-w-c"/>
 				</accesscontrol>
 			</explorertype>
-			<explorertype name="containerpage_template" key="fileicon.containerpage_template"
-				icon="containerpage_template.png" bigicon="containerpage_template_big.png"
-				reference="jsp">
-				<newresource page="otheroptions"
-					uri="newresource.jsp?newresourcetype=containerpage_template" order="22"
-					autosetnavigation="false" autosettitle="false"
-					info="desc.containerpage_template" />
-			</explorertype>
-
-			<explorertype name="content_folder" key="fileicon.configfolder"
-				icon="configfolder.png" bigicon="configfolder_big.png" reference="folder">
-				<newresource page="extendedfolder"
-					uri="newresource.jsp?newresourcetype=content_folder" order="491"
-					autosetnavigation="false" autosettitle="false" info="desc.configfolder" />
+			<explorertype name="function" key="fileicon.function" icon="function.png" bigicon="function_big.png" reference="xmlcontent">
+				<newresource page="structurecontent" uri="newresource_xmlcontent.jsp?newresourcetype=function" order="999" autosetnavigation="false" autosettitle="false" info="desc.function"/>
 				<accesscontrol>
-					<accessentry principal="ROLE.DEVELOPER" permissions="+r+v+w+c" />
+					<accessentry principal="ROLE.DEVELOPER" permissions="+r+v+w+c"/>
+					<accessentry principal="DEFAULT" permissions="+r+v"/>
 				</accesscontrol>
 			</explorertype>
-			<explorertype name="sitemap_config" key="fileicon.sitemap_config"
-				icon="sitemap_config.png" bigicon="sitemap_config_big.png"
+			<explorertype name="seo_file" key="fileicon.seo_file" reference="xmlcontent">
+				<newresource page="structurecontent" uri="newresource_xmlcontent.jsp?newresourcetype=seo_file" order="998" autosetnavigation="false" autosettitle="false" info="desc.seo_file"/>
+			</explorertype>
+			<explorertype name="containerpage_template" key="fileicon.containerpage_template" icon="containerpage_template.png" bigicon="containerpage_template_big.png" reference="jsp">
+				<newresource page="otheroptions" uri="newresource.jsp?newresourcetype=containerpage_template" order="22" autosetnavigation="false" autosettitle="false" info="desc.containerpage_template"/>
+			</explorertype>
+			<explorertype name="content_folder" key="fileicon.configfolder" icon="configfolder.png" bigicon="configfolder_big.png" reference="folder">
+				<newresource page="extendedfolder" uri="newresource.jsp?newresourcetype=content_folder" order="491" autosetnavigation="false" autosettitle="false" info="desc.configfolder"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.EDITOR" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="sitemap_config" key="fileicon.sitemap_config" icon="sitemap_config.png" bigicon="sitemap_config_big.png" reference="xmlcontent">
+				<newresource page="otheroptions" uri="newresource_xmlcontent.jsp?newresourcetype=sitemap_config" order="21" autosetnavigation="false" autosettitle="false" info="desc.sitemap_config"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.EDITOR" permissions="+r+v+w+c"/>
+				</accesscontrol>
+				<editoptions>
+					<defaultproperties enabled="true" shownavigation="true">
+						<defaultproperty name="Title"/>
+						<defaultproperty name="Keywords"/>
+						<defaultproperty name="Description"/>
+					</defaultproperties>
+					<contextmenu>
+						<entry key="GUI_EXPLORER_CONTEXT_LOCK_0" uri="commons/lock.jsp" rule="lock"/>
+						<entry key="GUI_EXPLORER_CONTEXT_OVERRIDELOCK_0" uri="commons/lockchange.jsp" rule="changelock"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNLOCK_0" uri="commons/unlock.jsp" rule="unlock"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_COPYTOPROJECT_0" uri="commons/copytoproject.jsp" rule="copytoproject"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_0" uri="/system/workplace/commons/direct_publish.jsp" rule="directpublish"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_SCHEDULED_0" uri="commons/publishscheduledresource.jsp" rule="publishscheduled"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_EDIT_0" uri="editors/editor.jsp" target="_top" rule="standard"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_COPY_0" uri="commons/copy.jsp" rule="copy"/>
+						<entry key="GUI_EXPLORER_CONTEXT_MOVE_0" uri="commons/move.jsp" rule="standard"/>
+						<entry key="GUI_EXPLORER_CONTEXT_DELETE_0" uri="commons/delete.jsp" rule="standard"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNDOCHANGES_0" uri="commons/undochanges.jsp" rule="undochanges"/>
+						<entry key="GUI_EXPLORER_CONTEXT_UNDELETE_0" uri="commons/undelete.jsp" rule="undelete"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_RELATIONS_0" rule="substandard">
+							<entry key="GUI_EXPLORER_CONTEXT_LINKRELATIONTO_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Flinkrelationtarget" rule="standard"/>
+							<entry key="GUI_EXPLORER_CONTEXT_LINKRELATIONFROM_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Flinkrelationsource" rule="standard"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_SHOWSIBLINGS_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fsiblings" rule="showsiblings"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_CATEGORIES_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fcategories" rule="standard"/></entry>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_ACCESS_0" uri="commons/chacc.jsp" rule="permissions"/>
+						<entry key="GUI_EXPLORER_CONTEXT_CHNAV_0" uri="commons/chnav.jsp" rule="standard"/>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_ADVANCED_0" rule="substandard">
+							<entry key="GUI_EXPLORER_CONTEXT_TOUCH_0" uri="commons/touch.jsp" rule="standard"/>
+							<entry key="GUI_EXPLORER_CONTEXT_AVAILABILITY_0" uri="commons/availability.jsp" rule="standard"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_SECURE_0" uri="commons/secure.jsp" rule="standard"/>
+							<entry key="GUI_EXPLORER_CONTEXT_TYPE_0" uri="commons/chtype.jsp" rule="standard"/>
+							<separator/>
+							<entry key="GUI_EXPLORER_CONTEXT_EDITCONTROLFILE_0" uri="editors/editor.jsp?editastext=true" target="_top" rule="editcontrolcode"/></entry>
+						<separator/>
+						<entry key="GUI_EXPLORER_CONTEXT_HISTORY_0" uri="views/admin/admin-main.jsp?root=explorer&amp;path=%2Fhistory" rule="nondeleted"/>
+						<entry key="GUI_EXPLORER_CONTEXT_PROPERTY_0" uri="/system/workplace/commons/properties.jsp" rule="nondeleted"/>
+						<entry key="GUI_ACTION_SWITCH_SITE_0" name="org.opencms.gwt.client.ui.contextmenu.CmsEmbeddedAction" params="dialogId=org.opencms.ui.actions.CmsSiteDialogAction" rule="sitemap"/>
+						<entry key="GUI_EXPLORER_CONTEXT_GO_TO_PARENT_0" name="org.opencms.ade.sitemap.client.toolbar.CmsGoToParentAction" rule="sitemap"/>
+						<entry key="GUI_EXPLORER_CONTEXT_REFRESH_0" name="org.opencms.ade.sitemap.client.toolbar.CmsRefreshAction" rule="sitemap"/>
+						<entry key="GUI_EXPLORER_CONTEXT_ADE_ADVANCED_0" rule="sitemap">
+							<entry key="GUI_EXPLORER_CONTEXT_ALIAS_DIALOG_0" name="org.opencms.ade.sitemap.client.toolbar.CmsAliasDialog" rule="sitemap"/>
+							<entry key="GUI_EXPLORER_CONTEXT_EDIT_SITE_CONFIG_0" name="org.opencms.gwt.client.ui.contextmenu.CmsEditFile" params="reload=true|filename=%(subsite)/.content/.config" rule="sitemapcheckfile"/>
+						</entry>
+						<entry key="GUI_EXPLORER_CONTEXT_PUBLISH_QUEUE_0" name="org.opencms.gwt.client.ui.contextmenu.CmsEmbeddedAction" params="dialogId=org.opencms.ui.actions.CmsPublishQueueDialogAction" rule="sitemap"/>
+						<entry key="GUI_EXPLORER_CONTEXT_ABOUT_0" name="org.opencms.gwt.client.ui.contextmenu.CmsAbout" rule="sitemap"/>
+					</contextmenu>
+				</editoptions>
+			</explorertype>
+			<explorertype name="module_config" key="fileicon.module_config" icon="module_config.png" bigicon="module_config_big.png" reference="xmlcontent">
+				<newresource page="otheroptions" uri="newresource_xmlcontent.jsp?newresourcetype=module_config" order="22" autosetnavigation="false" autosettitle="false" info="desc.module_config"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.WORKPLACE_USER" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="sitemap_master_config" key="fileicon.sitemap_master_config" icon="module_config.png" bigicon="module_config_big.png" reference="xmlcontent">
+				<newresource page="otheroptions" uri="newresource_xmlcontent.jsp?newresourcetype=sitemap_master_config" order="23" autosetnavigation="false" autosettitle="false" info="desc.sitemap_master_config"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.WORKPLACE_USER" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="formatter_config" key="fileicon.formatter_config" icon="formatter_config.png" bigicon="formatter_config_big.png" reference="xmlcontent">
+				<newresource page="otheroptions" uri="newresource_xmlcontent.jsp?newresourcetype=formatter_config" order="23" autosetnavigation="false" autosettitle="false" info="desc.formatter_config"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.WORKPLACE_USER" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="inheritance_group" key="fileicon.inheritance_group" icon="inheritancegroup.png" bigicon="inheritancegroup_big.png" reference="xmlcontent">
+				<newresource uri="newresource_xmlcontent.jsp?newresourcetype=inheritance_group" order="27" autosetnavigation="false" autosettitle="false" info="desc.inheritance_group"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.ELEMENT_AUTHOR" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="inheritance_config" key="fileicon.inheritance_config" icon="inheritancegroup.png" bigicon="inheritancegroup_big.png" reference="xmlcontent">
+				<newresource uri="newresource_xmlcontent.jsp?newresourcetype=inheritance_config" order="28" autosetnavigation="false" autosettitle="false" info="desc.inheritance_config"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.ELEMENT_AUTHOR" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="xmlvfsbundle" key="fileicon.xmlvfsbundle" icon="localization.png" bigicon="localization_big.png" reference="xmlcontent">
+				<newresource page="otheroptions" uri="newresource_xmlcontent.jsp?newresourcetype=xmlvfsbundle" order="28" autosetnavigation="false" autosettitle="false" info="desc.xmlvfsbundle"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.WORKPLACE_USER" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="propertyvfsbundle" key="fileicon.propertyvfsbundle" icon="localization.png" bigicon="localization_big.png" reference="plain">
+				<newresource page="otheroptions" uri="newresource.jsp?newresourcetype=propertyvfsbundle" order="30" autosetnavigation="false" autosettitle="false" info="desc.propertyvfsbundle"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.WORKPLACE_USER" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="modelgroup" key="fileicon.modelgroup" icon="containerpage.png" bigicon="modelgroup_copy_big.png" reference="xmlcontent">
+				<newresource uri="newresource_xmlcontent.jsp?newresourcetype=modelgroup" order="50" autosetnavigation="false" autosettitle="false" info="desc.modelgroup"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.DEVELOPER" permissions="+r+v+w+c"/>
+					<accessentry principal="ROLE.ELEMENT_AUTHOR" permissions="+r+v"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="macro_formatter" key="fileicon.macro_formatter" icon="formatter_config.png" bigicon="formatter_config_big.png" reference="xmlcontent">
+				<newresource page="otheroptions" uri="newresource_xmlcontent.jsp?newresourcetype=macro_formatter" order="24" autosetnavigation="false" autosettitle="false" info="desc.macro_formatter"/>
+				<accesscontrol>
+					<accessentry principal="ROLE.WORKPLACE_USER" permissions="+r+v+w+c"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="view_basic" key="fileicon.view_basic" icon="menu.png" reference="folder" isview="true">
+				<newresource uri="" order="1000" autosetnavigation="false" autosettitle="false" info="desc.otheroptions"/>
+				<accesscontrol>
+					<accessentry principal="DEFAULT" permissions="+r+v"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="view_folders" key="fileicon.view_folders" icon="menu.png" reference="folder" isview="true">
+				<newresource uri="" order="2100" autosetnavigation="false" autosettitle="false" info="desc.otheroptions"/>
+				<accesscontrol>
+					<accessentry principal="DEFAULT" permissions="+r+v"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="view_configs" key="fileicon.view_configs" icon="menu.png" reference="folder" isview="true">
+				<newresource uri="" order="2200" autosetnavigation="false" autosettitle="false" info="desc.otheroptions"/>
+				<accesscontrol>
+					<accessentry principal="DEFAULT" permissions="+r+v"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="view_other" key="fileicon.view_other" icon="menu.png" reference="folder" isview="true">
+				<newresource uri="" order="2300" autosetnavigation="false" autosettitle="false" info=""/>
+				<accesscontrol>
+					<accessentry principal="DEFAULT" permissions="+r+v"/>
+				</accesscontrol>
+			</explorertype>
+			<explorertype name="bundledescriptor" key="fileicon.bundledescriptor"
+				icon="localization_descriptor.png" bigicon="localization_descriptor_big.png"
 				reference="xmlcontent">
 				<newresource page="otheroptions"
-					uri="newresource_xmlcontent.jsp?newresourcetype=sitemap_config"
-					order="21" autosetnavigation="false" autosettitle="false"
-					info="desc.sitemap_config" />
-				<accesscontrol>
-					<accessentry principal="ROLE.WORKPLACE_USER"
-						permissions="+r+v+w+c" />
-				</accesscontrol>
-			</explorertype>
-			<explorertype name="module_config" key="fileicon.module_config"
-				icon="module_config.png" bigicon="module_config_big.png" reference="xmlcontent">
-				<newresource page="otheroptions"
-					uri="newresource_xmlcontent.jsp?newresourcetype=module_config"
-					order="22" autosetnavigation="false" autosettitle="false"
-					info="desc.module_config" />
+					uri="newresource_xmlcontent.jsp?newresourcetype=bundledescriptor"
+					order="29" autosetnavigation="false" autosettitle="false"
+					info="desc.bundledescriptor" />
 				<accesscontrol>
 					<accessentry principal="ROLE.WORKPLACE_USER"
 						permissions="+r+v+w+c" />
@@ -310,142 +611,101 @@
 		<file>
 			<destination>system</destination>
 			<type>folder</type>
-			<uuidstructure>d0ae7320-a228-11e0-9ff0-afd4b35f6004</uuidstructure>
-			<datelastmodified>Wed, 29 Jun 2011 08:21:40 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Wed, 29 Jun 2011 08:21:40 GMT</datecreated>
-			<usercreated>Admin</usercreated>
-			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol>
-				<accessentry>
-					<uuidprincipal>ROLE.WORKPLACE_USER</uuidprincipal>
-					<flags>514</flags>
-					<permissionset>
-						<allowed>1</allowed>
-						<denied>0</denied>
-					</permissionset>
-				</accessentry>
-			</accesscontrol>
+			<properties/>
 		</file>
 		<file>
 			<destination>system/modules</destination>
 			<type>folder</type>
-			<uuidstructure>d157abac-a228-11e0-9ff0-afd4b35f6004</uuidstructure>
-			<datelastmodified>Wed, 29 Jun 2011 08:21:41 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Wed, 29 Jun 2011 08:21:41 GMT</datecreated>
-			<usercreated>Admin</usercreated>
-			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol>
-				<accessentry>
-					<uuidprincipal>ROLE.WORKPLACE_USER</uuidprincipal>
-					<flags>514</flags>
-					<permissionset>
-						<allowed>5</allowed>
-						<denied>0</denied>
-					</permissionset>
-				</accessentry>
-			</accesscontrol>
+			<properties/>
 		</file>
 		<file>
 			<destination>system/modules/org.opencms.ade.config</destination>
 			<type>folder</type>
 			<uuidstructure>599661f3-70d4-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:43:36 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:43:36 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/classes
-			</destination>
+			<source>system/modules/org.opencms.ade.config/.config</source>
+			<destination>system/modules/org.opencms.ade.config/.config</destination>
+			<type>module_config</type>
+			<uuidstructure>2baf86ab-62be-11e5-a6b9-35cf27d9ef56</uuidstructure>
+			<uuidresource>2baf86ac-62be-11e5-a6b9-35cf27d9ef56</uuidresource>
+			<datecreated>Thu, 24 Sep 2015 13:14:22 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>locale</name>
+					<value><![CDATA[en]]></value>
+				</property>
+				<property>
+					<name>locale-available</name>
+					<value><![CDATA[en]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<destination>system/modules/org.opencms.ade.config/classes</destination>
 			<type>folder</type>
 			<uuidstructure>59a974c5-70d4-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:43:36 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:43:36 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/classes/org
-			</destination>
+			<destination>system/modules/org.opencms.ade.config/classes/org</destination>
 			<type>folder</type>
 			<uuidstructure>59abbeb7-70d4-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:43:36 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:43:36 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/classes/org/opencms
-			</destination>
+			<destination>system/modules/org.opencms.ade.config/classes/org/opencms</destination>
 			<type>folder</type>
 			<uuidstructure>59ae2fb9-70d4-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:43:36 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:43:36 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/classes/org/opencms/ade
-			</destination>
+			<destination>system/modules/org.opencms.ade.config/classes/org/opencms/ade</destination>
 			<type>folder</type>
 			<uuidstructure>59b0a0bb-70d4-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:43:36 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:43:36 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/classes/org/opencms/ade/config
-			</destination>
+			<destination>system/modules/org.opencms.ade.config/classes/org/opencms/ade/config</destination>
 			<type>folder</type>
 			<uuidstructure>59b2eaad-70d4-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:43:36 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:43:36 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/modules/org.opencms.ade.config/classes/org/opencms/ade/config/workplace.properties
-			</source>
-			<destination>system/modules/org.opencms.ade.config/classes/org/opencms/ade/config/workplace.properties
-			</destination>
+			<source>system/modules/org.opencms.ade.config/classes/org/opencms/ade/config/workplace.properties</source>
+			<destination>system/modules/org.opencms.ade.config/classes/org/opencms/ade/config/workplace.properties</destination>
 			<type>plain</type>
 			<uuidstructure>d789bd73-70d8-11e0-8f1f-91706a02fba1</uuidstructure>
 			<uuidresource>d789bd74-70d8-11e0-8f1f-91706a02fba1</uuidresource>
-			<datelastmodified>Fri, 10 Jun 2011 07:46:06 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 14:15:45 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property>
@@ -453,40 +713,31 @@
 					<value><![CDATA[ISO-8859-1]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/copyresources
-			</destination>
+			<destination>system/modules/org.opencms.ade.config/copyresources</destination>
 			<type>folder</type>
 			<uuidstructure>9d49825f-70d5-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:52:39 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:52:39 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/modules/org.opencms.ade.config/copyresources/sitemap.config
-			</source>
-			<destination>system/modules/org.opencms.ade.config/copyresources/sitemap.config
-			</destination>
+			<source>system/modules/org.opencms.ade.config/copyresources/sitemap.config</source>
+			<destination>system/modules/org.opencms.ade.config/copyresources/sitemap.config</destination>
 			<type>sitemap_config</type>
 			<uuidstructure>c9949dfa-70d5-11e0-9709-91706a02fba1</uuidstructure>
 			<uuidresource>c9949dfb-70d5-11e0-9709-91706a02fba1</uuidresource>
-			<datelastmodified>Wed, 27 Apr 2011 15:09:24 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:53:53 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>512</flags>
 			<properties>
 				<property>
 					<name>Title</name>
-					<value><![CDATA[Resource type configuration]]></value>
+					<value><![CDATA[Sitemap configuration file]]></value>
 				</property>
 				<property>
 					<name>locale</name>
@@ -501,18 +752,35 @@
 					<value><![CDATA[all]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/copyresources/models
-			</destination>
+			<source>system/modules/org.opencms.ade.config/copyresources/sub-level-redirect.html</source>
+			<destination>system/modules/org.opencms.ade.config/copyresources/sub-level-redirect.html</destination>
+			<type>htmlredirect</type>
+			<uuidstructure>bba62bd0-7f0c-11e1-a2a6-b38ba2bad1b2</uuidstructure>
+			<uuidresource>bba62bd1-7f0c-11e1-a2a6-b38ba2bad1b2</uuidresource>
+			<datecreated>Thu, 05 Apr 2012 10:47:26 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[Sub level redirect]]></value>
+				</property>
+				<property type="shared">
+					<name>template-elements</name>
+					<value><![CDATA[/system/modules/org.opencms.ade.sitemap/pages/redirect-detail.jsp]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<destination>system/modules/org.opencms.ade.config/copyresources/models</destination>
 			<type>folder</type>
 			<uuidstructure>c913fc31-70d5-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:53:52 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:53:52 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property>
@@ -520,18 +788,14 @@
 					<value><![CDATA[Model folder]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/modules/org.opencms.ade.config/copyresources/models/pages
-			</destination>
+			<destination>system/modules/org.opencms.ade.config/copyresources/models/pages</destination>
 			<type>folder</type>
 			<uuidstructure>c91fe314-70d5-11e0-9709-91706a02fba1</uuidstructure>
-			<datelastmodified>Wed, 27 Apr 2011 13:53:52 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 27 Apr 2011 13:53:52 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property>
@@ -539,45 +803,66 @@
 					<value><![CDATA[Models for container pages]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<destination>system/workplace</destination>
+			<destination>system/modules/org.opencms.ade.config/elementviews</destination>
 			<type>folder</type>
-			<uuidstructure>6dbd9558-8db6-11e0-972f-8f51174189b7</uuidstructure>
-			<datelastmodified>Mon, 27 Mar 2006 12:00:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Mon, 27 Jun 2005 08:00:00 GMT</datecreated>
-			<usercreated>Admin</usercreated>
+			<uuidstructure>69ccd65e-e116-11e5-8d6e-0242ac11002b</uuidstructure>
+			<datecreated>Thu, 03 Mar 2016 08:03:28 GMT</datecreated>
+			<flags>0</flags>
+			<properties/>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/modules/org.opencms.ade.config/elementviews/system-elements</source>
+			<destination>system/modules/org.opencms.ade.config/elementviews/system-elements</destination>
+			<type>elementview</type>
+			<uuidstructure>cf0f2604-e114-11e5-8d6e-0242ac11002b</uuidstructure>
+			<uuidresource>cf0f2605-e114-11e5-8d6e-0242ac11002b</uuidresource>
+			<datecreated>Thu, 03 Mar 2016 07:51:59 GMT</datecreated>
 			<flags>0</flags>
 			<properties>
 				<property>
-					<name>content-encoding</name>
-					<value><![CDATA[UTF-8]]></value>
+					<name>Title</name>
+					<value><![CDATA[System elements]]></value>
 				</property>
 				<property>
-					<name>export</name>
-					<value><![CDATA[false]]></value>
+					<name>locale</name>
+					<value><![CDATA[en]]></value>
 				</property>
 				<property>
-					<name>login-form</name>
-					<value><![CDATA[/system/login/index.html]]></value>
+					<name>locale-available</name>
+					<value><![CDATA[en]]></value>
+				</property>
+				<property>
+					<name>search.exclude</name>
+					<value><![CDATA[true]]></value>
 				</property>
 			</properties>
-			<relations />
+			<relations/>
 			<accesscontrol>
 				<accessentry>
-					<uuidprincipal>ALL_OTHERS</uuidprincipal>
-					<flags>134</flags>
+					<uuidprincipal>OVERWRITE_ALL</uuidprincipal>
+					<flags>256</flags>
 					<permissionset>
 						<allowed>0</allowed>
 						<denied>0</denied>
 					</permissionset>
 				</accessentry>
 				<accessentry>
-					<uuidprincipal>ROLE.WORKPLACE_USER</uuidprincipal>
-					<flags>518</flags>
+					<uuidprincipal>ROLE.CATEGORY_EDITOR</uuidprincipal>
+					<flags>512</flags>
+					<permissionset>
+						<allowed>5</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+				<accessentry>
+					<uuidprincipal>ROLE.GALLERY_EDITOR</uuidprincipal>
+					<flags>512</flags>
 					<permissionset>
 						<allowed>5</allowed>
 						<denied>0</denied>
@@ -586,43 +871,630 @@
 			</accesscontrol>
 		</file>
 		<file>
-			<destination>system/workplace/resources</destination>
+			<destination>system/modules/org.opencms.ade.config/formatters</destination>
 			<type>folder</type>
-			<uuidstructure>6dbfdf50-8db6-11e0-972f-8f51174189b7</uuidstructure>
-			<datelastmodified>Mon, 27 Mar 2006 12:00:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Mon, 27 Jun 2005 08:00:00 GMT</datecreated>
-			<usercreated>Admin</usercreated>
+			<uuidstructure>2bb6d9af-62be-11e5-a6b9-35cf27d9ef56</uuidstructure>
+			<datecreated>Thu, 24 Sep 2015 13:14:22 GMT</datecreated>
 			<flags>0</flags>
-			<properties />
+			<properties/>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/modules/org.opencms.ade.config/formatters/function.jsp</source>
+			<destination>system/modules/org.opencms.ade.config/formatters/function.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>087ba7c9-e7fc-4336-acb8-d3416a4eb1fd</uuidstructure>
+			<uuidresource>087ba7c9-e7fc-4336-acb8-d3416a4eb1fe</uuidresource>
+			<datecreated>Thu, 24 Sep 2015 13:14:22 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>cache</name>
+					<value><![CDATA[container-element;locale]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/modules/org.opencms.ade.config/formatters/group-container.jsp</source>
+			<destination>system/modules/org.opencms.ade.config/formatters/group-container.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>e7029fa2-761e-11e0-bd7f-9ffeadaf4d46</uuidstructure>
+			<uuidresource>e7029fa3-761e-11e0-bd7f-9ffeadaf4d46</uuidresource>
+			<datecreated>Thu, 24 Sep 2015 13:14:22 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[Formatter for group-containers]]></value>
+				</property>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<destination>system/modules/org.opencms.ade.config/pages</destination>
+			<type>folder</type>
+			<uuidstructure>e9bf555e-7734-11e0-89e5-d14bc4448678</uuidstructure>
+			<datecreated>Thu, 05 May 2011 16:29:56 GMT</datecreated>
+			<flags>0</flags>
+			<properties/>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/modules/org.opencms.ade.config/pages/render-macro.jsp</source>
+			<destination>system/modules/org.opencms.ade.config/pages/render-macro.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>7fdf3f5f-d164-11e5-b5bd-cf61f8636af1</uuidstructure>
+			<uuidresource>7fdf3f60-d164-11e5-b5bd-cf61f8636af1</uuidresource>
+			<datecreated>Fri, 12 Feb 2016 08:42:07 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/modules/org.opencms.ade.config/pages/render-seo-file.jsp</source>
+			<destination>system/modules/org.opencms.ade.config/pages/render-seo-file.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>4a982d98-b3ec-4709-a5c3-2c57a9c670c5</uuidstructure>
+			<uuidresource>71b01b3d-207f-46b3-b7c0-d551782070ca</uuidresource>
+			<datecreated>Thu, 05 May 2011 16:33:23 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[render-seo-file]]></value>
+				</property>
+				<property>
+					<name>cache</name>
+					<value><![CDATA[uri]]></value>
+				</property>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/modules/org.opencms.ade.config/pages/updateModelGroups.jsp</source>
+			<destination>system/modules/org.opencms.ade.config/pages/updateModelGroups.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>43feadd4-ab31-11e6-8ea0-a123275265e0</uuidstructure>
+			<uuidresource>43feadd5-ab31-11e6-8ea0-a123275265e0</uuidresource>
+			<datecreated>Tue, 15 Nov 2016 12:44:36 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ALL_OTHERS</uuidprincipal>
+					<flags>132</flags>
+					<permissionset>
+						<allowed>0</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+				<accessentry>
+					<uuidprincipal>ROLE.WORKPLACE_USER</uuidprincipal>
+					<flags>516</flags>
+					<permissionset>
+						<allowed>0</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+				<accessentry>
+					<uuidprincipal>ROLE.ROOT_ADMIN</uuidprincipal>
+					<flags>516</flags>
+					<permissionset>
+						<allowed>31</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<destination>system/shared</destination>
+			<type>folder</type>
+			<properties/>
+		</file>
+		<file>
+			<source>system/shared/templatecontexts.json</source>
+			<destination>system/shared/templatecontexts.json</destination>
+			<type>plain</type>
+			<uuidstructure>c9c10d58-25b4-11e3-9fd8-000c29d28104</uuidstructure>
+			<uuidresource>c9c10d59-25b4-11e3-9fd8-000c29d28104</uuidresource>
+			<datecreated>Wed, 25 Sep 2013 07:33:36 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[Template device contexts]]></value>
+				</property>
+			</properties>
 			<relations />
 			<accesscontrol />
+		</file>
+		<file>
+			<destination>system/userimages</destination>
+			<type>folder</type>
+			<properties/>
+		</file>
+		<file>
+			<destination>system/userimages/temp</destination>
+			<type>folder</type>
+			<uuidstructure>9ac1eb20-ce30-11e5-8623-5517cca7ff58</uuidstructure>
+			<datecreated>Mon, 08 Feb 2016 06:53:05 GMT</datecreated>
+			<flags>0</flags>
+			<properties/>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.ELEMENT_AUTHOR</uuidprincipal>
+					<flags>518</flags>
+					<permissionset>
+						<allowed>7</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<destination>system/workplace</destination>
+			<type>folder</type>
+			<properties/>
+		</file>
+		<file>
+			<destination>system/workplace/commons</destination>
+			<type>folder</type>
+			<properties/>
+		</file>
+		<file>
+			<source>system/workplace/commons/direct_publish.jsp</source>
+			<destination>system/workplace/commons/direct_publish.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>4794cb7c-0e03-4e48-b3fb-55f807c07e75</uuidstructure>
+			<uuidresource>385bcf53-98dd-40fc-b1bb-4c1365e99f2b</uuidresource>
+			<datecreated>Thu, 08 Dec 2011 08:18:04 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ALL_OTHERS</uuidprincipal>
+					<flags>132</flags>
+					<permissionset>
+						<allowed>0</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/download-aliases.jsp</source>
+			<destination>system/workplace/commons/download-aliases.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>08bb7d11-23eb-4507-ab0e-b978d582a8bb</uuidstructure>
+			<uuidresource>08bb7d12-23eb-4507-ab0e-b978d582a8bb</uuidresource>
+			<datecreated>Thu, 05 May 2011 16:33:23 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[download-aliases]]></value>
+				</property>
+				<property>
+					<name>cache</name>
+					<value><![CDATA[bypass]]></value>
+				</property>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/commons/gallery.jsp</source>
+			<destination>system/workplace/commons/gallery.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>01e0b3b9-2d24-11df-abdb-43be96c33985</uuidstructure>
+			<uuidresource>01e0b3ba-2d24-11df-abdb-43be96c33985</uuidresource>
+			<datecreated>Thu, 11 Mar 2010 15:37:31 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.ELEMENT_AUTHOR</uuidprincipal>
+					<flags>512</flags>
+					<permissionset>
+						<allowed>1</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/import-aliases.jsp</source>
+			<destination>system/workplace/commons/import-aliases.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>367b6c2f-2a6d-4b5d-b4a0-3f7b8519a8ac</uuidstructure>
+			<uuidresource>8c32fbcd-a5b5-49e6-8ab5-aa792e5cb592</uuidresource>
+			<datecreated>Thu, 05 May 2011 16:33:23 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[import-aliases]]></value>
+				</property>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/commons/open_ade_gallery.jsp</source>
+			<destination>system/workplace/commons/open_ade_gallery.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>c94f1961-7489-11df-bd01-83befda52004</uuidstructure>
+			<uuidresource>c94f1962-7489-11df-bd01-83befda52004</uuidresource>
+			<datecreated>Thu, 10 Jun 2010 12:14:58 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[Dialog - Open ADE gallery]]></value>
+				</property>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/commons/postupload.jsp</source>
+			<destination>system/workplace/commons/postupload.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>8b5d8dfd-c4e3-11e1-8bdc-9d057d88828d</uuidstructure>
+			<uuidresource>8b5d8dfe-c4e3-11e1-8bdc-9d057d88828d</uuidresource>
+			<datecreated>Tue, 03 Jul 2012 07:48:57 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.ELEMENT_AUTHOR</uuidprincipal>
+					<flags>512</flags>
+					<permissionset>
+						<allowed>1</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/postupload_basicproperties.jsp</source>
+			<destination>system/workplace/commons/postupload_basicproperties.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>0da00905-0f45-11e5-b81f-e9e4a966f961</uuidstructure>
+			<uuidresource>0da00906-0f45-11e5-b81f-e9e4a966f961</uuidresource>
+			<datecreated>Wed, 10 Jun 2015 07:48:16 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.ELEMENT_AUTHOR</uuidprincipal>
+					<flags>512</flags>
+					<permissionset>
+						<allowed>1</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/postupload_useconfig.jsp</source>
+			<destination>system/workplace/commons/postupload_useconfig.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>ea643811-375c-4b14-ad4c-3df748f88ea2</uuidstructure>
+			<uuidresource>f782375a-1c07-4a01-ba1b-64595e157658</uuidresource>
+			<datecreated>Tue, 03 Jul 2012 07:48:57 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.ELEMENT_AUTHOR</uuidprincipal>
+					<flags>512</flags>
+					<permissionset>
+						<allowed>1</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/properties.jsp</source>
+			<destination>system/workplace/commons/properties.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>dd359570-c6cd-4493-8921-158890608979</uuidstructure>
+			<uuidresource>c71d3a56-233e-4bd0-9016-78299aa1181e</uuidresource>
+			<datecreated>Fri, 02 Nov 2012 11:48:07 GMT</datecreated>
+			<flags>0</flags>
+			<properties/>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/commons/publish.jsp</source>
+			<destination>system/workplace/commons/publish.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>26ada581-2175-11e1-a3f6-4d6aceb32220</uuidstructure>
+			<uuidresource>26ada582-2175-11e1-a3f6-4d6aceb32220</uuidresource>
+			<datecreated>Thu, 08 Dec 2011 08:18:04 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+				<property>
+					<name>login-form</name>
+					<value><![CDATA[/system/login/index.html]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.ELEMENT_AUTHOR</uuidprincipal>
+					<flags>518</flags>
+					<permissionset>
+						<allowed>1</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+				<accessentry>
+					<uuidprincipal>ALL_OTHERS</uuidprincipal>
+					<flags>132</flags>
+					<permissionset>
+						<allowed>0</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/publish_project.jsp</source>
+			<destination>system/workplace/commons/publish_project.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>0c187fef-58cc-433f-ba7e-be97f5f3b480</uuidstructure>
+			<uuidresource>0665ab9d-2833-49d1-bed4-53f05d6d2e51</uuidresource>
+			<datecreated>Thu, 08 Dec 2011 08:18:04 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ALL_OTHERS</uuidprincipal>
+					<flags>132</flags>
+					<permissionset>
+						<allowed>0</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/sitemap.jsp</source>
+			<destination>system/workplace/commons/sitemap.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>654be781-7735-11e0-89e5-d14bc4448678</uuidstructure>
+			<uuidresource>654be782-7735-11e0-89e5-d14bc4448678</uuidresource>
+			<datecreated>Thu, 05 May 2011 16:33:23 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[sitemap]]></value>
+				</property>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.EDITOR</uuidprincipal>
+					<flags>512</flags>
+					<permissionset>
+						<allowed>1</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<source>system/workplace/commons/upload.jsp</source>
+			<destination>system/workplace/commons/upload.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>be9eaf09-40df-11e0-b044-e756eface22e</uuidstructure>
+			<uuidresource>be9eaf0a-40df-11e0-b044-e756eface22e</uuidresource>
+			<datecreated>Fri, 25 Feb 2011 13:04:14 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/commons/uploadAction.jsp</source>
+			<destination>system/workplace/commons/uploadAction.jsp</destination>
+			<type>jsp</type>
+			<uuidstructure>54fc80dc-287a-11e0-9363-9d0a6b56f130</uuidstructure>
+			<uuidresource>54fc80dd-287a-11e0-9363-9d0a6b56f130</uuidresource>
+			<datecreated>Tue, 25 Jan 2011 11:57:49 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[The upload JSP]]></value>
+				</property>
+				<property type="shared">
+					<name>export</name>
+					<value><![CDATA[false]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol>
+				<accessentry>
+					<uuidprincipal>ROLE.ELEMENT_AUTHOR</uuidprincipal>
+					<flags>512</flags>
+					<permissionset>
+						<allowed>1</allowed>
+						<denied>0</denied>
+					</permissionset>
+				</accessentry>
+			</accesscontrol>
+		</file>
+		<file>
+			<destination>system/workplace/resources</destination>
+			<type>folder</type>
+			<properties/>
+		</file>
+		<file>
+			<destination>system/workplace/resources/commons</destination>
+			<type>folder</type>
+			<properties/>
+		</file>
+		<file>
+			<source>system/workplace/resources/commons/notemplate.png</source>
+			<destination>system/workplace/resources/commons/notemplate.png</destination>
+			<type>image</type>
+			<uuidstructure>653b45a9-7735-11e0-89e5-d14bc4448678</uuidstructure>
+			<uuidresource>653b45aa-7735-11e0-89e5-d14bc4448678</uuidresource>
+			<datecreated>Thu, 05 May 2011 16:33:23 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[notemplate]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:64,h:64]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
 			<destination>system/workplace/resources/filetypes</destination>
 			<type>folder</type>
-			<uuidstructure>6dc24f52-8db6-11e0-972f-8f51174189b7</uuidstructure>
-			<datelastmodified>Mon, 27 Mar 2006 12:00:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Mon, 27 Jun 2005 08:00:00 GMT</datecreated>
-			<usercreated>Admin</usercreated>
-			<flags>0</flags>
-			<properties />
-			<relations />
-			<accesscontrol />
+			<properties/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/configfolder.png
-			</source>
-			<destination>system/workplace/resources/filetypes/configfolder.png
-			</destination>
+			<source>system/workplace/resources/filetypes/category.png</source>
+			<destination>system/workplace/resources/filetypes/category.png</destination>
+			<type>image</type>
+			<uuidstructure>ef02fdfe-c532-4f97-8967-8455abb8d0f0</uuidstructure>
+			<uuidresource>2878c13e-c298-432a-b623-90ac86daa5f9</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/category_big.png</source>
+			<destination>system/workplace/resources/filetypes/category_big.png</destination>
+			<type>image</type>
+			<uuidstructure>47268356-aa5c-4161-b375-1e423de7bd7c</uuidstructure>
+			<uuidresource>6f602324-0386-403b-8fba-d456c23f860b</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/configfolder.png</source>
+			<destination>system/workplace/resources/filetypes/configfolder.png</destination>
 			<type>image</type>
 			<uuidstructure>22e6582d-758b-11e0-bb02-a1b7a1ca2b7f</uuidstructure>
 			<uuidresource>22e6582e-758b-11e0-bb02-a1b7a1ca2b7f</uuidresource>
-			<datelastmodified>Tue, 03 May 2011 13:42:15 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Tue, 03 May 2011 13:42:06 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -630,21 +1502,16 @@
 					<value><![CDATA[w:16,h:16]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/configfolder_big.png
-			</source>
-			<destination>system/workplace/resources/filetypes/configfolder_big.png
-			</destination>
+			<source>system/workplace/resources/filetypes/configfolder_big.png</source>
+			<destination>system/workplace/resources/filetypes/configfolder_big.png</destination>
 			<type>image</type>
 			<uuidstructure>d05e83de-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
 			<uuidresource>d05e83df-7649-11e0-89d1-5b4e51806a5b</uuidresource>
-			<datelastmodified>Wed, 04 May 2011 12:28:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -652,21 +1519,16 @@
 					<value><![CDATA[w:24,h:24]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/containerpage.png
-			</source>
-			<destination>system/workplace/resources/filetypes/containerpage.png
-			</destination>
+			<source>system/workplace/resources/filetypes/containerpage.png</source>
+			<destination>system/workplace/resources/filetypes/containerpage.png</destination>
 			<type>image</type>
 			<uuidstructure>b690907a-7591-11e0-a914-a1b7a1ca2b7f</uuidstructure>
 			<uuidresource>b690907b-7591-11e0-a914-a1b7a1ca2b7f</uuidresource>
-			<datelastmodified>Tue, 03 May 2011 15:50:10 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Tue, 03 May 2011 14:29:11 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -674,21 +1536,16 @@
 					<value><![CDATA[w:16,h:16]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/containerpage_big.png
-			</source>
-			<destination>system/workplace/resources/filetypes/containerpage_big.png
-			</destination>
+			<source>system/workplace/resources/filetypes/containerpage_big.png</source>
+			<destination>system/workplace/resources/filetypes/containerpage_big.png</destination>
 			<type>image</type>
 			<uuidstructure>d06365e2-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
 			<uuidresource>d06365e3-7649-11e0-89d1-5b4e51806a5b</uuidresource>
-			<datelastmodified>Wed, 04 May 2011 12:28:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -696,64 +1553,16 @@
 					<value><![CDATA[w:24,h:24]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/function.png</source>
-			<destination>system/workplace/resources/filetypes/function.png
-			</destination>
-			<type>image</type>
-			<uuidstructure>fd4ead16-608c-4a1b-92c0-3a417a55ae07</uuidstructure>
-			<uuidresource>fd4ead16-608c-4a1b-92c0-3a417a55ae08</uuidresource>
-			<datelastmodified>Wed, 04 May 2011 12:28:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
-			<usercreated>Admin</usercreated>
-			<flags>0</flags>
-			<properties>
-				<property type="shared">
-					<name>image.size</name>
-					<value><![CDATA[w:24,h:24]]></value>
-				</property>
-			</properties>
-			<relations />
-			<accesscontrol />
-		</file>
-		<file>
-			<source>system/workplace/resources/filetypes/function_big.png
-			</source>
-			<destination>system/workplace/resources/filetypes/function_big.png
-			</destination>
-			<type>image</type>
-			<uuidstructure>afbccf5a-bce4-4fe9-8c8d-246265f1b3d0</uuidstructure>
-			<uuidresource>afbccf5a-bce4-4fe9-8c8d-246265f1b3d1</uuidresource>
-			<datelastmodified>Wed, 04 May 2011 12:28:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
-			<usercreated>Admin</usercreated>
-			<flags>0</flags>
-			<properties>
-				<property type="shared">
-					<name>image.size</name>
-					<value><![CDATA[w:24,h:24]]></value>
-				</property>
-			</properties>
-			<relations />
-			<accesscontrol />
-		</file>
-		<file>
-			<source>system/workplace/resources/filetypes/containerpage_template.png
-			</source>
-			<destination>system/workplace/resources/filetypes/containerpage_template.png
-			</destination>
+			<source>system/workplace/resources/filetypes/containerpage_template.png</source>
+			<destination>system/workplace/resources/filetypes/containerpage_template.png</destination>
 			<type>image</type>
 			<uuidstructure>2f19b03c-759e-11e0-bda2-a1b7a1ca2b7f</uuidstructure>
 			<uuidresource>2f19b03d-759e-11e0-bda2-a1b7a1ca2b7f</uuidresource>
-			<datelastmodified>Tue, 03 May 2011 16:05:29 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Tue, 03 May 2011 15:58:27 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -761,21 +1570,16 @@
 					<value><![CDATA[w:16,h:16]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/containerpage_template_big.png
-			</source>
-			<destination>system/workplace/resources/filetypes/containerpage_template_big.png
-			</destination>
+			<source>system/workplace/resources/filetypes/containerpage_template_big.png</source>
+			<destination>system/workplace/resources/filetypes/containerpage_template_big.png</destination>
 			<type>image</type>
 			<uuidstructure>d06f4cca-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
 			<uuidresource>d06f4ccb-7649-11e0-89d1-5b4e51806a5b</uuidresource>
-			<datelastmodified>Wed, 04 May 2011 12:28:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -783,21 +1587,16 @@
 					<value><![CDATA[w:24,h:24]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/elementgroup.png
-			</source>
-			<destination>system/workplace/resources/filetypes/elementgroup.png
-			</destination>
+			<source>system/workplace/resources/filetypes/elementgroup.png</source>
+			<destination>system/workplace/resources/filetypes/elementgroup.png</destination>
 			<type>image</type>
 			<uuidstructure>7cf8f7e7-7596-11e0-b62c-a1b7a1ca2b7f</uuidstructure>
 			<uuidresource>7cf8f7e8-7596-11e0-b62c-a1b7a1ca2b7f</uuidresource>
-			<datelastmodified>Tue, 03 May 2011 15:44:52 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Tue, 03 May 2011 15:03:22 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -805,21 +1604,16 @@
 					<value><![CDATA[w:16,h:16]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/elementgroup_big.png
-			</source>
-			<destination>system/workplace/resources/filetypes/elementgroup_big.png
-			</destination>
+			<source>system/workplace/resources/filetypes/elementgroup_big.png</source>
+			<destination>system/workplace/resources/filetypes/elementgroup_big.png</destination>
 			<type>image</type>
 			<uuidstructure>d07d7da6-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
 			<uuidresource>d07d7da7-7649-11e0-89d1-5b4e51806a5b</uuidresource>
-			<datelastmodified>Wed, 04 May 2011 12:28:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -827,21 +1621,430 @@
 					<value><![CDATA[w:24,h:24]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/module_config.png
-			</source>
-			<destination>system/workplace/resources/filetypes/module_config.png
-			</destination>
+			<source>system/workplace/resources/filetypes/formatter_config.png</source>
+			<destination>system/workplace/resources/filetypes/formatter_config.png</destination>
+			<type>image</type>
+			<uuidstructure>5d011d07-c390-4eee-a3e7-a1f3be8348a5</uuidstructure>
+			<uuidresource>93c70ec4-cf18-45f2-87db-bd157a2d087d</uuidresource>
+			<datecreated>Wed, 29 Jun 2011 08:48:01 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/formatter_config_big.png</source>
+			<destination>system/workplace/resources/filetypes/formatter_config_big.png</destination>
+			<type>image</type>
+			<uuidstructure>eb5a0089-8f53-4c56-b050-ad80e0319c3e</uuidstructure>
+			<uuidresource>b35e207c-1df5-48ad-bfd2-9a1fa36d7bc8</uuidresource>
+			<datecreated>Wed, 29 Jun 2011 08:48:01 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/function.png</source>
+			<destination>system/workplace/resources/filetypes/function.png</destination>
+			<type>image</type>
+			<uuidstructure>fd4ead16-608c-4a1b-92c0-3a417a55ae07</uuidstructure>
+			<uuidresource>fd4ead16-608c-4a1b-92c0-3a417a55ae08</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/function_big.png</source>
+			<destination>system/workplace/resources/filetypes/function_big.png</destination>
+			<type>image</type>
+			<uuidstructure>afbccf5a-bce4-4fe9-8c8d-246265f1b3d0</uuidstructure>
+			<uuidresource>afbccf5a-bce4-4fe9-8c8d-246265f1b3d1</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/htmlredirect.png</source>
+			<destination>system/workplace/resources/filetypes/htmlredirect.png</destination>
+			<type>image</type>
+			<uuidstructure>77120f85-7584-11e0-a519-a1b7a1ca2b7f</uuidstructure>
+			<uuidresource>77120f86-7584-11e0-a519-a1b7a1ca2b7f</uuidresource>
+			<datecreated>Tue, 03 May 2011 12:54:21 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/htmlredirect_big.png</source>
+			<destination>system/workplace/resources/filetypes/htmlredirect_big.png</destination>
+			<type>image</type>
+			<uuidstructure>d08bd58e-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
+			<uuidresource>d08bd58f-7649-11e0-89d1-5b4e51806a5b</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/image_xml.png</source>
+			<destination>system/workplace/resources/filetypes/image_xml.png</destination>
+			<type>image</type>
+			<uuidstructure>c9eee56b-61cb-11e5-bd18-a1aa1f21b3dc</uuidstructure>
+			<uuidresource>c9eee56c-61cb-11e5-bd18-a1aa1f21b3dc</uuidresource>
+			<datecreated>Wed, 23 Sep 2015 08:19:19 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[image_xml]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/image_xml_big.png</source>
+			<destination>system/workplace/resources/filetypes/image_xml_big.png</destination>
+			<type>image</type>
+			<uuidstructure>c9f59c2f-61cb-11e5-bd18-a1aa1f21b3dc</uuidstructure>
+			<uuidresource>c9f59c30-61cb-11e5-bd18-a1aa1f21b3dc</uuidresource>
+			<datecreated>Wed, 23 Sep 2015 08:19:19 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[image_xml_big]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/inheritancegroup.png</source>
+			<destination>system/workplace/resources/filetypes/inheritancegroup.png</destination>
+			<type>image</type>
+			<uuidstructure>fa1b3707-6c26-11e1-8c1e-91bd90e3b856</uuidstructure>
+			<uuidresource>fa1b3708-6c26-11e1-8c1e-91bd90e3b856</uuidresource>
+			<datecreated>Mon, 12 Mar 2012 09:37:25 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[inheritancegroup]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/inheritancegroup_big.png</source>
+			<destination>system/workplace/resources/filetypes/inheritancegroup_big.png</destination>
+			<type>image</type>
+			<uuidstructure>fa20190b-6c26-11e1-8c1e-91bd90e3b856</uuidstructure>
+			<uuidresource>fa20190c-6c26-11e1-8c1e-91bd90e3b856</uuidresource>
+			<datecreated>Mon, 12 Mar 2012 09:37:25 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[inheritancegroup_big]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/localization.png</source>
+			<destination>system/workplace/resources/filetypes/localization.png</destination>
+			<type>image</type>
+			<uuidstructure>c62ed49f-3d04-11e6-8bb0-155d29dc604a</uuidstructure>
+			<uuidresource>c62ed4a0-3d04-11e6-8bb0-155d29dc604a</uuidresource>
+			<datecreated>Tue, 28 Jun 2016 07:48:59 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/localization_big.png</source>
+			<destination>system/workplace/resources/filetypes/localization_big.png</destination>
+			<type>image</type>
+			<uuidstructure>c637fc63-3d04-11e6-8bb0-155d29dc604a</uuidstructure>
+			<uuidresource>c637fc64-3d04-11e6-8bb0-155d29dc604a</uuidresource>
+			<datecreated>Tue, 28 Jun 2016 07:48:59 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/localization_descriptor.png</source>
+			<destination>system/workplace/resources/filetypes/localization_descriptor.png</destination>
+			<type>image</type>
+			<uuidstructure>c63d5397-3d04-11e6-8bb0-155d29dc604a</uuidstructure>
+			<uuidresource>c63d5398-3d04-11e6-8bb0-155d29dc604a</uuidresource>
+			<datecreated>Tue, 28 Jun 2016 07:48:59 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/localization_descriptor_big.png</source>
+			<destination>system/workplace/resources/filetypes/localization_descriptor_big.png</destination>
+			<type>image</type>
+			<uuidstructure>c642d1db-3d04-11e6-8bb0-155d29dc604a</uuidstructure>
+			<uuidresource>c642d1dc-3d04-11e6-8bb0-155d29dc604a</uuidresource>
+			<datecreated>Tue, 28 Jun 2016 07:48:59 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>		
+		<file>
+			<source>system/workplace/resources/filetypes/modelgroup_copy.png</source>
+			<destination>system/workplace/resources/filetypes/modelgroup_copy.png</destination>
+			<type>image</type>
+			<uuidstructure>1e613685-610b-11e5-afa4-a1aa1f21b3dc</uuidstructure>
+			<uuidresource>1e613686-610b-11e5-afa4-a1aa1f21b3dc</uuidresource>
+			<datecreated>Tue, 22 Sep 2015 09:20:08 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[modelgroup_copy]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/modelgroup_copy_big.png</source>
+			<destination>system/workplace/resources/filetypes/modelgroup_copy_big.png</destination>
+			<type>image</type>
+			<uuidstructure>7f1699d3-603c-11e5-85f9-377ea9708e4d</uuidstructure>
+			<uuidresource>7f1699d4-603c-11e5-85f9-377ea9708e4d</uuidresource>
+			<datecreated>Mon, 21 Sep 2015 08:41:05 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[modelgroup_copy_big]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/modelgroup_reuse.png</source>
+			<destination>system/workplace/resources/filetypes/modelgroup_reuse.png</destination>
+			<type>image</type>
+			<uuidstructure>1e6ad379-610b-11e5-afa4-a1aa1f21b3dc</uuidstructure>
+			<uuidresource>1e6ad37a-610b-11e5-afa4-a1aa1f21b3dc</uuidresource>
+			<datecreated>Tue, 22 Sep 2015 09:20:08 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[modelgroup_reuse]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/modelgroup_reuse_big.png</source>
+			<destination>system/workplace/resources/filetypes/modelgroup_reuse_big.png</destination>
+			<type>image</type>
+			<uuidstructure>7f1adf97-603c-11e5-85f9-377ea9708e4d</uuidstructure>
+			<uuidresource>7f1adf98-603c-11e5-85f9-377ea9708e4d</uuidresource>
+			<datecreated>Mon, 21 Sep 2015 08:41:05 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[modelgroup_reuse_big]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/modelpage.png</source>
+			<destination>system/workplace/resources/filetypes/modelpage.png</destination>
+			<type>image</type>
+			<uuidstructure>79b4873a-11df-4f02-b9a9-bb5ed9759a7d</uuidstructure>
+			<uuidresource>b12b5a77-476e-424c-aa5d-35959979221c</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/modelpage_big.png</source>
+			<destination>system/workplace/resources/filetypes/modelpage_big.png</destination>
+			<type>image</type>
+			<uuidstructure>070319ec-c325-4e65-89e1-700aa387a8d7</uuidstructure>
+			<uuidresource>7cb655af-d7d4-43ec-ab82-b8867c371464</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/modelpage_groups.png</source>
+			<destination>system/workplace/resources/filetypes/modelpage_groups.png</destination>
+			<type>image</type>
+			<uuidstructure>1e6ca83d-610b-11e5-afa4-a1aa1f21b3dc</uuidstructure>
+			<uuidresource>1e6ca83e-610b-11e5-afa4-a1aa1f21b3dc</uuidresource>
+			<datecreated>Tue, 22 Sep 2015 09:20:08 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[modelpage_groups]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/modelpage_groups_big.png</source>
+			<destination>system/workplace/resources/filetypes/modelpage_groups_big.png</destination>
+			<type>image</type>
+			<uuidstructure>7f1cb45b-603c-11e5-85f9-377ea9708e4d</uuidstructure>
+			<uuidresource>7f1cb45c-603c-11e5-85f9-377ea9708e4d</uuidresource>
+			<datecreated>Mon, 21 Sep 2015 08:41:05 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property>
+					<name>Title</name>
+					<value><![CDATA[modelpage_groups_big]]></value>
+				</property>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/module_config.png</source>
+			<destination>system/workplace/resources/filetypes/module_config.png</destination>
 			<type>image</type>
 			<uuidstructure>7f364afd-a22c-11e0-9ff0-afd4b35f6004</uuidstructure>
 			<uuidresource>7f364afe-a22c-11e0-9ff0-afd4b35f6004</uuidresource>
-			<datelastmodified>Wed, 29 Jun 2011 08:48:09 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 29 Jun 2011 08:48:01 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -849,21 +2052,16 @@
 					<value><![CDATA[w:16,h:16]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/module_config_big.png
-			</source>
-			<destination>system/workplace/resources/filetypes/module_config_big.png
-			</destination>
+			<source>system/workplace/resources/filetypes/module_config_big.png</source>
+			<destination>system/workplace/resources/filetypes/module_config_big.png</destination>
 			<type>image</type>
 			<uuidstructure>7f3b05f1-a22c-11e0-9ff0-afd4b35f6004</uuidstructure>
 			<uuidresource>7f3b05f2-a22c-11e0-9ff0-afd4b35f6004</uuidresource>
-			<datelastmodified>Wed, 29 Jun 2011 08:48:20 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
 			<datecreated>Wed, 29 Jun 2011 08:48:01 GMT</datecreated>
-			<usercreated>Admin</usercreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -871,21 +2069,16 @@
 					<value><![CDATA[w:24,h:24]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/sitemap_config.png
-			</source>
-			<destination>system/workplace/resources/filetypes/sitemap_config.png
-			</destination>
+			<source>system/workplace/resources/filetypes/navlevel.png</source>
+			<destination>system/workplace/resources/filetypes/navlevel.png</destination>
 			<type>image</type>
-			<uuidstructure>231864b1-758b-11e0-bb02-a1b7a1ca2b7f</uuidstructure>
-			<uuidresource>231864b2-758b-11e0-bb02-a1b7a1ca2b7f</uuidresource>
-			<datelastmodified>Tue, 03 May 2011 13:42:20 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Tue, 03 May 2011 13:42:07 GMT</datecreated>
-			<usercreated>Admin</usercreated>
+			<uuidstructure>e20c5421-a4b5-4389-958e-5323d4b6843f</uuidstructure>
+			<uuidresource>4d1f707c-3e04-472b-b825-0ff4783f5a2f</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -893,21 +2086,16 @@
 					<value><![CDATA[w:16,h:16]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
 		</file>
 		<file>
-			<source>system/workplace/resources/filetypes/sitemap_config_big.png
-			</source>
-			<destination>system/workplace/resources/filetypes/sitemap_config_big.png
-			</destination>
+			<source>system/workplace/resources/filetypes/navlevel_big.png</source>
+			<destination>system/workplace/resources/filetypes/navlevel_big.png</destination>
 			<type>image</type>
-			<uuidstructure>d0afb15e-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
-			<uuidresource>d0afb15f-7649-11e0-89d1-5b4e51806a5b</uuidresource>
-			<datelastmodified>Wed, 04 May 2011 12:28:00 GMT</datelastmodified>
-			<userlastmodified>Admin</userlastmodified>
-			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
-			<usercreated>Admin</usercreated>
+			<uuidstructure>d1180e28-5c7d-11e5-b2da-a1aa1f21b3dc</uuidstructure>
+			<uuidresource>d1180e29-5c7d-11e5-b2da-a1aa1f21b3dc</uuidresource>
+			<datecreated>Wed, 16 Sep 2015 14:18:35 GMT</datecreated>
 			<flags>0</flags>
 			<properties>
 				<property type="shared">
@@ -915,8 +2103,76 @@
 					<value><![CDATA[w:24,h:24]]></value>
 				</property>
 			</properties>
-			<relations />
-			<accesscontrol />
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/sitemap_config.png</source>
+			<destination>system/workplace/resources/filetypes/sitemap_config.png</destination>
+			<type>image</type>
+			<uuidstructure>231864b1-758b-11e0-bb02-a1b7a1ca2b7f</uuidstructure>
+			<uuidresource>231864b2-758b-11e0-bb02-a1b7a1ca2b7f</uuidresource>
+			<datecreated>Tue, 03 May 2011 13:42:07 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/sitemap_config_big.png</source>
+			<destination>system/workplace/resources/filetypes/sitemap_config_big.png</destination>
+			<type>image</type>
+			<uuidstructure>d0afb15e-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
+			<uuidresource>d0afb15f-7649-11e0-89d1-5b4e51806a5b</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/subsitemap.png</source>
+			<destination>system/workplace/resources/filetypes/subsitemap.png</destination>
+			<type>image</type>
+			<uuidstructure>770d2d81-7584-11e0-a519-a1b7a1ca2b7f</uuidstructure>
+			<uuidresource>770d2d82-7584-11e0-a519-a1b7a1ca2b7f</uuidresource>
+			<datecreated>Tue, 03 May 2011 12:54:21 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:16,h:16]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
+		</file>
+		<file>
+			<source>system/workplace/resources/filetypes/subsitemap_big.png</source>
+			<destination>system/workplace/resources/filetypes/subsitemap_big.png</destination>
+			<type>image</type>
+			<uuidstructure>d0b92742-7649-11e0-89d1-5b4e51806a5b</uuidstructure>
+			<uuidresource>d0b92743-7649-11e0-89d1-5b4e51806a5b</uuidresource>
+			<datecreated>Wed, 04 May 2011 12:27:02 GMT</datecreated>
+			<flags>0</flags>
+			<properties>
+				<property type="shared">
+					<name>image.size</name>
+					<value><![CDATA[w:24,h:24]]></value>
+				</property>
+			</properties>
+			<relations/>
+			<accesscontrol/>
 		</file>
 	</files>
 </export>

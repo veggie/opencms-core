@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -50,15 +50,15 @@ import org.apache.commons.logging.Log;
  * Scheduled job for time based publishing.<p>
  *
  * This class is called via the front end to publish scheduled a file at a given time.<p>
- * 
- * Per default, it publishes all new, edited and deleted resources in the project which are locked in 
+ *
+ * Per default, it publishes all new, edited and deleted resources in the project which are locked in
  * the current project. For all resources in the project which are not locked by the current user is the
  * lock changed. You are able to perform a link validation before
  * publishing the project by adding the parameter <code>linkcheck=true</code>. It is possible to send
  * an email to a user in OpenCms in case somthing went wrong during this process. To do so specifiy
  * a parameter<code>mail-to-user=username_in_opencms</code>.
  * After running this job, the job is deleted. Therefore the job name is to set in the parameter <code>jobname</code><p>
- * 
+ *
  * @since 7.5.1
  */
 public class CmsPublishScheduledJob implements I_CmsScheduledJob {
@@ -78,13 +78,12 @@ public class CmsPublishScheduledJob implements I_CmsScheduledJob {
     /**
      * @see org.opencms.scheduler.I_CmsScheduledJob#launch(org.opencms.file.CmsObject, java.util.Map)
      */
-    @SuppressWarnings("unchecked")
-    public synchronized String launch(CmsObject cms, Map parameters) throws Exception {
+    public synchronized String launch(CmsObject cms, Map<String, String> parameters) throws Exception {
 
         Date jobStart = new Date();
         String finishMessage;
-        String linkcheck = (String)parameters.get(PARAM_LINKCHECK);
-        String jobName = (String)parameters.get(PARAM_JOBNAME);
+        String linkcheck = parameters.get(PARAM_LINKCHECK);
+        String jobName = parameters.get(PARAM_JOBNAME);
         CmsProject project = cms.getRequestContext().getCurrentProject();
         CmsLogReport report = new CmsLogReport(cms.getRequestContext().getLocale(), CmsPublishScheduledJob.class);
 
@@ -156,7 +155,7 @@ public class CmsPublishScheduledJob implements I_CmsScheduledJob {
             // send publish notification
             if (report.hasWarning() || report.hasError()) {
                 try {
-                    String userName = (String)parameters.get(PARAM_USER);
+                    String userName = parameters.get(PARAM_USER);
                     CmsUser user = cms.readUser(userName);
 
                     CmsPublishNotification notification = new CmsPublishNotification(cms, user, report);

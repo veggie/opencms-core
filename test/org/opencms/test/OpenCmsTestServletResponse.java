@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,6 +28,7 @@
 package org.opencms.test;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
@@ -36,7 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Very incomplete implementation of <code>HttpServletResponse</code> for testing.<p>
- * 
+ *
  */
 public class OpenCmsTestServletResponse implements HttpServletResponse {
 
@@ -82,9 +83,10 @@ public class OpenCmsTestServletResponse implements HttpServletResponse {
 
     /**
      * @see javax.servlet.http.HttpServletResponse#encodeRedirectUrl(java.lang.String)
-     * 
+     *
      * @deprecated deprecated in Java standard, but still required to implement
      */
+    @Deprecated
     public String encodeRedirectUrl(String arg0) {
 
         throw new RuntimeException("Not implemented");
@@ -100,9 +102,10 @@ public class OpenCmsTestServletResponse implements HttpServletResponse {
 
     /**
      * @see javax.servlet.http.HttpServletResponse#encodeUrl(java.lang.String)
-     * 
+     *
      * @deprecated deprecated in Java standard, but still required to implement
      */
+    @Deprecated
     public String encodeUrl(String arg0) {
 
         throw new RuntimeException("Not implemented");
@@ -148,6 +151,21 @@ public class OpenCmsTestServletResponse implements HttpServletResponse {
         throw new RuntimeException("Not implemented");
     }
 
+    public String getHeader(String name) {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public Collection<String> getHeaderNames() {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public Collection<String> getHeaders(String name) {
+
+        throw new RuntimeException("Not implemented");
+    }
+
     /**
      * @see javax.servlet.ServletResponse#getLocale()
      */
@@ -160,6 +178,11 @@ public class OpenCmsTestServletResponse implements HttpServletResponse {
      * @see javax.servlet.ServletResponse#getOutputStream()
      */
     public ServletOutputStream getOutputStream() {
+
+        throw new RuntimeException("Not implemented");
+    }
+
+    public int getStatus() {
 
         throw new RuntimeException("Not implemented");
     }
@@ -294,9 +317,10 @@ public class OpenCmsTestServletResponse implements HttpServletResponse {
 
     /**
      * @see javax.servlet.http.HttpServletResponse#setStatus(int, java.lang.String)
-     * 
+     *
      * @deprecated deprecated in Java standard, but still required to implement
      */
+    @Deprecated
     public void setStatus(int arg0, String arg1) {
 
         throw new RuntimeException("Not implemented");

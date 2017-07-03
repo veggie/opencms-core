@@ -1,0 +1,39 @@
+<module>
+	<!-- Inherit the default widget set -->
+	<inherits name="com.vaadin.terminal.gwt.DefaultWidgetSet" />
+	<inherits name="com.google.gwt.logging.Logging"/>
+	<set-property name="gwt.logging.logLevel" value="INFO"/>   
+
+	<inherits name="org.opencms.GwtBaseCommon" />
+	<inherits name="org.opencms.ade.publish.PublishDialogCommon" />
+	<inherits name="org.opencms.ade.galleries.GalleryCommon" />
+	<inherits name="org.tepi.filtertable.gwt.FilterTableWidgetset" />
+	<stylesheet src="../../../resources/css/toolbar.css"/>
+	<entry-point class="org.opencms.ui.client.CmsWidgetSetEntryPoint" />
+	<set-property name="vaadin.profiler" value="true" />
+	<source path="client" />
+	<source path="shared" />
+	<super-source path="client/super_src/" /> 
+	
+	<replace-with class="org.opencms.ui.client.CmsLoadingIndicator">
+    	<when-type-is class="com.vaadin.client.VLoadingIndicator"/>
+    </replace-with>
+    
+    <replace-with class="org.opencms.ui.client.CmsVNotification">
+    	<when-type-is class="com.vaadin.client.ui.VNotification" />
+    </replace-with>
+    <replace-with class="org.opencms.ui.client.CmsVMenuBar">
+    	<when-type-is class="com.vaadin.client.ui.VMenuBar" />
+    </replace-with>
+    <replace-with class="org.opencms.ui.client.CmsVPopupView">
+    	<when-type-is class="com.vaadin.client.ui.VPopupView" />
+    </replace-with>
+    
+    <replace-with class="org.opencms.ui.client.CmsVUI">
+    	<when-type-is class="com.vaadin.client.ui.VUI" />
+    </replace-with>
+    
+    <replace-with class="org.opencms.ui.client.CmsRpcManager">
+    	<when-type-is class="com.vaadin.client.communication.RpcManager" />
+    </replace-with>
+</module>

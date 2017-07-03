@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,39 +27,60 @@
 
 package org.opencms.workplace.editors.directedit;
 
+import org.opencms.ade.configuration.CmsADEConfigData;
+import org.opencms.ade.configuration.CmsResourceTypeConfig;
+import org.opencms.ade.contenteditor.shared.CmsEditorConstants;
+import org.opencms.gwt.shared.CmsGwtConstants;
+import org.opencms.gwt.shared.I_CmsCollectorInfoFactory;
+import org.opencms.gwt.shared.I_CmsContentLoadCollectorInfo;
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.json.JSONException;
 import org.opencms.json.JSONObject;
+import org.opencms.main.CmsException;
+import org.opencms.main.CmsLog;
+import org.opencms.main.OpenCms;
+import org.opencms.util.CmsStringUtil;
+import org.opencms.util.CmsUUID;
 import org.opencms.workplace.editors.Messages;
+import org.opencms.workplace.explorer.CmsResourceUtil;
 
 import java.util.Random;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
+import org.apache.commons.logging.Log;
+
+import com.google.web.bindery.autobean.shared.AutoBean;
+import com.google.web.bindery.autobean.shared.AutoBeanCodex;
+import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
+
 /**
  * Provider for the OpenCms AdvancedDirectEdit.<p>
- * 
+ *
  * Since OpenCms version 8.0.0.<p>
- * 
+ *
  * This provider DOES NOT support {@link CmsDirectEditMode#MANUAL} mode.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
 
+    /** The log object for this class. */
+    private static final Log LOG = CmsLog.getLog(CmsAdvancedDirectEditProvider.class);
+
     /** Indicates the permissions for the last element the was opened. */
     protected int m_lastPermissionMode;
-
-    /** The random number generator used for element ids. */
-    private Random m_random = new Random();
 
     /** True if the elements should be assigned randomly generated ids. */
     protected boolean m_useIds;
 
+    /** The random number generator used for element ids. */
+    private Random m_random = new Random();
+
     /**
      * Returns the end HTML for a disabled direct edit button.<p>
-     * 
+     *
      * @return the end HTML for a disabled direct edit button
      */
     public String endDirectEditDisabled() {
@@ -69,18 +90,18 @@ public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
 
     /**
      * Returns the end HTML for an enabled direct edit button.<p>
-     * 
+     *
      * @return the end HTML for an enabled direct edit button
      */
     public String endDirectEditEnabled() {
 
-        return "<div class=\"cms-editable-end\"></div>";
+        return "<div class=\"cms-editable-end\"></div>\n";
     }
 
     /**
      * Generates a random element id.<p>
-     * 
-     * @return a random  element id 
+     *
+     * @return a random  element id
      */
     public synchronized String getRandomId() {
 
@@ -96,8 +117,8 @@ public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
         switch (m_lastPermissionMode) {
 
             case 1: // disabled
-                content = endDirectEditDisabled();
-                break;
+                //                content = endDirectEditDisabled();
+                //                break;
             case 2: // enabled
                 content = endDirectEditEnabled();
                 break;
@@ -119,19 +140,42 @@ public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
     }
 
     /**
+     * @see org.opencms.workplace.editors.directedit.A_CmsDirectEditProvider#insertDirectEditListMetadata(javax.servlet.jsp.PageContext, org.opencms.gwt.shared.I_CmsContentLoadCollectorInfo)
+     */
+    @Override
+    public void insertDirectEditListMetadata(PageContext context, I_CmsContentLoadCollectorInfo info)
+    throws JspException {
+
+        if (m_cms.getRequestContext().getCurrentProject().isOnlineProject()) {
+            // the metadata is only needed for editing
+            return;
+        }
+        I_CmsCollectorInfoFactory collectorInfoFactory = AutoBeanFactorySource.create(I_CmsCollectorInfoFactory.class);
+        AutoBean<I_CmsContentLoadCollectorInfo> collectorInfoAutoBean = collectorInfoFactory.wrapCollectorInfo(info);
+        String serializedCollectorInfo = AutoBeanCodex.encode(collectorInfoAutoBean).getPayload();
+
+        String marker = "<div class='"
+            + CmsGwtConstants.CLASS_COLLECTOR_INFO
+            + "' style='display: none !important;' rel='"
+            + CmsEncoder.escapeXml(serializedCollectorInfo)
+            + "'></div>";
+        print(context, marker);
+    }
+
+    /**
      * @see org.opencms.workplace.editors.directedit.I_CmsDirectEditProvider#insertDirectEditStart(javax.servlet.jsp.PageContext, org.opencms.workplace.editors.directedit.CmsDirectEditParams)
      */
     public boolean insertDirectEditStart(PageContext context, CmsDirectEditParams params) throws JspException {
 
         String content;
-        // check the direct edit permissions of the current user          
+        // check the direct edit permissions of the current user
         CmsDirectEditResourceInfo resourceInfo = getResourceInfo(params.getResourceName());
         // check the permission mode
         m_lastPermissionMode = resourceInfo.getPermissions().getPermission();
         switch (m_lastPermissionMode) {
             case 1: // disabled
-                content = startDirectEditDisabled(params, resourceInfo);
-                break;
+                //                content = startDirectEditDisabled(params, resourceInfo);
+                //                break;
             case 2: // enabled
                 try {
                     content = startDirectEditEnabled(params, resourceInfo);
@@ -148,7 +192,7 @@ public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
 
     /**
      * Returns <code>false</code> because the default provider does not support manual button placement.<p>
-     * 
+     *
      * @see org.opencms.workplace.editors.directedit.I_CmsDirectEditProvider#isManual(org.opencms.workplace.editors.directedit.CmsDirectEditMode)
      */
     @Override
@@ -169,10 +213,10 @@ public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
 
     /**
      * Returns the start HTML for a disabled direct edit button.<p>
-     * 
+     *
      * @param params the direct edit parameters
      * @param resourceInfo contains information about the resource to edit
-     * 
+     *
      * @return the start HTML for a disabled direct edit button
      */
     public String startDirectEditDisabled(CmsDirectEditParams params, CmsDirectEditResourceInfo resourceInfo) {
@@ -197,9 +241,9 @@ public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
      *
      * @param params the direct edit parameters
      * @param resourceInfo contains information about the resource to edit
-     * 
+     *
      * @return the start HTML for an enabled direct edit button
-     * @throws JSONException 
+     * @throws JSONException if a JSON handling error occurs
      */
     public String startDirectEditEnabled(CmsDirectEditParams params, CmsDirectEditResourceInfo resourceInfo)
     throws JSONException {
@@ -219,15 +263,46 @@ public class CmsAdvancedDirectEditProvider extends A_CmsDirectEditProvider {
         editableData.put("hasDelete", params.getButtonSelection().isShowDelete());
         editableData.put("hasNew", params.getButtonSelection().isShowNew());
         editableData.put("newtitle", m_messages.key(Messages.GUI_EDITOR_TITLE_NEW_0));
+        editableData.put(
+            "unreleaseOrExpired",
+            !resourceInfo.getResource().isReleasedAndNotExpired(System.currentTimeMillis()));
+        if (params.getId() != null) {
+            editableData.put(CmsEditorConstants.ATTR_CONTEXT_ID, params.getId().toString());
+        }
+        editableData.put(CmsEditorConstants.ATTR_POST_CREATE_HANDLER, params.getPostCreateHandler());
+        CmsUUID viewId = CmsUUID.getNullUUID();
+        if ((resourceInfo.getResource() != null) && resourceInfo.getResource().isFile()) {
+            CmsADEConfigData configData = OpenCms.getADEManager().lookupConfiguration(
+                m_cms,
+                resourceInfo.getResource().getRootPath());
+            CmsResourceTypeConfig typeConfig = configData.getResourceType(
+                OpenCms.getResourceManager().getResourceType(resourceInfo.getResource()).getTypeName());
+            if (typeConfig != null) {
+                viewId = typeConfig.getElementView();
+            }
+        }
+        editableData.put(CmsEditorConstants.ATTR_ELEMENT_VIEW, viewId);
 
+        if (m_lastPermissionMode == 1) {
+
+            try {
+                String noEditReason = new CmsResourceUtil(m_cms, resourceInfo.getResource()).getNoEditReason(
+                    OpenCms.getWorkplaceManager().getWorkplaceLocale(m_cms),
+                    true);
+                if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(noEditReason)) {
+                    editableData.put("noEditReason", noEditReason);
+                }
+            } catch (CmsException e) {
+                LOG.error(e.getLocalizedMessage(), e);
+            }
+        }
         StringBuffer result = new StringBuffer(512);
         if (m_useIds) {
             result.append("<div id=\"" + getRandomId() + "\" class='cms-editable' rel='").append(
-                editableData.toString()).append("'></div>");
+                editableData.toString()).append("'></div>\n");
         } else {
-            result.append("<div class='cms-editable' rel='").append(editableData.toString()).append("'></div>");
+            result.append("<div class='cms-editable' rel='").append(editableData.toString()).append("'></div>\n");
         }
-
         return result.toString();
     }
 }

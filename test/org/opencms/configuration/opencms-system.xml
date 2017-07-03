@@ -71,8 +71,9 @@
 		<requesthandlers/>
 		<passwordhandler class="org.opencms.security.CmsDefaultPasswordHandler">
 			<encoding>UTF-8</encoding>
-			<digest-type>MD5</digest-type>
+			<digest-type>scrypt</digest-type>
 			<param name="compatibility.convert.digestencoding">false</param>
+            <param name="scrypt.settings">16384,8,1</param>			
 		</passwordhandler>
 		<validationhandler class="org.opencms.security.CmsDefaultValidationHandler" />	
 		<loginmanager>	
@@ -88,8 +89,12 @@
 		<sites>
 			<workplace-server>http://localhost:8080</workplace-server>
 			<default-uri>/sites/default/</default-uri>
-			<site server="http://localhost:8080" uri="/sites/default/" >
-              <secure server="http://www.mysecureserver.com" exclusive="true" error="true" />			
+			<site server="http://localhost:8080" uri="/sites/default/" position="10.0" webserver="true">
+              <secure server="http://www.mysecureserver.com" exclusive="true" error="true"/>	
+               <parameters>
+              	<param name="test1">test1</param>
+              	<param name="test2">test2</param>
+              </parameters> 	
               <alias server="http://www.aliasserver.com"/>              			
               <alias server="http://www.yetanotheraliasserver.com"/>			
 			</site>
@@ -106,7 +111,6 @@
 			<user-guest>Guest</user-guest>
 			<user-export>Export</user-export>
 			<group-administrators>Administrators</group-administrators>
-			<group-projectmanagers>Projectmanagers</group-projectmanagers>
 			<group-users>Users</group-users>
 			<group-guests>Guests</group-guests>
 		</defaultusers>		

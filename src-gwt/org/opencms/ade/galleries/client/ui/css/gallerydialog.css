@@ -1,15 +1,8 @@
-@external html-face;
+@external html-face, cmsState, previewVisible, gwt-TabLayoutPanel;
 
-div.editorGallery {}
-@if user.agent ie8 {
-	div.editorGallery{
-		-ms-filter: none;
-	}
-} @else  {
-	div.editorGallery{
-		box-shadow: none;
-		border-radius: 0;
-	}
+div.editorGallery{
+	box-shadow: none;
+	border-radius: 0;
 }
 body.galleryBody, div.galleryBody {
 	margin:0px;
@@ -17,14 +10,6 @@ body.galleryBody, div.galleryBody {
 	overflow: hidden;
 }
 
-@if user.agent ie6 {
-body.galleryBody *{
-	zoom: 1;
-}
-body.galleryBody{
-	height: 499px;
-}
-}
 div.resultTabUpload{
 	float: right;
 	margin: 1px 1px 0 0;
@@ -41,36 +26,39 @@ div.showPreview{
 	right: 0px;
 }
 
-div.criteriaList {
+div.parentPanel div.criteriaList {
 	border:1px solid value("constants.css.borderColor");
-	height:414px;
-	overflow: auto;
-	position: relative;
 	background-color: value("constants.css.backgroundColorDialog");
-	padding:0 2px;
+	bottom: 6px;
+    left: 6px;
+    padding: 0 2px;
+    position: absolute;
+    right: 6px;
+    top: 41px;
 }
 
-.listOnlyTab .criteriaList{
-	height: 441px;
+div.parentPanel.previewVisible > div.gwt-TabLayoutPanel{
+	visibility:hidden;
 }
 
 div.selectboxWidth {
 	width: 200px;
+	display: inline-block;
+	margin-right: 3px;
 }
 
 div.listIcon {
 	margin:7px;
 }
 
-@sprite div.showParams {
-	gwt-image: "backgrounds.stateBackground";
-	background-position: 50% 50%;
+div.showParams {
+	background-image: value("constants.css.gradientListItem");
 	height: auto;
 	border:1px solid value("constants.css.borderColor");
-	margin-right:1px;
-	margin-bottom:1px;
-	padding:2px;
-	background-color: value("constants.css.backgroundColorStateStandard");
+	margin-right:3px;
+	margin-bottom:3px;
+	padding: 0 20px 0 4px;
+	position: relative;
 }
 
 div.tabParamsPanel {
@@ -83,33 +71,25 @@ div.tabOptions {
 	margin-bottom: 5px;
 }
 
-.listOnlyTab .tabOptions{
-	display: none;
-}
-
-.showParams div, .showParams div span{
-	vertical-align: top !important;
-}
-
 div.paramsText {
-	margin-right:5px;
 	max-width: 600px;
+	line-height: value("constants.css.inputInnerHeight");
 }
 
-@if user.agent ie6 {
-	.showParams, .paramsText {
-		display: inline;
-		zoom: 1;
-	}
-} @else {
-	.showParams, .paramsText {
-		display: inline-block;
-	}
+.showParams, .paramsText {
+	display: inline-block;
+}
+
+div.showParams div.cmsState{
+	font-size:10px !important;
+	position: absolute !important;
+	right: 4px !important;
+	top: 8px !important;
 }
 
 div.searchTabRow {
 	clear: both;
-	height: 24px;
+	height: value("constants.css.inputHeight");
 	margin-bottom: 5px;
 }
 div.searchTabRow div.searchTabInputWide div.html-face{
@@ -141,6 +121,15 @@ div.searchTabInputWide {
 	width: 497px;
 	float: right;
 }
+
+div.searchTabInputWide.hasButton > div{
+	margin-right: 24px;
+}
+div.searchTabInputWide.hasButton > div.cmsState{
+	margin: 4px 0px 0px 0px;
+	float:right;
+}
+
 div.searchTabBorderLayer {
 	position:absolute; 
 	top:0px; 
@@ -166,37 +155,18 @@ div.infoLabel {
 div.quickFilterBox {
 	float: right;
 	width: 200px;
-}
-div.quickFilterBox > div{
-	padding-top: 3px;
-	padding-bottom: 3px;
+	margin-right: 4px;
 }
 
+.typesImportant .shouldOnlyShowInFullTypeList {
+	display: none; 
+} 
 
-div.noParamsMessage {
-	position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    border:1px solid value("constants.css.borderColor");
-	background-color: value("constants.css.backgroundColorDialog");
-    margin: 6px;
-    padding: 6px;
-}
-div.noParamsMessage > table {
-	height: 90px;
-	margin: auto;
-}
-@sprite .noParamsMessage > table > tbody > tr > td:first-child {
-	gwt-image: "gwtImages.informationBigImage";
-	background-position: 50% 50%;
-	background-repeat: no-repeat;
-	vertical-align: middle;
-	padding: 15px;
-	width: 32px;
-}
-.noParamsMessage > table > tbody > tr > td {
-	vertical-align: middle;
-	padding: 15px 15px 15px 0px;
+.typeModeSwitch * {
+	font-weight: normal !important; 
+} 
+
+.typeModeSwitch { 
+	margin-top: 3px; 
+	float: left; 
 }

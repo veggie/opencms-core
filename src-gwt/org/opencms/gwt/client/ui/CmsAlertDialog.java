@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,7 +43,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Provides an alert dialog with a button.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
@@ -66,7 +66,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
     /** The warning message. */
     private CmsMessageWidget m_warningMessage;
 
-    /** 
+    /**
      * Constructor.<p>
      */
     public CmsAlertDialog() {
@@ -76,7 +76,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param title the title and heading of the dialog
      * @param content the content text
      */
@@ -87,7 +87,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param title the title and heading of the dialog
      * @param content the content text
      * @param buttonText the button text
@@ -99,7 +99,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param title the title and heading of the dialog
      * @param content the content text
      * @param buttonText the button text
@@ -107,9 +107,9 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
      */
     public CmsAlertDialog(String title, String content, String buttonText, String buttonIconClass) {
 
-        super(title, 439);
-        super.setAutoHideEnabled(false);
-        super.setModal(true);
+        super(title);
+        setAutoHideEnabled(false);
+        setModal(true);
         setGlassEnabled(true);
 
         // create the dialogs content panel
@@ -166,7 +166,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Adds a widget to this dialogs bottom content.<p>
-     * 
+     *
      * @param w the widget to add
      */
     public void addBottomWidget(Widget w) {
@@ -179,7 +179,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Adds a widget to this dialogs top content.<p>
-     * 
+     *
      * @param w the widget to add
      */
     public void addTopWidget(Widget w) {
@@ -201,7 +201,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Returns the button widget.<p>
-     * 
+     *
      * @return the button
      */
     public CmsPushButton getCloseButton() {
@@ -211,7 +211,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Sets the cancel/close button icon class.<p>
-     * 
+     *
      * @param iconClass the icon class
      */
     public void setCloseIconClass(String iconClass) {
@@ -221,7 +221,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Sets the close button text.<p>
-     * 
+     *
      * @param text the button text
      */
     public void setCloseText(String text) {
@@ -231,7 +231,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Sets the dialog handler.<p>
-     * 
+     *
      * @param handler the handler to set
      */
     public void setHandler(I_CmsCloseDialogHandler handler) {
@@ -241,7 +241,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Sets the warning text (HTML possible).<p>
-     * 
+     *
      * @param warningText the warning text to set
      */
     public void setWarningMessage(String warningText) {
@@ -273,7 +273,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Returns the dialog handler.<p>
-     * 
+     *
      * @return the dialog handler
      */
     protected I_CmsCloseDialogHandler getHandler() {
@@ -283,7 +283,7 @@ public class CmsAlertDialog extends CmsPopup implements I_CmsTruncable {
 
     /**
      * Returns the top widgets panel.<p>
-     * 
+     *
      * @return the top widgets panel
      */
     protected FlowPanel getTopWidgets() {

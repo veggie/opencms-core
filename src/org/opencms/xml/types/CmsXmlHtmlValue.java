@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -53,8 +53,8 @@ import org.htmlparser.util.ParserException;
 
 /**
  * Describes the XML content type "OpenCmsHtml".<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
 
@@ -89,7 +89,7 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
 
     /**
      * Creates a new XML content value of type "OpenCmsHtml".<p>
-     * 
+     *
      * @param document the XML content instance this value belongs to
      * @param element the XML element that contains this value
      * @param locale the locale this value is created for
@@ -101,7 +101,7 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
 
     /**
      * Creates a new XML content value of type "OpenCmsHtml".<p>
-     * 
+     *
      * @param document the XML content instance this value belongs to
      * @param element the XML element that contains this value
      * @param locale the locale this value is created for
@@ -114,7 +114,7 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
 
     /**
      * Creates a new schema type descriptor for the type "OpenCmsHtml".<p>
-     * 
+     *
      * @param name the name of the XML node containing the value according to the XML schema
      * @param minOccurs minimum number of occurrences of this type according to the XML schema
      * @param maxOccurs maximum number of occurrences of this type according to the XML schema
@@ -163,7 +163,7 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
 
     /**
      * Returns the link table of this XML page element.<p>
-     * 
+     *
      * @return the link table of this XML page element
      */
     public CmsLinkTable getLinkTable() {
@@ -188,7 +188,7 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
 
         if (m_plainTextValue == null) {
             try {
-                m_plainTextValue = CmsHtmlExtractor.extractText(this.getStringValue(cms), m_document.getEncoding());
+                m_plainTextValue = CmsHtmlExtractor.extractText(getStringValue(cms), m_document.getEncoding());
             } catch (Exception exc) {
                 m_plainTextValue = NULL_VALUE;
             }
@@ -254,7 +254,7 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
         String finalValue = value;
         if (finalValue != null) {
             // nested CDATA tags are not allowed, so replace CDATA tags with their contents
-            finalValue = finalValue.replaceAll("(?s)// <!\\[CDATA\\[(.*?)// \\]\\]>", "$1"); // special case for embedded Javascript 
+            finalValue = finalValue.replaceAll("(?s)// <!\\[CDATA\\[(.*?)// \\]\\]>", "$1"); // special case for embedded Javascript
             finalValue = finalValue.replaceAll("(?s)<!\\[CDATA\\[(.*?)\\]\\]>", "$1");
         }
         if (encoding != null) {
@@ -267,10 +267,11 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
         if (CmsHtmlConverter.isConversionEnabled(contentConversion)) {
             CmsHtmlConverter converter = new CmsHtmlConverter(encoding, contentConversion);
             finalValue = converter.convertToStringSilent(finalValue);
+            finalValue = fixNullCharacters(finalValue);
         }
         if (linkProcessor != null) {
             try {
-                // replace links in HTML by macros and fill link table      
+                // replace links in HTML by macros and fill link table
                 finalValue = linkProcessor.replaceLinks(finalValue);
             } catch (Exception exc) {
                 throw new CmsRuntimeException(Messages.get().container(Messages.ERR_HTML_DATA_PROCESSING_0), exc);
@@ -301,16 +302,47 @@ public class CmsXmlHtmlValue extends A_CmsXmlContentValue {
     }
 
     /**
+     * JTidy sometimes erroneouslsy produces HTML containing 'null' characters (Unicode code point 0), which are
+     * invalid in an XML document. Until we find a way to prevent JTidy doing that, we remove the null characters
+     * from the HTML, and log a warning.<p>
+     *
+     * @param jtidyOutput the JTidy output
+     * @return the output with null characters removed
+     */
+    protected String fixNullCharacters(String jtidyOutput) {
+
+        String outputWithoutNullChars = jtidyOutput.replaceAll("\u0000", "");
+        if (jtidyOutput.length() != outputWithoutNullChars.length()) {
+            String context = "";
+            if (m_document.getFile() != null) {
+                context = "(file=" + m_document.getFile().getRootPath() + ")";
+            }
+            LOG.warn("HTML cleanup produced invalid null characters in output. " + context);
+            LOG.debug("HTML cleanup output = " + jtidyOutput);
+        }
+        return outputWithoutNullChars;
+    }
+
+    /**
      * Creates the String value for this HTML value element.<p>
-     * 
+     *
      * @param cms an initialized instance of a CmsObject
      * @param document the XML document this value belongs to
-     * 
+     *
      * @return the String value for this HTML value element
      */
     private String createStringValue(CmsObject cms, I_CmsXmlDocument document) {
 
         Element data = m_element.element(CmsXmlPage.NODE_CONTENT);
+        if (data == null) {
+            String content = m_element.getText();
+            m_element.clearContent();
+            int index = m_element.getParent().elements(m_element.getQName()).indexOf(m_element);
+            m_element.addAttribute(CmsXmlPage.ATTRIBUTE_NAME, getName() + index);
+            m_element.addElement(CmsXmlPage.NODE_LINKS);
+            m_element.addElement(CmsXmlPage.NODE_CONTENT).addCDATA(content);
+            data = m_element.element(CmsXmlPage.NODE_CONTENT);
+        }
         Attribute enabled = m_element.attribute(CmsXmlPage.ATTRIBUTE_ENABLED);
 
         String content = "";

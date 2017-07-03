@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -49,7 +49,7 @@ import junit.framework.Test;
 
 /**
  * Tests for the XML page that doesn't require a running OpenCms system.<p>
- * 
+ *
  * @since 6.0.0
  */
 public class TestCmsXmlPage extends OpenCmsTestCase {
@@ -58,9 +58,12 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
 
     private static final String UTF8 = CmsEncoder.ENCODING_UTF_8;
 
+    /** The current VFS prefix as added to internal links according to the configuration in opencms-importexport.xml. */
+    private String m_vfsPrefix;
+
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestCmsXmlPage(String arg0) {
@@ -70,7 +73,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -80,8 +83,8 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
     }
 
     /**
-     * Tests reading and updating link elements from the XML page.<p> 
-     * 
+     * Tests reading and updating link elements from the XML page.<p>
+     *
      * @throws Exception in case something goes wrong
      */
     public void testUpdateXmlPageLink() throws Exception {
@@ -154,7 +157,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
 
     /**
      * Test validating a XML page with the XML page schema.<p>
-     * 
+     *
      * @throws Exception in case something goes wrong
      */
     public void testValidateXmlPageWithSchema() throws Exception {
@@ -184,8 +187,8 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
     }
 
     /**
-     * Tests using a XML page with a XML content definition.<p> 
-     * 
+     * Tests using a XML page with a XML content definition.<p>
+     *
      * @throws Exception  in case something goes wrong
      */
     public void testXmlPageAsXmlContentDefinition() throws Exception {
@@ -219,7 +222,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
 
     /**
      * Tests creating a XMl page (final version) with the API.<p>
-     * 
+     *
      * @throws Exception in case something goes wrong
      */
     public void testXmlPageCreateMinimal() throws Exception {
@@ -231,7 +234,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
         System.out.println("Testing creation of a minimal valid XML page:\n");
         System.out.println(pageStr);
 
-        // now compare against stored version of minimal XML page 
+        // now compare against stored version of minimal XML page
         String minimalPageStr = CmsFileUtil.readFile("org/opencms/xml/page/xmlpage-minimal.xml", UTF8);
         // remove windows-style linebreaks
         minimalPageStr = CmsStringUtil.substitute(minimalPageStr, "\r\n", "\n");
@@ -246,7 +249,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
 
     /**
      * Tests accessing element names in the XML page.<p>
-     * 
+     *
      * @throws Exception in case something goes wrong
      */
     public void testXmlPageElementNames() throws Exception {
@@ -319,7 +322,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
     }
 
     /**
-     * Tests acessing XML page values via locales.<p> 
+     * Tests acessing XML page values via locales.<p>
      *
      * @throws Exception in case something goes wrong
      */
@@ -347,7 +350,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
     }
 
     /**
-     * Tests copying, moving and removing locales from a XML page.<p> 
+     * Tests copying, moving and removing locales from a XML page.<p>
      *
      * @throws Exception in case something goes wrong
      */
@@ -389,8 +392,8 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
     }
 
     /**
-     * Tests reading elements from the updated, final version of the XML page.<p> 
-     * 
+     * Tests reading elements from the updated, final version of the XML page.<p>
+     *
      * @throws Exception  in case something goes wrong
      */
     public void testXmlPageReadFinalVersion() throws Exception {
@@ -407,10 +410,9 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
         assertTrue(page.hasValue("body", Locale.ENGLISH));
         CmsLinkTable table = page.getLinkTable("body", Locale.ENGLISH);
         assertTrue(table.getLink("link0").isInternal());
-        assertEquals("English! Image <img src=\"/sites/default/folder1/image2.gif\" />", page.getStringValue(
-            null,
-            "body",
-            Locale.ENGLISH));
+        assertEquals(
+            "English! Image <img src=\"/sites/default/folder1/image2.gif\" />",
+            page.getStringValue(null, "body", Locale.ENGLISH));
 
         // validate "final" xmlpage 2
         content = CmsFileUtil.readFile("org/opencms/xml/page/xmlpage-2.xml", UTF8);
@@ -418,20 +420,18 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
         assertTrue(page.hasValue("body", Locale.ENGLISH));
         assertTrue(page.hasValue("body", Locale.GERMAN));
         assertTrue(page.hasValue("body2", Locale.ENGLISH));
-        assertEquals("English! Image <img src=\"/sites/default/folder1/image2.gif\" />", page.getStringValue(
-            null,
-            "body",
-            Locale.ENGLISH));
+        assertEquals(
+            "English! Image <img src=\"/sites/default/folder1/image2.gif\" />",
+            page.getStringValue(null, "body", Locale.ENGLISH));
         assertEquals("English 2!", page.getStringValue(null, "body2", Locale.ENGLISH));
-        assertEquals("Deutsch! Image <img src=\"/sites/default/folder1/image2.gif\" />", page.getStringValue(
-            null,
-            "body",
-            Locale.GERMAN));
+        assertEquals(
+            "Deutsch! Image <img src=\"/sites/default/folder1/image2.gif\" />",
+            page.getStringValue(null, "body", Locale.GERMAN));
     }
 
     /**
      * Tests reading elements from the "old", pre 5.5.0 version of the XML page.<p>
-     * 
+     *
      * @throws Exception in case something goes wrong
      */
     public void testXmlPageReadOldVersion() throws Exception {
@@ -448,10 +448,9 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
         assertTrue(page.hasValue("body", Locale.ENGLISH));
         CmsLinkTable table = page.getLinkTable("body", Locale.ENGLISH);
         assertTrue(table.getLink("link0").isInternal());
-        assertEquals("English! Image <img src=\"/sites/default/folder1/image2.gif\" />", page.getStringValue(
-            null,
-            "body",
-            Locale.ENGLISH));
+        assertEquals(
+            "English! Image <img src=\"/sites/default/folder1/image2.gif\" />",
+            page.getStringValue(null, "body", Locale.ENGLISH));
 
         // validate "old" xmlpage 2
         content = CmsFileUtil.readFile("org/opencms/xml/page/xmlpage-old-2.xml", UTF8);
@@ -459,20 +458,18 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
         assertTrue(page.hasValue("body", Locale.ENGLISH));
         assertTrue(page.hasValue("body", Locale.GERMAN));
         assertTrue(page.hasValue("body2", Locale.ENGLISH));
-        assertEquals("English! Image <img src=\"/sites/default/folder1/image2.gif\" />", page.getStringValue(
-            null,
-            "body",
-            Locale.ENGLISH));
+        assertEquals(
+            "English! Image <img src=\"/sites/default/folder1/image2.gif\" />",
+            page.getStringValue(null, "body", Locale.ENGLISH));
         assertEquals("English 2!", page.getStringValue(null, "body2", Locale.ENGLISH));
-        assertEquals("Deutsch! Image <img src=\"/sites/default/folder1/image2.gif\" />", page.getStringValue(
-            null,
-            "body",
-            Locale.GERMAN));
+        assertEquals(
+            "Deutsch! Image <img src=\"/sites/default/folder1/image2.gif\" />",
+            page.getStringValue(null, "body", Locale.GERMAN));
     }
 
     /**
      * Tests accessing element names in the XML page.<p>
-     * 
+     *
      * @throws Exception in case something goes wrong
      */
     public void testXmlPageRenameElement() throws Exception {
@@ -499,7 +496,7 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
     }
 
     /**
-     * Tests writing elements to the updated, final version of the XML page.<p> 
+     * Tests writing elements to the updated, final version of the XML page.<p>
      *
      * @throws Exception in case something goes wrong
      */
@@ -524,13 +521,13 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
         CmsLinkTable table = page.getLinkTable("body3", Locale.ENGLISH);
         assertTrue(table.getLink("link0").isInternal());
         assertEquals(
-            "English WRITTEN! Image <img alt=\"\" src=\"/data/opencms/test/image.gif\" />",
+            "English WRITTEN! Image <img alt=\"\" src=\"" + getVfsPrefix() + "/test/image.gif\" />",
             page.getStringValue(getCmsObject(), "body3", Locale.ENGLISH));
     }
 
     /**
      * Tests writing elements to the "old", pre 5.5.0 version of the XML page.<p>
-     * 
+     *
      * @throws Exception in case something goes wrong
      */
     public void testXmlPageWriteOldVersion() throws Exception {
@@ -554,7 +551,19 @@ public class TestCmsXmlPage extends OpenCmsTestCase {
         CmsLinkTable table = page.getLinkTable("body3", Locale.ENGLISH);
         assertTrue(table.getLink("link0").isInternal());
         assertEquals(
-            "English WRITTEN! Image <img alt=\"\" src=\"/data/opencms/test/image.gif\" />",
+            "English WRITTEN! Image <img alt=\"\" src=\"" + getVfsPrefix() + "/test/image.gif\" />",
             page.getStringValue(getCmsObject(), "body3", Locale.ENGLISH));
+    }
+
+    /**
+     * Initializes m_vfsPrefix lazily, otherwise it does not work.
+     * @return the VFS prefix as added to internal links
+     */
+    protected String getVfsPrefix() {
+
+        if (null == m_vfsPrefix) {
+            m_vfsPrefix = OpenCms.getStaticExportManager().getVfsPrefix();
+        }
+        return m_vfsPrefix;
     }
 }

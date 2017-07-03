@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -48,8 +48,8 @@ import org.dom4j.Element;
  * Describes the XML content type "OpenCmsVarLink".<p>
  *
  * This type allows a link to either an internal VFS resource, or to an external website.<p>
- * 
- * @since 7.0.0 
+ *
+ * @since 7.0.0
  */
 public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
 
@@ -81,7 +81,7 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
 
     /**
      * Creates a new XML content value of type "OpenCmsVfsFile".<p>
-     * 
+     *
      * @param document the XML content instance this value belongs to
      * @param element the XML element that contains this value
      * @param locale the locale this value is created for
@@ -94,7 +94,7 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
 
     /**
      * Creates a new schema type descriptor for the type "OpenCmsVfsFile".<p>
-     * 
+     *
      * @param name the name of the XML node containing the value according to the XML schema
      * @param minOccurs minimum number of occurrences of this type according to the XML schema
      * @param maxOccurs maximum number of occurrences of this type according to the XML schema
@@ -131,10 +131,10 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
 
     /**
      * Returns the link object represented by this XML content value.<p>
-     * 
-     * @param cms the cms context, can be <code>null</code> but in this case no link check is performed, 
+     *
+     * @param cms the cms context, can be <code>null</code> but in this case no link check is performed,
      *      and the target is marked as "external"
-     * 
+     *
      * @return the link object represented by this XML content value
      */
     public CmsLink getLink(CmsObject cms) {
@@ -145,8 +145,7 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
             if (linkElement == null) {
                 setStringValue(cms, m_element.getText());
             } else {
-                CmsLinkUpdateUtil.updateType(linkElement, getContentDefinition().getContentHandler().getRelationType(
-                    getPath()));
+                CmsLinkUpdateUtil.updateType(linkElement, getRelationType(getPath()));
                 CmsLink link = new CmsLink(linkElement);
                 if (link.isInternal()) {
                     // link management check
@@ -182,7 +181,7 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
 
         // the schema definition is located in a separate file for easier editing
         if (m_schemaDefinition == null) {
-            m_schemaDefinition = readSchemaDefinition("org/opencms/xml/types/XmlVfsFileValue.xsd");
+            m_schemaDefinition = readSchemaDefinition("org/opencms/xml/types/XmlVarLinkValue.xsd");
         }
         return m_schemaDefinition;
     }
@@ -239,6 +238,7 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
             // no valid value given
             return;
         }
+
         String path = value;
         if (cms != null) {
             String siteRoot = OpenCms.getSiteManager().getSiteRoot(value);
@@ -276,7 +276,7 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
         boolean internal = (path != null);
         CmsRelationType type;
         if (internal) {
-            type = getContentDefinition().getContentHandler().getRelationType(getPath());
+            type = getRelationType(getPath());
         } else {
             // use original value for external links
             path = value;
@@ -296,9 +296,9 @@ public class CmsXmlVarLinkValue extends A_CmsXmlContentValue {
 
     /**
      * Creates the String value for this VarLink value element.<p>
-     * 
+     *
      * @param cms the current users OpenCms context
-     * 
+     *
      * @return the String value for this VarLink value element
      */
     private String createStringValue(CmsObject cms) {

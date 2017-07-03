@@ -6,7 +6,8 @@
 		<directory>index</directory>
 		<timeout>60000</timeout>
 		<offlineUpdateFrequency>30000</offlineUpdateFrequency>
-		<forceunlock>onlyfull</forceunlock>		
+		<maxIndexWaitTime>30000</maxIndexWaitTime>
+		<forceunlock>onlyfull</forceunlock>
 		<excerpt>1024</excerpt>	
 		<extractionCacheMaxAge>672.0</extractionCacheMaxAge>
         <maxModificationsBeforeCommit>4711</maxModificationsBeforeCommit>            
@@ -146,11 +147,15 @@
 		</documenttypes>
 		<analyzers>
 			<analyzer>
+				<class>org.apache.lucene.analysis.standard.StandardAnalyzer</class>
+				<locale>all</locale>
+			</analyzer>
+			<analyzer>
 				<class>org.apache.lucene.analysis.de.GermanAnalyzer</class>
 				<locale>de</locale>
 			</analyzer>
 			<analyzer>
-				<class>org.apache.lucene.analysis.standard.StandardAnalyzer</class>
+				<class>org.apache.lucene.analysis.en.EnglishAnalyzer</class>
 				<locale>en</locale>
 			</analyzer>
 			<analyzer>
@@ -158,8 +163,7 @@
                 <locale>fr</locale>
 			</analyzer>
 			<analyzer>
-				<class>org.apache.lucene.analysis.snowball.SnowballAnalyzer</class>
-				<stemmer>Italian</stemmer>
+				<class>org.apache.lucene.analysis.it.ItalianAnalyzer</class>
 				<locale>it</locale>
 			</analyzer>
 		</analyzers>
@@ -168,7 +172,7 @@
 				<name>Online project (VFS)</name>
 				<rebuild>manual</rebuild>
 				<project>Online</project>
-				<locale>en</locale>			
+				<locale>en</locale>
 				<sources>
 					<source>source1</source>
 				</sources>		
@@ -178,14 +182,11 @@
 				<name>Offline project (VFS)</name>
 				<rebuild>manual</rebuild>
 				<project>Offline</project>
-				<locale>en</locale>		
+				<locale>en</locale>
 				<configuration>standard</configuration>	
 				<sources>
 					<source>source1</source>
 				</sources>
-				<param name="lucene.MergeFactor">20</param>				
-				<param name="lucene.RAMBufferSizeMB">20.5</param>				
-				<param name="lucene.UseCompoundFile">true</param>				
 				<param name="org.opencms.search.CmsSearchIndex.checkPermissions">false</param>				
 				<param name="org.opencms.search.CmsSearchIndex.checkTimeRange">false</param>				
 				<param name="org.opencms.search.CmsSearchIndex.createExcerpt">false</param>				
@@ -217,7 +218,7 @@
 		<fieldconfigurations>
 			<fieldconfiguration>
 				<name>standard</name>
-				<description>Modified OpenCms 8.0 search index field configuration for test cases.</description>
+				<description>The standard OpenCms search index field configuration.</description>
 				<fields>
 					<field name="content" store="compress" index="true" excerpt="true">
 						<mapping type="content" />
@@ -251,7 +252,7 @@
 						<mapping type="dynamic" class="org.opencms.search.fields.CmsSearchFieldMapping">specialTwo</mapping>
 					</field>						
 				</fields>
-			</fieldconfiguration>			
+			</fieldconfiguration>	
 		</fieldconfigurations>			
 	</search>
 </opencms>

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,11 +32,11 @@ import com.google.gwt.user.client.Timer;
 
 /**
  * Lazy list tree open handler abstract implementation.<p>
- * 
- * @param <I> the specific lazy tree item implementation 
- * 
+ *
+ * @param <I> the specific lazy tree item implementation
+ *
  * @since 8.0.0
- * 
+ *
  * @see org.opencms.gwt.client.ui.tree.CmsLazyTree
  * @see org.opencms.gwt.client.ui.tree.CmsLazyTreeItem
  * @see org.opencms.gwt.client.ui.tree.I_CmsLazyOpenHandler
@@ -53,7 +53,7 @@ public abstract class A_CmsLazyOpenHandler<I extends CmsLazyTreeItem> implements
 
         /**
          * Default constructor.<p>
-         * 
+         *
          * @param target the tree item to open
          */
         public OpenTimer(I target) {
@@ -67,7 +67,7 @@ public abstract class A_CmsLazyOpenHandler<I extends CmsLazyTreeItem> implements
         @Override
         public void run() {
 
-            m_target.setOpen(true);
+            m_target.setOpen(true, false);
         }
     }
 
@@ -82,7 +82,7 @@ public abstract class A_CmsLazyOpenHandler<I extends CmsLazyTreeItem> implements
         }
         new OpenTimer(target).schedule(500);
         target.onStartLoading();
-        target.setOpen(false);
+        target.setOpen(false, false);
         load(target);
     }
 }

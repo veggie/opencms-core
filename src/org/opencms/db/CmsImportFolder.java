@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -53,7 +53,7 @@ import java.util.zip.ZipInputStream;
 
 /**
  * Allows to import resources from the filesystem or a ZIP file into the OpenCms VFS.<p>
- * 
+ *
  * @since 6.0.0
  */
 public class CmsImportFolder {
@@ -62,7 +62,7 @@ public class CmsImportFolder {
     private CmsObject m_cms;
 
     /** The names of resources that have been created or replaced during the import. */
-    private List<String> m_createdResourceNames;
+    private List<CmsResource> m_importedResources = new ArrayList<CmsResource>();
 
     /** The name of the import folder to load resources from. */
     private String m_importFolderName;
@@ -95,7 +95,7 @@ public class CmsImportFolder {
      * @param cms a OpenCms context to provide the permissions
      * @param noSubFolder if <code>true</code> no sub folders will be created, if <code>false</code> the content of the
      * zip file is created 1:1 inclusive sub folders
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public CmsImportFolder(byte[] content, String importPath, CmsObject cms, boolean noSubFolder)
@@ -119,13 +119,13 @@ public class CmsImportFolder {
     }
 
     /**
-     * Returns the names of resources that have been created or replaced during the import.<p>
+     * Returns the list of imported resources.<p>
      *
-     * @return the names of resources that have been created or replaced during the import
+     * @return the list of imported resources
      */
-    public List<String> getCreatedResourceNames() {
+    public List<CmsResource> getImportedResources() {
 
-        return m_createdResourceNames;
+        return m_importedResources;
     }
 
     /**
@@ -139,7 +139,7 @@ public class CmsImportFolder {
     public void importFolder(String importFolderName, String importPath, CmsObject cms) throws CmsException {
 
         try {
-            m_createdResourceNames = new ArrayList<String>();
+            m_importedResources = new ArrayList<CmsResource>();
             m_importFolderName = importFolderName;
             m_importPath = importPath;
             m_cms = cms;
@@ -156,10 +156,9 @@ public class CmsImportFolder {
             // all is done, unlock the resources
             m_cms.unlockResource(m_importPath);
         } catch (Exception e) {
-            throw new CmsVfsException(Messages.get().container(
-                Messages.ERR_IMPORT_FOLDER_2,
-                importFolderName,
-                importPath), e);
+            throw new CmsVfsException(
+                Messages.get().container(Messages.ERR_IMPORT_FOLDER_2, importFolderName, importPath),
+                e);
         }
 
     }
@@ -172,12 +171,11 @@ public class CmsImportFolder {
      * @param cms a OpenCms context to provide the permissions
      * @param noSubFolder if <code>true</code> no sub folders will be created, if <code>false</code> the content of the
      * zip file is created 1:1 inclusive sub folders
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     public void importZip(byte[] content, String importPath, CmsObject cms, boolean noSubFolder) throws CmsException {
 
-        m_createdResourceNames = new ArrayList<String>();
         m_importPath = importPath;
         m_cms = cms;
         try {
@@ -194,7 +192,7 @@ public class CmsImportFolder {
 
     /**
      * Returns true if a valid ZIP file was imported.<p>
-     * 
+     *
      * @return true if a valid ZIP file was imported
      */
     public boolean isValidZipFile() {
@@ -216,9 +214,9 @@ public class CmsImportFolder {
                 m_zipStreamIn = new ZipInputStream(new FileInputStream(m_importResource));
             } catch (IOException e) {
                 // if file but no ZIP file throw an exception
-                throw new CmsVfsException(Messages.get().container(
-                    Messages.ERR_NO_ZIPFILE_1,
-                    m_importResource.getName()), e);
+                throw new CmsVfsException(
+                    Messages.get().container(Messages.ERR_NO_ZIPFILE_1, m_importResource.getName()),
+                    e);
             }
         }
     }
@@ -228,7 +226,7 @@ public class CmsImportFolder {
      *
      * @param folder the folder to import from
      * @param importPath the OpenCms VFS import path to import to
-     * @throws Exception if something goes wrong during file IO 
+     * @throws Exception if something goes wrong during file IO
      */
     private void importResources(File folder, String importPath) throws Exception {
 
@@ -240,7 +238,8 @@ public class CmsImportFolder {
 
             if (currentFile.isDirectory()) {
                 // create directory in cms
-                m_cms.createResource(importPath + currentFile.getName(), CmsResourceTypeFolder.RESOURCE_TYPE_ID);
+                m_importedResources.add(
+                    m_cms.createResource(importPath + currentFile.getName(), CmsResourceTypeFolder.RESOURCE_TYPE_ID));
                 importResources(currentFile, importPath + currentFile.getName() + "/");
             } else {
                 // import file into cms
@@ -248,14 +247,16 @@ public class CmsImportFolder {
                 byte[] content = CmsFileUtil.readFile(currentFile);
                 // create the file
                 try {
-                    m_cms.createResource(importPath + currentFile.getName(), type, content, null);
+                    m_importedResources.add(
+                        m_cms.createResource(importPath + currentFile.getName(), type, content, null));
                 } catch (CmsSecurityException e) {
                     // in case of not enough permissions, try to create a plain text file
-                    int plainId = OpenCms.getResourceManager().getResourceType(CmsResourceTypePlain.getStaticTypeName()).getTypeId();
-                    m_cms.createResource(importPath + currentFile.getName(), plainId, content, null);
+                    int plainId = OpenCms.getResourceManager().getResourceType(
+                        CmsResourceTypePlain.getStaticTypeName()).getTypeId();
+                    m_importedResources.add(
+                        m_cms.createResource(importPath + currentFile.getName(), plainId, content, null));
                 }
                 content = null;
-                m_createdResourceNames.add(importPath + currentFile.getName());
             }
         }
     }
@@ -267,13 +268,13 @@ public class CmsImportFolder {
      * @param importPath the path in the vfs
      * @param noSubFolder if <code>true</code> no sub folders will be created, if <code>false</code> the content of the
      * zip file is created 1:1 inclusive sub folders
-     * 
-     * @throws Exception if something goes wrong during file IO 
+     *
+     * @throws Exception if something goes wrong during file IO
      */
-    private void importZipResource(ZipInputStream zipStreamIn, String importPath, boolean noSubFolder) throws Exception {
+    private void importZipResource(ZipInputStream zipStreamIn, String importPath, boolean noSubFolder)
+    throws Exception {
 
-        int todo = 0;
-        // TODO: this method looks very crude, it should be re-written sometime...
+        // HACK: this method looks very crude, it should be re-written sometime...
 
         boolean isFolder = false;
         int j, r, stop, size;
@@ -317,7 +318,10 @@ public class CmsImportFolder {
             // now write the folders ...
             for (r = 0; r < stop; r++) {
                 try {
-                    m_cms.createResource(actImportPath + path[r], CmsResourceTypeFolder.RESOURCE_TYPE_ID);
+                    CmsResource createdFolder = m_cms.createResource(
+                        actImportPath + path[r],
+                        CmsResourceTypeFolder.RESOURCE_TYPE_ID);
+                    m_importedResources.add(createdFolder);
                 } catch (CmsException e) {
                     // of course some folders did already exist!
                 }
@@ -343,16 +347,19 @@ public class CmsImportFolder {
                     resourceExists = false;
                 }
 
-                int plainId = OpenCms.getResourceManager().getResourceType(CmsResourceTypePlain.getStaticTypeName()).getTypeId();
+                int plainId = OpenCms.getResourceManager().getResourceType(
+                    CmsResourceTypePlain.getStaticTypeName()).getTypeId();
                 if (resourceExists) {
                     CmsResource res = m_cms.readResource(filename, CmsResourceFilter.ALL);
                     CmsFile file = m_cms.readFile(res);
                     byte[] contents = file.getContents();
                     try {
                         m_cms.replaceResource(filename, res.getTypeId(), buffer, new ArrayList<CmsProperty>(0));
+                        m_importedResources.add(res);
                     } catch (CmsSecurityException e) {
                         // in case of not enough permissions, try to create a plain text file
                         m_cms.replaceResource(filename, plainId, buffer, new ArrayList<CmsProperty>(0));
+                        m_importedResources.add(res);
                     } catch (CmsDbSqlException sqlExc) {
                         // SQL error, probably the file is too large for the database settings, restore content
                         file.setContents(contents);
@@ -374,10 +381,10 @@ public class CmsImportFolder {
                     }
                     properties.add(titleProp);
                     try {
-                        m_cms.createResource(newResName, type, buffer, properties);
+                        m_importedResources.add(m_cms.createResource(newResName, type, buffer, properties));
                     } catch (CmsSecurityException e) {
                         // in case of not enough permissions, try to create a plain text file
-                        m_cms.createResource(newResName, plainId, buffer, properties);
+                        m_importedResources.add(m_cms.createResource(newResName, plainId, buffer, properties));
                     } catch (CmsDbSqlException sqlExc) {
                         // SQL error, probably the file is too large for the database settings, delete file
                         m_cms.lockResource(newResName);
@@ -385,7 +392,6 @@ public class CmsImportFolder {
                         throw sqlExc;
                     }
                 }
-                m_createdResourceNames.add(filename);
             }
 
             // close the entry ...

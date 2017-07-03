@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,6 +36,7 @@ import org.opencms.i18n.CmsEncoder;
 import org.opencms.importexport.CmsImportParameters;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
+import org.opencms.main.CmsShell;
 import org.opencms.main.CmsSystemInfo;
 import org.opencms.main.OpenCms;
 import org.opencms.module.CmsModule;
@@ -45,6 +46,7 @@ import org.opencms.relations.I_CmsLinkParseable;
 import org.opencms.report.CmsHtmlReport;
 import org.opencms.report.CmsShellReport;
 import org.opencms.report.I_CmsReport;
+import org.opencms.security.CmsRole;
 import org.opencms.setup.db.CmsUpdateDBThread;
 import org.opencms.util.CmsStringUtil;
 import org.opencms.workplace.threads.CmsXmlContentRepairSettings;
@@ -52,33 +54,39 @@ import org.opencms.workplace.threads.CmsXmlContentRepairThread;
 import org.opencms.xml.CmsXmlException;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import javax.servlet.jsp.JspWriter;
 
 import org.apache.commons.logging.Log;
 
-import com.google.common.collect.MapMaker;
+import com.google.common.collect.Lists;
 
 /**
  * A java bean as a controller for the OpenCms update wizard.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsUpdateBean extends CmsSetupBean {
+
+    /** The empty jar marker attribute key. */
+    public static final String EMPTY_JAR_ATTRIBUTE_KEY = "OpenCms-empty-jar";
 
     /** name of the update folder. */
     public static final String FOLDER_UPDATE = "update" + File.separatorChar;
@@ -99,10 +107,25 @@ public class CmsUpdateBean extends CmsSetupBean {
     private static final String C_UPDATE_SITE = "@UPDATE_SITE@";
 
     /** The static log object for this class. */
-    private static final Log LOG = CmsLog.getLog(CmsUpdateBean.class);
+    static final Log LOG = CmsLog.getLog(CmsUpdateBean.class);
 
     /** Static flag to indicate if all modules should be updated regardless of their version number. */
     private static final boolean UPDATE_ALL_MODULES = false;
+
+    /** The obsolete modules that should be removed. */
+    private static String[] OBSOLETE_MODULES = new String[] {
+        "org.opencms.ade.containerpage",
+        "org.opencms.ade.contenteditor",
+        "org.opencms.ade.editprovider",
+        "org.opencms.ade.galleries",
+        "org.opencms.ade.postupload",
+        "org.opencms.ade.properties",
+        "org.opencms.ade.publish",
+        "org.opencms.ade.sitemap",
+        "org.opencms.ade.upload",
+        "org.opencms.workplace.help.de",
+        "org.opencms.workplace.help.en",
+        "org.opencms.workplace.help"};
 
     /** The new logging offset in the database update thread. */
     protected int m_newLoggingDBOffset;
@@ -123,7 +146,7 @@ public class CmsUpdateBean extends CmsSetupBean {
     private CmsUpdateDBThread m_dbUpdateThread;
 
     /** The detected mayor version, based on DB structure. */
-    private int m_detectedVersion;
+    private double m_detectedVersion;
 
     /** Parameter for keeping the history. */
     private boolean m_keepHistory;
@@ -143,12 +166,16 @@ public class CmsUpdateBean extends CmsSetupBean {
     /** The workplace import thread. */
     private CmsUpdateThread m_workplaceUpdateThread;
 
-    /** 
+    /** The list of modules that should keep their libs. */
+    private List<String> m_preserveLibModules;
+
+    /**
      * Default constructor.<p>
      */
     public CmsUpdateBean() {
 
         super();
+        m_preserveLibModules = Collections.emptyList();
         m_modulesFolder = FOLDER_UPDATE + CmsSystemInfo.FOLDER_MODULES;
         m_logFile = CmsSystemInfo.FOLDER_WEBINF + CmsLog.FOLDER_LOGS + "update.log";
     }
@@ -168,9 +195,9 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Compatibility check for OCEE modules.<p>
-     * 
+     *
      * @param version the opencms version
-     * 
+     *
      * @return <code>false</code> if OCEE is present but not compatible with opencms version
      */
     @SuppressWarnings({"boxing"})
@@ -180,7 +207,7 @@ public class CmsUpdateBean extends CmsSetupBean {
             Class<?> manager = Class.forName("org.opencms.ocee.base.CmsOceeManager");
             Method checkVersion = manager.getMethod("checkOceeVersion", String.class);
             return (Boolean)checkVersion.invoke(manager, version);
-        } catch (ClassNotFoundException e) {
+        } catch (@SuppressWarnings("unused") ClassNotFoundException e) {
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -188,10 +215,10 @@ public class CmsUpdateBean extends CmsSetupBean {
         }
     }
 
-    /** 
+    /**
      * Creates the shared folder if possible.<p>
-     * 
-     * @throws Exception if something goes wrong 
+     *
+     * @throws Exception if something goes wrong
      */
     public void createSharedFolder() throws Exception {
 
@@ -201,14 +228,29 @@ public class CmsUpdateBean extends CmsSetupBean {
             m_cms.getRequestContext().setSiteRoot("");
             m_cms.getRequestContext().setCurrentProject(m_cms.createTempfileProject());
             if (!m_cms.existsResource("/shared")) {
-                m_cms.createResource("/shared", OpenCms.getResourceManager().getResourceType("folder").getTypeId());
-                CmsResource shared = m_cms.readResource("/shared");
+                m_cms.createResource("/shared", OpenCms.getResourceManager().getResourceType("folder"));
+            }
+
+            try {
+                m_cms.lockResourceTemporary("/shared");
+            } catch (CmsException e) {
+                LOG.error(e.getLocalizedMessage(), e);
+            }
+            try {
+                m_cms.chacc("/shared", "group", "Users", "+v+w+r+i");
+            } catch (CmsException e) {
+                LOG.error(e.getLocalizedMessage(), e);
+            }
+            CmsResource shared = m_cms.readResource("/shared");
+            try {
                 OpenCms.getPublishManager().publishProject(
                     m_cms,
                     new CmsHtmlReport(m_cms.getRequestContext().getLocale(), m_cms.getRequestContext().getSiteRoot()),
                     shared,
                     false);
                 OpenCms.getPublishManager().waitWhileRunning();
+            } catch (CmsException e) {
+                LOG.error(e.getLocalizedMessage(), e);
             }
         } finally {
             m_cms.getRequestContext().setSiteRoot(originalSiteRoot);
@@ -218,10 +260,10 @@ public class CmsUpdateBean extends CmsSetupBean {
     }
 
     /**
-     * Returns html code to display an error.<p> 
-     * 
+     * Returns html code to display an error.<p>
+     *
      * @param pathPrefix to adjust the path
-     * 
+     *
      * @return html code
      */
     @Override
@@ -275,19 +317,19 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Returns the detected mayor version, based on DB structure.<p>
-     * 
+     *
      * @return the detected mayor version
      */
-    public int getDetectedVersion() {
+    public double getDetectedVersion() {
 
         return m_detectedVersion;
     }
 
     /**
      * Returns a map of all previously installed modules.<p>
-     * 
+     *
      * @return a map of <code>[String, {@link org.opencms.module.CmsModuleVersion}]</code> objects
-     * 
+     *
      * @see org.opencms.module.CmsModuleManager#getAllInstalledModules()
      */
     public Map<String, CmsModuleVersion> getInstalledModules() {
@@ -295,7 +337,8 @@ public class CmsUpdateBean extends CmsSetupBean {
         String file = CmsModuleConfiguration.DEFAULT_XML_FILE_NAME;
         // /opencms/modules/module[?]
         String basePath = new StringBuffer("/").append(CmsConfigurationManager.N_ROOT).append("/").append(
-            CmsModuleConfiguration.N_MODULES).append("/").append(CmsModuleXmlHandler.N_MODULE).append("[?]/").toString();
+            CmsModuleConfiguration.N_MODULES).append("/").append(CmsModuleXmlHandler.N_MODULE).append(
+                "[?]/").toString();
         Map<String, CmsModuleVersion> modules = new HashMap<String, CmsModuleVersion>();
         String name = "";
         for (int i = 1; name != null; i++) {
@@ -305,7 +348,7 @@ public class CmsUpdateBean extends CmsSetupBean {
                     ver = getXmlHelper().getValue(
                         file,
                         CmsStringUtil.substitute(basePath, "?", "" + (i - 1)) + CmsModuleXmlHandler.N_VERSION);
-                } catch (CmsXmlException e) {
+                } catch (@SuppressWarnings("unused") CmsXmlException e) {
                     // ignore
                 }
                 modules.put(name, new CmsModuleVersion(ver));
@@ -314,7 +357,7 @@ public class CmsUpdateBean extends CmsSetupBean {
                 name = getXmlHelper().getValue(
                     file,
                     CmsStringUtil.substitute(basePath, "?", "" + i) + CmsModuleXmlHandler.N_NAME);
-            } catch (CmsXmlException e) {
+            } catch (@SuppressWarnings("unused") CmsXmlException e) {
                 // ignore
             }
         }
@@ -323,7 +366,7 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * List of modules to be updated.<p>
-     * 
+     *
      * @return a list of module names
      */
     public List<String> getModulesToUpdate() {
@@ -336,7 +379,7 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Returns the update database thread.<p>
-     * 
+     *
      * @return the update database thread
      */
     public CmsUpdateDBThread getUpdateDBThread() {
@@ -366,7 +409,7 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Returns the modules that does not need to be updated.<p>
-     * 
+     *
      * @return a list of module names
      */
     public List<String> getUptodateModules() {
@@ -389,13 +432,8 @@ public class CmsUpdateBean extends CmsSetupBean {
                     m_modulesToUpdate.add(name);
                 }
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(name
-                        + " --- installed: "
-                        + instVer
-                        + " available: "
-                        + availVer
-                        + " --- uptodate: "
-                        + uptodate);
+                    LOG.debug(
+                        name + " --- installed: " + instVer + " available: " + availVer + " --- uptodate: " + uptodate);
                 }
             }
         }
@@ -404,7 +442,7 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Returns the workplace update thread.<p>
-     * 
+     *
      * @return the workplace update thread
      */
     public CmsUpdateThread getWorkplaceUpdateThread() {
@@ -444,9 +482,9 @@ public class CmsUpdateBean extends CmsSetupBean {
         return html.toString();
     }
 
-    /** 
+    /**
      * Creates a new instance of the setup Bean.<p>
-     * 
+     *
      * @param webAppRfsPath path to the OpenCms web application
      * @param servletMapping the OpenCms servlet mapping
      * @param defaultWebApplication the name of the default web application
@@ -456,6 +494,7 @@ public class CmsUpdateBean extends CmsSetupBean {
 
         try {
             super.init(webAppRfsPath, servletMapping, defaultWebApplication);
+            CmsUpdateInfo.INSTANCE.setAdeModuleVersion(getInstalledModules().get("org.opencms.ade.containerpage"));
 
             if (m_workplaceUpdateThread != null) {
                 if (m_workplaceUpdateThread.isAlive()) {
@@ -498,52 +537,21 @@ public class CmsUpdateBean extends CmsSetupBean {
     }
 
     /**
-     * Try to preload necessary classes, to avoid ugly class loader issues caused by JARs being deleted during the update.
+     * Checks whether the selected user and password are valid and the user has the ROOT_ADMIN role.<p>
+     *
+     * @return <code>true</code> if the selected user and password are valid and the user has the ROOT_ADMIN role
      */
-    public void preload() {
+    public boolean isValidUser() {
 
-        //opencms.jar 
-        preload(OpenCms.class);
-
-        //guava
-        preload(MapMaker.class);
-    }
-
-    /**
-     * Preloads classes from the same jar file as a given class.<p>
-     * 
-     * @param cls the class for which the classes from the same jar file should be loaded 
-     */
-    public void preload(Class<?> cls) {
-
-        try {
-            File jar = new File(cls.getProtectionDomain().getCodeSource().getLocation().getFile());
-            java.util.jar.JarFile jarfile = new JarFile(jar);
-            try {
-                Enumeration<JarEntry> entries = jarfile.entries();
-                while (entries.hasMoreElements()) {
-                    JarEntry entry = entries.nextElement();
-                    String name = entry.getName();
-                    if (name.endsWith(".class")) {
-                        String className = name.replaceFirst("\\.class$", "");
-                        className = className.replace('/', '.');
-                        try {
-                            Class.forName(className);
-                        } catch (VirtualMachineError e) {
-                            throw e;
-                        } catch (Throwable e) {
-                            LOG.error(e.getLocalizedMessage(), e);
-                        }
-                    }
-                }
-            } finally {
-                jarfile.close();
-            }
-        } catch (VirtualMachineError e) {
-            throw e;
-        } catch (Throwable e) {
-            LOG.error(e.getLocalizedMessage(), e);
-        }
+        CmsShell shell = new CmsShell(
+            getWebAppRfsPath() + "WEB-INF" + File.separator,
+            getServletMapping(),
+            getDefaultWebApplication(),
+            "${user}@${project}>",
+            null);
+        boolean validUser = shell.validateUser(getAdminUser(), getAdminPwd(), CmsRole.ROOT_ADMIN);
+        shell.exit();
+        return validUser;
     }
 
     /**
@@ -579,7 +587,7 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Generates the output for step 1 of the setup wizard.<p>
-     * 
+     *
      * @param out the JSP print stream
      * @throws IOException in case errors occur while writing to "out"
      */
@@ -622,7 +630,6 @@ public class CmsUpdateBean extends CmsSetupBean {
     public void prepareUpdateStep5() {
 
         if (isInitialized()) {
-            preload();
             try {
                 String fileName = getWebAppRfsPath() + FOLDER_UPDATE + "cmsupdate";
                 // read the file
@@ -678,9 +685,9 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Generates the output for the update wizard.<p>
-     * 
+     *
      * @param out the JSP print stream
-     * 
+     *
      * @throws IOException in case errors occur while writing to "out"
      */
     public void prepareUpdateStep5bOutput(JspWriter out) throws IOException {
@@ -731,10 +738,11 @@ public class CmsUpdateBean extends CmsSetupBean {
         forced.add("db.subscription.sqlmanager");
         addSubscriptionDriver();
         if (isInitialized()) {
-            // lock the wizard for further use 
+            // lock the wizard for further use
             lockWizard();
-            // save Properties to file "opencms.properties" 
+            // save Properties to file "opencms.properties"
             saveProperties(getProperties(), CmsSystemInfo.FILE_PROPERTIES, false, forced);
+            deleteEmptyJars();
         }
     }
 
@@ -763,7 +771,7 @@ public class CmsUpdateBean extends CmsSetupBean {
      *
      * @param detectedVersion the value to set
      */
-    public void setDetectedVersion(int detectedVersion) {
+    public void setDetectedVersion(double detectedVersion) {
 
         m_detectedVersion = detectedVersion;
     }
@@ -776,6 +784,22 @@ public class CmsUpdateBean extends CmsSetupBean {
     public void setKeepHistory(boolean keepHistory) {
 
         m_keepHistory = keepHistory;
+    }
+
+    /**
+     * Sets the list of modules where the included libs should be preserved during update.<p>
+     * Called from step_5_update_modules.jsp.<p>
+     *
+     * @param preserveLibModules the comma separated list of module names
+     */
+    public void setPreserveLibModules(String preserveLibModules) {
+
+        if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(preserveLibModules)) {
+            String[] modules = preserveLibModules.split(",");
+            m_preserveLibModules = Arrays.asList(modules);
+        } else {
+            m_preserveLibModules = Collections.emptyList();
+        }
     }
 
     /**
@@ -822,16 +846,21 @@ public class CmsUpdateBean extends CmsSetupBean {
         for (int i = copy.length - 1; i >= 0; i--) {
             System.out.println(copy[i]);
         }
-        System.out.println("This is OpenCms " + OpenCms.getSystemInfo().getVersionNumber());
+        System.out.println(
+            "This is OpenCms "
+                + OpenCms.getSystemInfo().getVersionNumber()
+                + " ["
+                + OpenCms.getSystemInfo().getVersionId()
+                + "]");
         System.out.println();
         System.out.println();
     }
 
     /**
      * Installed all modules that have been set using {@link #setInstallModules(String)}.<p>
-     * 
+     *
      * This method is invoked as a shell command.<p>
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     public void updateModulesFromUpdateBean() throws Exception {
@@ -852,7 +881,9 @@ public class CmsUpdateBean extends CmsSetupBean {
             for (String moduleToRemove : getModulesToDelete()) {
                 removeModule(moduleToRemove, report);
             }
-            for (String name : m_installModules) {
+
+            List<String> installList = Lists.newArrayList(m_installModules);
+            for (String name : installList) {
                 if (!utdModules.contains(name)) {
                     String filename = m_moduleFilenames.get(name);
                     try {
@@ -872,7 +903,7 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Fills the relations db tables during the update.<p>
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     public void updateRelations() throws Exception {
@@ -892,7 +923,7 @@ public class CmsUpdateBean extends CmsSetupBean {
             try {
                 // try to read a (leftover) unlock project
                 project = m_cms.readProject(projectName);
-            } catch (CmsException e) {
+            } catch (@SuppressWarnings("unused") CmsException e) {
                 // create a Project to unlock the resources
                 project = m_cms.createProject(
                     projectName,
@@ -918,9 +949,10 @@ public class CmsUpdateBean extends CmsSetupBean {
                         String.valueOf(m),
                         String.valueOf(n)),
                     I_CmsReport.FORMAT_NOTE);
-                report.print(org.opencms.report.Messages.get().container(
-                    org.opencms.report.Messages.RPT_ARGUMENT_1,
-                    type.getTypeName()));
+                report.print(
+                    org.opencms.report.Messages.get().container(
+                        org.opencms.report.Messages.RPT_ARGUMENT_1,
+                        type.getTypeName()));
                 report.print(org.opencms.report.Messages.get().container(org.opencms.report.Messages.RPT_DOTS_0));
 
                 if (type instanceof I_CmsLinkParseable) {
@@ -990,25 +1022,16 @@ public class CmsUpdateBean extends CmsSetupBean {
     /**
      * Computes a list of modules which need to be removed before updating the other modules, e.g. because of resource type
      * conflicts.<p>
-     * 
-     * @return the list of names of modules which need to be removed 
+     *
+     * @return the list of names of modules which need to be removed
      */
     protected List<String> getModulesToDelete() {
 
         List<String> result = new ArrayList<String>();
         if (m_installModules.contains("org.opencms.ade.config")) {
-            // some resource types have been moved from org.opencms.ade.containerpage an org.opencms.ade.sitemap
-            // to org.opencms.ade.config in 8.0.3, so we need to remove the former modules to avoid a resource
-            // type conflict.
-            CmsModule containerpageModule = OpenCms.getModuleManager().getModule("org.opencms.ade.containerpage");
-            if (containerpageModule != null) {
-                String version = containerpageModule.getVersion().toString();
-                if ("8.0.0".equals(version)
-                    || "8.0.1".equals(version)
-                    || "8.0.2".equals(version)
-                    || "8.0.3".equals(version)) {
-                    result.add("org.opencms.ade.containerpage");
-                    result.add("org.opencms.ade.sitemap");
+            for (int i = 0; i < OBSOLETE_MODULES.length; i++) {
+                if (OpenCms.getModuleManager().hasModule(OBSOLETE_MODULES[i])) {
+                    result.add(OBSOLETE_MODULES[i]);
                 }
             }
         }
@@ -1017,16 +1040,21 @@ public class CmsUpdateBean extends CmsSetupBean {
 
     /**
      * Removes a module.<p>
-     * 
-     * @param moduleName the name of the module to remove 
+     *
+     * @param moduleName the name of the module to remove
      * @param report the report to write to
      *
-     * @throws CmsException   
+     * @throws CmsException in case something goes wrong
      */
     protected void removeModule(String moduleName, I_CmsReport report) throws CmsException {
 
         if (OpenCms.getModuleManager().getModule(moduleName) != null) {
-            OpenCms.getModuleManager().deleteModule(m_cms, moduleName, true, report);
+            OpenCms.getModuleManager().deleteModule(
+                m_cms,
+                moduleName,
+                true,
+                m_preserveLibModules.contains(moduleName),
+                report);
         }
     }
 
@@ -1041,15 +1069,15 @@ public class CmsUpdateBean extends CmsSetupBean {
     }
 
     /**
-     * Imports a module (zipfile) from the default module directory, 
+     * Imports a module (zipfile) from the default module directory,
      * creating a temporary project for this.<p>
-     * 
+     *
      * @param moduleName the name of the module to replace
      * @param importFile the name of the import .zip file located in the update module directory
      * @param report the shell report to write the output
-     * 
+     *
      * @throws Exception if something goes wrong
-     * 
+     *
      * @see org.opencms.importexport.CmsImportExportManager#importData(org.opencms.file.CmsObject, I_CmsReport, org.opencms.importexport.CmsImportParameters)
      */
     protected void updateModule(String moduleName, String importFile, I_CmsReport report) throws Exception {
@@ -1073,11 +1101,62 @@ public class CmsUpdateBean extends CmsSetupBean {
     }
 
     /**
+     * Marks all empty jars for deletion on VM exit.<p>
+     */
+    private void deleteEmptyJars() {
+
+        File libFolder = new File(getLibFolder());
+        if (libFolder.exists()) {
+            File[] emptyJars = libFolder.listFiles(new FileFilter() {
+
+                public boolean accept(File pathname) {
+
+                    if (pathname.getName().endsWith(".jar")) {
+                        FileInputStream fileInput = null;
+                        JarInputStream jarStream = null;
+                        try {
+                            fileInput = new FileInputStream(pathname);
+                            jarStream = new JarInputStream(fileInput);
+                            // check the manifest for the empty jar marker attribute
+                            Manifest mf = jarStream.getManifest();
+                            Attributes att = mf.getMainAttributes();
+                            if ((att != null) && "true".equals(att.getValue(EMPTY_JAR_ATTRIBUTE_KEY))) {
+                                return true;
+                            }
+                        } catch (Exception e) {
+                            LOG.warn(e.getMessage(), e);
+                        } finally {
+                            if (jarStream != null) {
+                                try {
+                                    jarStream.close();
+                                } catch (IOException e) {
+                                    LOG.warn(e.getMessage(), e);
+                                }
+                            }
+                            if (fileInput != null) {
+                                try {
+                                    fileInput.close();
+                                } catch (IOException e) {
+                                    LOG.warn(e.getMessage(), e);
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+            });
+            for (int i = 0; i < emptyJars.length; i++) {
+                emptyJars[i].deleteOnExit();
+            }
+        }
+    }
+
+    /**
      * Gets the database package name part.<p>
-     * 
+     *
      * @param dbName the db name from the opencms.properties file
-     *  
-     * @return the db package name part 
+     *
+     * @return the db package name part
      */
     private String getDbPackage(String dbName) {
 

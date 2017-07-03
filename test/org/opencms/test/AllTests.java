@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,8 +35,8 @@ import junit.framework.TestSuite;
 
 /**
  * OpenCms main test suite, executes the individual test suites of all core packages.<p>
- * 
- * 
+ *
+ *
  * @since 6.0
  */
 public final class AllTests {
@@ -64,20 +64,19 @@ public final class AllTests {
         System.out.println("Starting OpenCms test run...");
     }
 
-    /** 
+    /**
      * One-time cleanup code.<p>
      */
     public static void oneTimeTearDown() {
 
         long runTime = System.currentTimeMillis() - m_startTime;
-        System.out.println("... OpenCms test run finished! (Total runtime: "
-            + CmsStringUtil.formatRuntime(runTime)
-            + ")");
+        System.out.println(
+            "... OpenCms test run finished! (Total runtime: " + CmsStringUtil.formatRuntime(runTime) + ")");
     }
 
     /**
      * Creates the OpenCms JUnit test suite.<p>
-     * 
+     *
      * @return the OpenCms JUnit test suite
      */
     public static Test suite() {
@@ -86,7 +85,7 @@ public final class AllTests {
 
         suite.addTest(org.opencms.setup.AllTests.suite());
         suite.addTest(org.opencms.ade.configuration.AllTests.suite());
-        suite.addTest(org.opencms.ade.publish.AllTests.suite());
+        suite.addTest(org.opencms.ade.containerpage.inherited.AllTests.suite());
         suite.addTest(org.opencms.ade.sitemap.AllTests.suite());
         suite.addTest(org.opencms.cache.AllTests.suite());
         suite.addTest(org.opencms.configuration.AllTests.suite());
@@ -104,7 +103,6 @@ public final class AllTests {
         suite.addTest(org.opencms.mail.AllTests.suite());
         suite.addTest(org.opencms.main.AllTests.suite());
         suite.addTest(org.opencms.module.AllTests.suite());
-        suite.addTest(org.opencms.monitor.AllTests.suite());
         suite.addTest(org.opencms.notification.AllTests.suite());
         suite.addTest(org.opencms.publish.AllTests.suite());
         suite.addTest(org.opencms.relations.AllTests.suite());
@@ -112,7 +110,9 @@ public final class AllTests {
         suite.addTest(org.opencms.search.AllTests.suite());
         suite.addTest(org.opencms.search.extractors.AllTests.suite());
         suite.addTest(org.opencms.search.gallery.AllTests.suite());
+        suite.addTest(org.opencms.search.solr.AllTests.suite());
         suite.addTest(org.opencms.security.AllTests.suite());
+        suite.addTest(org.opencms.site.AllTests.suite());
         suite.addTest(org.opencms.staticexport.AllTests.suite());
         suite.addTest(org.opencms.synchronize.AllTests.suite());
         suite.addTest(org.opencms.util.AllTests.suite());
@@ -122,6 +122,8 @@ public final class AllTests {
         suite.addTest(org.opencms.xml.containerpage.AllTests.suite());
         suite.addTest(org.opencms.xml.content.AllTests.suite());
         suite.addTest(org.opencms.xml.page.AllTests.suite());
+        suite.addTest(org.opencms.repository.AllTests.suite());
+        suite.addTest(org.opencms.ugc.AllTests.suite());
 
         TestSetup wrapper = new TestSetup(suite) {
 

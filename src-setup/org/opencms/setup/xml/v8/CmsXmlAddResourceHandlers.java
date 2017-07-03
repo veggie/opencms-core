@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,6 +31,8 @@ import org.opencms.ade.detailpage.CmsDetailPageResourceHandler;
 import org.opencms.configuration.CmsConfigurationManager;
 import org.opencms.configuration.CmsSystemConfiguration;
 import org.opencms.configuration.I_CmsXmlConfiguration;
+import org.opencms.main.CmsAliasResourceHandler;
+import org.opencms.pdftools.CmsPdfResourceHandler;
 import org.opencms.setup.xml.A_CmsSetupXmlUpdate;
 import org.opencms.setup.xml.CmsSetupXmlHelper;
 
@@ -42,7 +44,7 @@ import org.dom4j.Node;
 
 /**
  * Adds the new init resource handler classes, from 7.5.x to 8.0.0.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsXmlAddResourceHandlers extends A_CmsSetupXmlUpdate {
@@ -74,11 +76,8 @@ public class CmsXmlAddResourceHandlers extends A_CmsSetupXmlUpdate {
 
         Node node = document.selectSingleNode(xpath);
         if (node == null) {
-            if (xpath.equals(getXPathsToUpdate().get(0))) {
-                CmsSetupXmlHelper.setValue(
-                    document,
-                    xpath + "/@" + I_CmsXmlConfiguration.A_CLASS,
-                    CmsDetailPageResourceHandler.class.getName());
+            if (getXPathsToUpdate().contains(xpath)) {
+                CmsSetupXmlHelper.setValue(document, xpath, "");
             } else {
                 return false;
             }
@@ -108,16 +107,22 @@ public class CmsXmlAddResourceHandlers extends A_CmsSetupXmlUpdate {
     protected List<String> getXPathsToUpdate() {
 
         if (m_xpaths == null) {
-            // "/opencms/system/resourceinit/resourceinithandler[@class='...']";
-            StringBuffer xp = new StringBuffer(256);
-            xp.append("/").append(CmsConfigurationManager.N_ROOT);
-            xp.append("/").append(CmsSystemConfiguration.N_SYSTEM);
-            xp.append("/").append(CmsSystemConfiguration.N_RESOURCEINIT);
-            xp.append("/").append(CmsSystemConfiguration.N_RESOURCEINITHANDLER);
-            xp.append("[@").append(I_CmsXmlConfiguration.A_CLASS);
-            xp.append("='");
+            String[] handlers = new String[] {
+                CmsDetailPageResourceHandler.class.getName(),
+                CmsAliasResourceHandler.class.getName(),
+                CmsPdfResourceHandler.class.getName()};
             m_xpaths = new ArrayList<String>();
-            m_xpaths.add(xp.toString() + CmsDetailPageResourceHandler.class.getName() + "']");
+            for (String handler : handlers) {
+                // "/opencms/system/resourceinit/resourceinithandler[@class='...']";
+                StringBuffer xp = new StringBuffer(256);
+                xp.append("/").append(CmsConfigurationManager.N_ROOT);
+                xp.append("/").append(CmsSystemConfiguration.N_SYSTEM);
+                xp.append("/").append(CmsSystemConfiguration.N_RESOURCEINIT);
+                xp.append("/").append(CmsSystemConfiguration.N_RESOURCEINITHANDLER);
+                xp.append("[@").append(I_CmsXmlConfiguration.A_CLASS);
+                xp.append("='");
+                m_xpaths.add(xp.toString() + handler + "']");
+            }
         }
         return m_xpaths;
     }

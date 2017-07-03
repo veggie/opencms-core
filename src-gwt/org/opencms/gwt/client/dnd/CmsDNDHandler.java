@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)-
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)-
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,17 +27,22 @@
 
 package org.opencms.gwt.client.dnd;
 
+import org.opencms.gwt.client.ui.css.I_CmsLayoutBundle;
+import org.opencms.gwt.client.util.A_CmsAnimation;
 import org.opencms.gwt.client.util.CmsDebugLog;
 import org.opencms.gwt.client.util.CmsDomUtil;
 import org.opencms.gwt.client.util.CmsDomUtil.Style;
 import org.opencms.gwt.client.util.CmsMoveAnimation;
+import org.opencms.gwt.client.util.CmsPositionBean;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.animation.client.Animation;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Style.Overflow;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
@@ -53,10 +58,20 @@ import com.google.gwt.user.client.ui.RootPanel;
 
 /**
  * Drag and drop handler.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsDNDHandler implements MouseDownHandler {
+
+    /** The animation types. */
+    public enum AnimationType {
+        /** Move animation. */
+        MOVE,
+        /** No animation. */
+        NONE,
+        /** Fade animation. */
+        SPECIAL
+    }
 
     /** The allowed drag and drop orientation. */
     public enum Orientation {
@@ -87,7 +102,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
         /**
          * Constructor.<p>
-         * 
+         *
          * @param scrollParent the element that should scrolled
          * @param scrollSpeed the scroll speed
          * @param direction the scroll direction
@@ -188,7 +203,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Drag and drop event preview handler.<p>
-     * 
+     *
      * To be used while dragging.<p>
      */
     protected class DNDEventPreviewHandler implements NativePreviewHandler {
@@ -231,8 +246,109 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     }
 
+    /**
+     * Fancy animation fading out the helper and shrinking away the original element.<p>
+     */
+    class SpecialAnimation extends A_CmsAnimation {
+
+        /** The helper element. */
+        private Element m_helper;
+
+        /** If the original should be hidden. */
+        private boolean m_hideOriginal;
+
+        /** The original element. */
+        private Element m_original;
+
+        /** The original element height. */
+        private int m_originalHeight;
+
+        /** The original element opacity. */
+        private double m_originalOpacity;
+
+        /** The original  element width. */
+        private int m_originalWidth;
+
+        /** The optional overlay. */
+        private Element m_overlay;
+
+        /**
+         * Constructor.<p>
+         *
+         * @param helper the helper element
+         * @param original the original element
+         * @param overlay the optional overlay to fade away
+         * @param callback the on complete callback
+         * @param hideOriginal if the original should be hidden
+         */
+        public SpecialAnimation(
+            Element helper,
+            Element original,
+            Element overlay,
+            Command callback,
+            boolean hideOriginal) {
+
+            super(callback);
+            m_helper = helper;
+            m_original = original;
+            m_hideOriginal = hideOriginal;
+            m_overlay = overlay;
+        }
+
+        /**
+         * @see com.google.gwt.animation.client.Animation#run(int)
+         */
+        @Override
+        public void run(int duration) {
+
+            m_original.getStyle().setOverflow(Overflow.HIDDEN);
+
+            if (m_hideOriginal) {
+                m_original.addClassName(I_CmsLayoutBundle.INSTANCE.generalCss().clearFix());
+                m_originalHeight = CmsDomUtil.getCurrentStyleInt(m_original, Style.height);
+                m_originalWidth = CmsDomUtil.getCurrentStyleInt(m_original, Style.width);
+            } else {
+                m_originalOpacity = CmsDomUtil.getCurrentStyleFloat(m_original, Style.opacity);
+            }
+            super.run(duration);
+        }
+
+        /**
+         * @see org.opencms.gwt.client.util.A_CmsAnimation#onComplete()
+         */
+        @Override
+        protected void onComplete() {
+
+            super.onComplete();
+            m_original.getStyle().clearHeight();
+            m_original.getStyle().clearWidth();
+            m_original.getStyle().clearOverflow();
+            m_original.removeClassName(I_CmsLayoutBundle.INSTANCE.generalCss().clearFix());
+        }
+
+        /**
+         * @see com.google.gwt.animation.client.Animation#onUpdate(double)
+         */
+        @Override
+        protected void onUpdate(double progress) {
+
+            m_helper.getStyle().setOpacity(-progress + 1);
+            if (m_overlay != null) {
+                m_overlay.getStyle().setOpacity(-progress + 1);
+            }
+
+            if (m_hideOriginal) {
+                m_original.getStyle().setHeight(m_originalHeight - (m_originalHeight * progress), Unit.PX);
+                m_original.getStyle().setWidth(m_originalWidth - (m_originalWidth * progress), Unit.PX);
+            } else {
+                m_original.getStyle().setOpacity(m_originalOpacity + ((1 - m_originalOpacity) * progress));
+            }
+
+        }
+    }
+
     /** Animation enabled flag. */
-    private boolean m_animationEnabled = true;
+    private AnimationType m_animationType = AnimationType.MOVE;
 
     /** The mouse x position of the current mouse event. */
     private int m_clientX;
@@ -244,7 +360,7 @@ public class CmsDNDHandler implements MouseDownHandler {
     private I_CmsDNDController m_controller;
 
     /** The current animation. */
-    private CmsMoveAnimation m_currentAnimation;
+    private Animation m_currentAnimation;
 
     /** The current drop target. */
     private I_CmsDropTarget m_currentTarget;
@@ -279,6 +395,9 @@ public class CmsDNDHandler implements MouseDownHandler {
     /** Current scroll direction. */
     private Direction m_scrollDirection;
 
+    /** The scroll parent. */
+    private Element m_scrollElement;
+
     /** Flag if automatic scrolling is enabled. */
     private boolean m_scrollEnabled = true;
 
@@ -294,10 +413,13 @@ public class CmsDNDHandler implements MouseDownHandler {
     /** The registered drop targets. */
     private List<I_CmsDropTarget> m_targets;
 
-    /** 
-     * Constructor.<p> 
-     * 
-     * @param controller the drag and drop controller 
+    /** Flag indicating whether the CTRL key was pressed when drag started. */
+    private boolean m_modifierCTRL;
+
+    /**
+     * Constructor.<p>
+     *
+     * @param controller the drag and drop controller
      **/
     public CmsDNDHandler(I_CmsDNDController controller) {
 
@@ -308,7 +430,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Adds a drop target.<p>
-     * 
+     *
      * @param target the target to add
      */
     public void addTarget(I_CmsDropTarget target) {
@@ -316,7 +438,7 @@ public class CmsDNDHandler implements MouseDownHandler {
         m_targets.add(target);
     }
 
-    /** 
+    /**
      * Cancels the dragging process.<p>
      */
     public void cancel() {
@@ -357,7 +479,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Returns the current drop target.<p>
-     * 
+     *
      * @return the current drop target
      */
     public I_CmsDropTarget getCurrentTarget() {
@@ -387,7 +509,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Returns the current draggable.<p>
-     * 
+     *
      * @return the draggable
      */
     public I_CmsDraggable getDraggable() {
@@ -397,7 +519,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Returns the drag helper element.<p>
-     * 
+     *
      * @return the drag helper
      */
     public Element getDragHelper() {
@@ -417,12 +539,22 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Returns the place holder element.<p>
-     * 
+     *
      * @return the place holder element
      */
     public Element getPlaceholder() {
 
         return m_placeholder;
+    }
+
+    /**
+     * Returns whether the CTRL key was pressed when drag started.<p>
+     *
+     * @return <code>true</code> if CTRL key was pressed when drag started
+     */
+    public boolean hasModifierCTRL() {
+
+        return m_modifierCTRL;
     }
 
     /**
@@ -432,12 +564,12 @@ public class CmsDNDHandler implements MouseDownHandler {
      */
     public boolean isAnimationEnabled() {
 
-        return m_animationEnabled;
+        return (m_animationType != null) && (m_animationType != AnimationType.NONE);
     }
 
     /**
      * Returns if a dragging process is taking place.<p>
-     * 
+     *
      * @return <code>true</code> if the handler is currently dragging
      */
     public boolean isDragging() {
@@ -508,7 +640,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Removes a drop target from the register.<p>
-     * 
+     *
      * @param target the target to remove
      */
     public void removeTarget(I_CmsDropTarget target) {
@@ -517,13 +649,13 @@ public class CmsDNDHandler implements MouseDownHandler {
     }
 
     /**
-     * Sets the animation enabled.<p>
+     * Sets the animation type.<p>
      *
-     * @param animationEnabled <code>true</code> to enable the animation
+     * @param animationType the animation type
      */
-    public void setAnimationEnabled(boolean animationEnabled) {
+    public void setAnimationType(AnimationType animationType) {
 
-        m_animationEnabled = animationEnabled;
+        m_animationType = animationType;
     }
 
     /**
@@ -556,9 +688,9 @@ public class CmsDNDHandler implements MouseDownHandler {
         m_cursorOffsetY = cursorOffsetY;
     }
 
-    /** 
+    /**
      * Sets the draggable.<p>
-     * 
+     *
      * @param draggable the draggable
      */
     public void setDraggable(I_CmsDraggable draggable) {
@@ -568,7 +700,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Sets the drag helper element.<p>
-     * 
+     *
      * @param dragHelper the drag helper element
      */
     public void setDragHelper(Element dragHelper) {
@@ -588,12 +720,22 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Sets the placeholder element.<p>
-     * 
+     *
      * @param placeholder the placeholder element
      */
     public void setPlaceholder(Element placeholder) {
 
         m_placeholder = placeholder;
+    }
+
+    /**
+     * Sets the scroll element in case not the window but another element needs scrolling.<p>
+     *
+     * @param scrollElement the scroll element
+     */
+    public void setScrollElement(Element scrollElement) {
+
+        m_scrollElement = scrollElement;
     }
 
     /**
@@ -608,10 +750,10 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Sets the start position.<p>
-     * In case of a canceled drag and drop and enabled animation, 
+     * In case of a canceled drag and drop and enabled animation,
      * the draggable helper element will be reverted to the start position.<p>
      * Values <code>&lt;0</code> will be ignored.<p>
-     * 
+     *
      * @param left the left position
      * @param top the top position
      */
@@ -627,8 +769,8 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Clears the drag process with a move animation of the drag element to it's original position.<p>
-     * 
-     * @param draggable the draggable 
+     *
+     * @param draggable the draggable
      * @param controller the drag and drop controller
      */
     protected void animateCancel(final I_CmsDraggable draggable, final I_CmsDNDController controller) {
@@ -647,13 +789,13 @@ public class CmsDNDHandler implements MouseDownHandler {
                 clear();
             }
         };
-        showEndAnimation(callback, m_startTop, m_startLeft);
+        showEndAnimation(callback, m_startTop, m_startLeft, false);
     }
 
     /**
      * Clears the drag process with a move animation of the drag element to the place-holder position.<p>
-     * 
-     * @param draggable the draggable 
+     *
+     * @param draggable the draggable
      * @param target the drop target
      * @param controller the drag and drop controller
      */
@@ -671,13 +813,14 @@ public class CmsDNDHandler implements MouseDownHandler {
              */
             public void execute() {
 
-                target.onDrop(draggable);
                 controller.onDrop(draggable, target, CmsDNDHandler.this);
+                target.onDrop(draggable);
                 draggable.onDrop(target);
                 clear();
             }
         };
-        showEndAnimation(callback, m_placeholder.getAbsoluteTop(), m_placeholder.getAbsoluteLeft());
+        CmsPositionBean placeholderPosition = CmsPositionBean.getBoundingClientRect(m_placeholder);
+        showEndAnimation(callback, placeholderPosition.getTop(), placeholderPosition.getLeft(), true);
     }
 
     /**
@@ -698,6 +841,7 @@ public class CmsDNDHandler implements MouseDownHandler {
         Document.get().getBody().removeClassName(
             org.opencms.gwt.client.ui.css.I_CmsLayoutBundle.INSTANCE.dragdropCss().dragStarted());
         m_currentAnimation = null;
+        m_modifierCTRL = false;
     }
 
     /**
@@ -713,7 +857,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Execute on mouse wheel event.<p>
-     * 
+     *
      * @param event the native event
      */
     protected void onMouseWheelScroll(Event event) {
@@ -748,7 +892,7 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Executed on mouse move while dragging.<p>
-     * 
+     *
      * @param event the event
      */
     protected void onMove(Event event) {
@@ -762,13 +906,14 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Executed on mouse up while dragging.<p>
-     * 
+     *
      * @param event the event
      */
     protected void onUp(Event event) {
 
         m_clientX = event.getClientX();
         m_clientY = event.getClientY();
+        m_modifierCTRL = event.getCtrlKey();
         if ((m_currentTarget == null) || (m_currentTarget.getPlaceholderIndex() < 0)) {
             cancel();
         } else {
@@ -789,8 +934,8 @@ public class CmsDNDHandler implements MouseDownHandler {
         Element parentElement = m_dragHelper.getParentElement();
         int left = CmsDomUtil.getRelativeX(m_clientX, parentElement) - m_cursorOffsetX;
         int top = CmsDomUtil.getRelativeY(m_clientY, parentElement) - m_cursorOffsetY;
-        DOM.setStyleAttribute((com.google.gwt.user.client.Element)m_dragHelper, "left", left + "px");
-        DOM.setStyleAttribute((com.google.gwt.user.client.Element)m_dragHelper, "top", top + "px");
+        m_dragHelper.getStyle().setLeft(left, Unit.PX);
+        m_dragHelper.getStyle().setTop(top, Unit.PX);
     }
 
     /**
@@ -813,11 +958,27 @@ public class CmsDNDHandler implements MouseDownHandler {
 
         // checking current target first
         if ((m_currentTarget != null) && m_currentTarget.checkPosition(m_clientX, m_clientY, m_orientation)) {
+            // in case of nested targets, check the children of the current target
+            if ((m_currentTarget instanceof I_CmsNestedDropTarget)
+                && ((I_CmsNestedDropTarget)m_currentTarget).hasDnDChildren()) {
+                for (I_CmsDropTarget target : ((I_CmsNestedDropTarget)m_currentTarget).getDnDChildren()) {
+                    if ((target != m_currentTarget) && target.checkPosition(m_clientX, m_clientY, m_orientation)) {
+                        // notifying controller, if false is returned, placeholder will not be positioned inside target
+                        if (m_controller.onTargetEnter(m_draggable, target, this)) {
+                            target.insertPlaceholder(m_placeholder, m_clientX, m_clientY, m_orientation);
+                            m_currentTarget = target;
+                            m_controller.onPositionedPlaceholder(m_draggable, m_currentTarget, this);
+                            return;
+                        }
+                    }
+                }
+            }
             if (m_currentTarget.getPlaceholderIndex() < 0) {
                 m_currentTarget.insertPlaceholder(m_placeholder, m_clientX, m_clientY, m_orientation);
             } else {
                 m_currentTarget.repositionPlaceholder(m_clientX, m_clientY, m_orientation);
             }
+
             m_controller.onPositionedPlaceholder(m_draggable, m_currentTarget, this);
         } else {
             // leaving the current target
@@ -826,7 +987,7 @@ public class CmsDNDHandler implements MouseDownHandler {
             }
             for (I_CmsDropTarget target : m_targets) {
                 if ((target != m_currentTarget) && target.checkPosition(m_clientX, m_clientY, m_orientation)) {
-                    // notifying controller, if false is returned, placeholder will not be positioned inside target 
+                    // notifying controller, if false is returned, placeholder will not be positioned inside target
                     if (m_controller.onTargetEnter(m_draggable, target, this)) {
                         target.insertPlaceholder(m_placeholder, m_clientX, m_clientY, m_orientation);
                         m_currentTarget = target;
@@ -842,37 +1003,64 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Convenience method to get the appropriate scroll direction.<p>
-     * 
+     *
      * @param offset the scroll parent border offset, if the cursor is within the border offset, scrolling should be triggered
-     * 
+     *
      * @return the scroll direction
      */
     private Direction getScrollDirection(int offset) {
 
-        Element body = RootPanel.getBodyElement();
-        int windowHeight = Window.getClientHeight();
-        int bodyHeight = body.getClientHeight();
-        if (windowHeight < bodyHeight) {
-            if (((windowHeight - m_clientY) < offset) && (Window.getScrollTop() < (bodyHeight - windowHeight))) {
-                return Direction.down;
+        if (m_scrollElement == null) {
+            Element body = RootPanel.getBodyElement();
+            int windowHeight = Window.getClientHeight();
+            int bodyHeight = body.getClientHeight();
+            if (windowHeight < bodyHeight) {
+                if (((windowHeight - m_clientY) < offset) && (Window.getScrollTop() < (bodyHeight - windowHeight))) {
+                    return Direction.down;
+                }
+                if ((m_clientY < offset) && (Window.getScrollTop() > 0)) {
+                    return Direction.up;
+                }
             }
-            if ((m_clientY < offset) && (Window.getScrollTop() > 0)) {
-                return Direction.up;
-            }
-        }
 
-        int windowWidth = Window.getClientWidth();
-        int bodyWidth = body.getClientWidth();
-        if (windowWidth < bodyWidth) {
-            if (((windowWidth - m_clientX) < offset) && (Window.getScrollLeft() < (bodyWidth - windowWidth))) {
-                return Direction.right;
+            int windowWidth = Window.getClientWidth();
+            int bodyWidth = body.getClientWidth();
+            if (windowWidth < bodyWidth) {
+                if (((windowWidth - m_clientX) < offset) && (Window.getScrollLeft() < (bodyWidth - windowWidth))) {
+                    return Direction.right;
+                }
+                if ((m_clientX < offset) && (Window.getScrollLeft() > 0)) {
+                    return Direction.left;
+                }
             }
-            if ((m_clientX < offset) && (Window.getScrollLeft() > 0)) {
-                return Direction.left;
-            }
-        }
 
-        return null;
+            return null;
+        } else {
+            int outerHeight = m_scrollElement.getClientHeight();
+            int innerHeight = m_scrollElement.getScrollHeight();
+            if (outerHeight < innerHeight) {
+                if ((((outerHeight + m_scrollElement.getAbsoluteTop()) - m_clientY) < offset)
+                    && (m_scrollElement.getScrollTop() < (innerHeight - outerHeight))) {
+                    return Direction.down;
+                }
+                if (((m_clientY - m_scrollElement.getAbsoluteTop()) < offset) && (m_scrollElement.getScrollTop() > 0)) {
+                    return Direction.up;
+                }
+            }
+            int outerWidth = m_scrollElement.getClientWidth();
+            int innerWidth = m_scrollElement.getScrollWidth();
+            if (outerWidth < innerWidth) {
+                if ((((outerWidth + m_scrollElement.getAbsoluteLeft()) - m_clientX) < offset)
+                    && (m_scrollElement.getScrollLeft() < (innerWidth - outerWidth))) {
+                    return Direction.right;
+                }
+                if (((m_clientX - m_scrollElement.getAbsoluteLeft()) < offset)
+                    && (m_scrollElement.getScrollLeft() > 0)) {
+                    return Direction.left;
+                }
+            }
+            return null;
+        }
     }
 
     /**
@@ -887,7 +1075,10 @@ public class CmsDNDHandler implements MouseDownHandler {
                 clearScrollTimer();
             }
             if ((direction != null) && (m_scrollTimer == null)) {
-                m_scrollTimer = new CmsScrollTimer(RootPanel.getBodyElement(), 20, direction);
+                m_scrollTimer = new CmsScrollTimer(
+                    m_scrollElement != null ? m_scrollElement : RootPanel.getBodyElement(),
+                    20,
+                    direction);
                 m_scrollTimer.scheduleRepeating(10);
             }
 
@@ -897,23 +1088,45 @@ public class CmsDNDHandler implements MouseDownHandler {
 
     /**
      * Shows the end animation on drop or cancel. Executes the given callback afterwards.<p>
-     * 
+     *
      * @param callback the callback to execute
      * @param top absolute top of the animation end position
      * @param left absolute left of the animation end position
+     * @param isDrop if the animation is done on drop
      */
-    private void showEndAnimation(Command callback, int top, int left) {
+    private void showEndAnimation(Command callback, int top, int left, boolean isDrop) {
 
         if (!isAnimationEnabled() || (m_dragHelper == null)) {
             callback.execute();
             return;
         }
-        Element parentElement = m_dragHelper.getParentElement();
-        int endTop = top - parentElement.getAbsoluteTop();
-        int endLeft = left - parentElement.getAbsoluteLeft();
-        int startTop = CmsDomUtil.getCurrentStyleInt(m_dragHelper, Style.top);
-        int startLeft = CmsDomUtil.getCurrentStyleInt(m_dragHelper, Style.left);
-        m_currentAnimation = new CmsMoveAnimation(m_dragHelper, startTop, startLeft, endTop, endLeft, callback);
-        m_currentAnimation.run(300);
+        switch (m_animationType) {
+            case SPECIAL:
+                List<Element> overlays = CmsDomUtil.getElementsByClass(
+                    I_CmsLayoutBundle.INSTANCE.generalCss().disablingOverlay(),
+                    m_draggable.getElement());
+                Element overlay = overlays.size() > 0 ? overlays.get(0) : null;
+                m_currentAnimation = new SpecialAnimation(
+                    m_dragHelper,
+                    m_draggable.getElement(),
+                    overlay,
+                    callback,
+                    isDrop);
+
+                break;
+
+            case MOVE:
+                Element parentElement = m_dragHelper.getParentElement();
+                int endTop = top - parentElement.getAbsoluteTop();
+                int endLeft = left - parentElement.getAbsoluteLeft();
+                int startTop = CmsDomUtil.getCurrentStyleInt(m_dragHelper, Style.top);
+                int startLeft = CmsDomUtil.getCurrentStyleInt(m_dragHelper, Style.left);
+                m_currentAnimation = new CmsMoveAnimation(m_dragHelper, startTop, startLeft, endTop, endLeft, callback);
+                break;
+
+            default:
+                // nothing to do
+        }
+        m_currentAnimation.run(400);
     }
 }

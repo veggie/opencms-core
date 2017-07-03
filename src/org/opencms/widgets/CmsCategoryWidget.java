@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,6 +32,7 @@ import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
 import org.opencms.file.CmsVfsResourceNotFoundException;
+import org.opencms.i18n.CmsMessages;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
 import org.opencms.main.OpenCms;
@@ -40,6 +41,10 @@ import org.opencms.relations.CmsCategoryService;
 import org.opencms.util.CmsStringUtil;
 import org.opencms.util.CmsUUID;
 import org.opencms.workplace.CmsWorkplace;
+import org.opencms.xml.content.I_CmsXmlContentHandler.DisplayType;
+import org.opencms.xml.types.A_CmsXmlContentValue;
+import org.opencms.xml.types.CmsXmlCategoryValue;
+import org.opencms.xml.types.CmsXmlDynamicCategoryValue;
 import org.opencms.xml.types.I_CmsXmlContentValue;
 
 import java.util.ArrayList;
@@ -55,10 +60,10 @@ import org.apache.commons.logging.Log;
 
 /**
  * Provides a widget for a category based dependent select boxes.<p>
- * 
- * @since 7.0.3 
+ *
+ * @since 7.0.3
  */
-public class CmsCategoryWidget extends A_CmsWidget {
+public class CmsCategoryWidget extends A_CmsWidget implements I_CmsADEWidget {
 
     /** Configuration parameter to set the category to display. */
     public static final String CONFIGURATION_CATEGORY = "category";
@@ -69,6 +74,12 @@ public class CmsCategoryWidget extends A_CmsWidget {
     /** Configuration parameter to set the 'property' parameter. */
     public static final String CONFIGURATION_PROPERTY = "property";
 
+    /** Configuration parameter to set the 'selection type' parameter. */
+    private static final String CONFIGURATION_PARENTSELECTION = "parentSelection";
+
+    /** Configuration parameter to set the 'selection type' parameter. */
+    private static final String CONFIGURATION_SELECTIONTYPE = "selectiontype";
+
     /** The log object for this class. */
     private static final Log LOG = CmsLog.getLog(CmsCategoryWidget.class);
 
@@ -78,8 +89,14 @@ public class CmsCategoryWidget extends A_CmsWidget {
     /** The 'only leaf' flag. */
     private String m_onlyLeafs;
 
+    /** The value if the parents should be selected with the children. */
+    private boolean m_parentSelection;
+
     /** The property to read the starting category from. */
     private String m_property;
+
+    /** The selection type parsed from configuration string. */
+    private String m_selectiontype = "multi";
 
     /**
      * Creates a new category widget.<p>
@@ -92,7 +109,7 @@ public class CmsCategoryWidget extends A_CmsWidget {
 
     /**
      * Creates a category widget with the specified options.<p>
-     * 
+     *
      * @param configuration the configuration for the widget
      */
     public CmsCategoryWidget(String configuration) {
@@ -108,11 +125,7 @@ public class CmsCategoryWidget extends A_CmsWidget {
 
         StringBuffer result = new StringBuffer(8);
 
-        // append category to configuration
         if (m_category != null) {
-            if (result.length() > 0) {
-                result.append("|");
-            }
             result.append(CONFIGURATION_CATEGORY);
             result.append("=");
             result.append(m_category);
@@ -135,7 +148,100 @@ public class CmsCategoryWidget extends A_CmsWidget {
             result.append("=");
             result.append(m_property);
         }
+        // append 'selectionType' to configuration
+        if (m_selectiontype != null) {
+            if (result.length() > 0) {
+                result.append("|");
+            }
+            result.append(CONFIGURATION_SELECTIONTYPE);
+            result.append("=");
+            result.append(m_selectiontype);
+        }
         return result.toString();
+    }
+
+    /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getConfiguration(org.opencms.file.CmsObject, org.opencms.xml.types.A_CmsXmlContentValue, org.opencms.i18n.CmsMessages, org.opencms.file.CmsResource, java.util.Locale)
+     */
+    public String getConfiguration(
+        CmsObject cms,
+        A_CmsXmlContentValue schemaType,
+        CmsMessages messages,
+        CmsResource resource,
+        Locale contentLocale) {
+
+        StringBuffer result = new StringBuffer();
+
+        // NOTE: set starting category as "category=" - independently if it is set via "property" or "category" config option.
+        String startingCategory = this.getStartingCategory(cms, cms.getSitePath(resource));
+        if (startingCategory.length() > 1) {
+            result.append(CONFIGURATION_CATEGORY).append("=").append(startingCategory);
+        }
+        // append 'only leafs' to configuration
+        if (m_onlyLeafs != null) {
+            if (result.length() > 0) {
+                result.append("|");
+            }
+            result.append(CONFIGURATION_ONLYLEAFS);
+            result.append("=");
+            result.append(m_onlyLeafs);
+        }
+        // append 'selection type' to configuration in case of the schemaType
+        if (!m_selectiontype.equals("single")
+            && (schemaType.getTypeName().equals(CmsXmlCategoryValue.TYPE_NAME)
+                || schemaType.getTypeName().equals(CmsXmlDynamicCategoryValue.TYPE_NAME))) {
+            m_selectiontype = "multi";
+        } else {
+            m_selectiontype = "single";
+        }
+
+        if (m_selectiontype != null) {
+            if (result.length() > 0) {
+                result.append("|");
+            }
+            result.append(CONFIGURATION_SELECTIONTYPE);
+            result.append("=");
+            result.append(m_selectiontype);
+        }
+
+        if (m_parentSelection) {
+            if (result.length() > 0) {
+                result.append("|");
+            }
+            result.append(CONFIGURATION_PARENTSELECTION);
+        }
+        CmsCategoryService catService = CmsCategoryService.getInstance();
+        List<String> categoriesList = catService.getCategoryRepositories(cms, cms.getSitePath(resource));
+        Iterator<String> it = categoriesList.iterator();
+        String catList = "|CategoryList=";
+        int i = 0;
+        while (it.hasNext()) {
+            if (i > 0) {
+                catList += ",";
+            }
+            String rootPath = it.next();
+            catList += rootPath;
+            i++;
+        }
+
+        return result.append(catList).toString();
+    }
+
+    /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getCssResourceLinks(org.opencms.file.CmsObject)
+     */
+    public List<String> getCssResourceLinks(CmsObject cms) {
+
+        // nothing to do
+        return null;
+    }
+
+    /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getDefaultDisplayType()
+     */
+    public DisplayType getDefaultDisplayType() {
+
+        return DisplayType.wide;
     }
 
     /**
@@ -152,7 +258,6 @@ public class CmsCategoryWidget extends A_CmsWidget {
     }
 
     /**
-    >>>>>>> THEIRS
      * @see org.opencms.widgets.I_CmsWidget#getDialogWidget(org.opencms.file.CmsObject, org.opencms.widgets.I_CmsWidgetDialog, org.opencms.widgets.I_CmsWidgetParameter)
      */
     public String getDialogWidget(CmsObject cms, I_CmsWidgetDialog widgetDialog, I_CmsWidgetParameter param) {
@@ -212,25 +317,30 @@ public class CmsCategoryWidget extends A_CmsWidget {
                             continue;
                         }
                         if (level != (baseLevel + 1)) {
-                            result.append("new Array('"
-                                + cat.getId()
-                                + "', '"
-                                + CmsCategoryService.getInstance().readCategory(
-                                    cms,
-                                    CmsResource.getParentFolder(cat.getPath()),
-                                    referencePath).getId()
-                                + "', '"
-                                + titleJs
-                                + "'),\n");
+                            result.append(
+                                "new Array('"
+                                    + cat.getId()
+                                    + "', '"
+                                    + CmsCategoryService.getInstance().readCategory(
+                                        cms,
+                                        CmsResource.getParentFolder(cat.getPath()),
+                                        referencePath).getId()
+                                    + "', '"
+                                    + titleJs
+                                    + "'),\n");
                         }
                         if ((level == (baseLevel + 1))
-                            || ((selected != null) && selected.getPath().startsWith(
-                                CmsResource.getParentFolder(cat.getPath())))) {
+                            || ((selected != null)
+                                && selected.getPath().startsWith(CmsResource.getParentFolder(cat.getPath())))) {
                             if (levels.size() < (level - baseLevel)) {
                                 options = new ArrayList<CmsSelectWidgetOption>();
                                 levels.add(options);
-                                options.add(new CmsSelectWidgetOption("", true, Messages.get().getBundle(
-                                    widgetDialog.getLocale()).key(Messages.GUI_CATEGORY_SELECT_0)));
+                                options.add(
+                                    new CmsSelectWidgetOption(
+                                        "",
+                                        true,
+                                        Messages.get().getBundle(widgetDialog.getLocale()).key(
+                                            Messages.GUI_CATEGORY_SELECT_0)));
                             }
                             options.add(new CmsSelectWidgetOption(cat.getId().toString(), false, titleHtml));
                         }
@@ -246,13 +356,14 @@ public class CmsCategoryWidget extends A_CmsWidget {
             result.append("</script>\n");
 
             result.append("<td class=\"xmlTd\" >");
-            result.append("<input id='"
-                + param.getId()
-                + "' name='"
-                + param.getId()
-                + "' type='hidden' value='"
-                + (selected != null ? selected.getId().toString() : "")
-                + "'>\n");
+            result.append(
+                "<input id='"
+                    + param.getId()
+                    + "' name='"
+                    + param.getId()
+                    + "' type='hidden' value='"
+                    + (selected != null ? selected.getId().toString() : "")
+                    + "'>\n");
 
             for (int i = 1; i < (level - baseLevel); i++) {
                 result.append("<span id='" + param.getId() + "cat" + i + "IdDisplay'");
@@ -261,18 +372,26 @@ public class CmsCategoryWidget extends A_CmsWidget {
                 } else {
                     result.append(" style='display:none'");
                     options = new ArrayList<CmsSelectWidgetOption>();
-                    options.add(new CmsSelectWidgetOption(
-                        "",
-                        true,
-                        Messages.get().getBundle(widgetDialog.getLocale()).key(Messages.GUI_CATEGORY_SELECT_0)));
+                    options.add(
+                        new CmsSelectWidgetOption(
+                            "",
+                            true,
+                            Messages.get().getBundle(widgetDialog.getLocale()).key(Messages.GUI_CATEGORY_SELECT_0)));
                 }
                 result.append(">");
-                result.append(buildSelectBox(param.getId(), i, options, (selected != null
-                ? CmsCategoryService.getInstance().readCategory(
-                    cms,
-                    CmsResource.getPathPart(selected.getPath(), i + baseLevel),
-                    referencePath).getId().toString()
-                : ""), param.hasError(), (i == (level - baseLevel - 1))));
+                result.append(
+                    buildSelectBox(
+                        param.getId(),
+                        i,
+                        options,
+                        (selected != null
+                        ? CmsCategoryService.getInstance().readCategory(
+                            cms,
+                            CmsResource.getPathPart(selected.getPath(), i + baseLevel),
+                            referencePath).getId().toString()
+                        : ""),
+                        param.hasError(),
+                        (i == (level - baseLevel - 1))));
                 result.append("</span>&nbsp;");
             }
             result.append("</td>");
@@ -283,8 +402,88 @@ public class CmsCategoryWidget extends A_CmsWidget {
     }
 
     /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getInitCall()
+     */
+    public String getInitCall() {
+
+        // nothing to do
+        return null;
+    }
+
+    /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getJavaScriptResourceLinks(org.opencms.file.CmsObject)
+     */
+    public List<String> getJavaScriptResourceLinks(CmsObject cms) {
+
+        // nothing to do
+        return null;
+    }
+
+    /**
+     * Returns the starting category depending on the configuration options.<p>
+     *
+     * @param cms the cms context
+     * @param referencePath the right resource path
+     *
+     * @return the starting category
+     */
+    public String getStartingCategory(CmsObject cms, String referencePath) {
+
+        String ret = "";
+        if (CmsStringUtil.isEmptyOrWhitespaceOnly(m_category) && CmsStringUtil.isEmptyOrWhitespaceOnly(m_property)) {
+            ret = "/";
+        } else if (CmsStringUtil.isEmptyOrWhitespaceOnly(m_property)) {
+            ret = m_category;
+        } else {
+            // use the given property from the right file
+            if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(referencePath)) {
+                try {
+                    ret = cms.readPropertyObject(referencePath, m_property, true).getValue("/");
+                } catch (CmsException ex) {
+                    // should never happen
+                    if (LOG.isErrorEnabled()) {
+                        LOG.error(ex.getLocalizedMessage(), ex);
+                    }
+                }
+            }
+        }
+        if (!ret.endsWith("/")) {
+            ret += "/";
+        }
+        if (ret.startsWith("/")) {
+            ret = ret.substring(1);
+        }
+        return ret;
+    }
+
+    /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getWidgetName()
+     */
+    public String getWidgetName() {
+
+        return CmsCategoryWidget.class.getName();
+    }
+
+    /**
+     * @see org.opencms.widgets.A_CmsWidget#isCompactViewEnabled()
+     */
+    @Override
+    public boolean isCompactViewEnabled() {
+
+        return false;
+    }
+
+    /**
+     * @see org.opencms.widgets.I_CmsADEWidget#isInternal()
+     */
+    public boolean isInternal() {
+
+        return false;
+    }
+
+    /**
      * Check if only leaf selection is allowed.<p>
-     * 
+     *
      * @return <code>true</code>, if only leaf selection is allowed
      */
     public boolean isOnlyLeafs() {
@@ -329,6 +528,11 @@ public class CmsCategoryWidget extends A_CmsWidget {
                 }
                 m_onlyLeafs = onlyLeafs;
             }
+            int parentSelectionIndex = configuration.indexOf(CONFIGURATION_PARENTSELECTION);
+            if (parentSelectionIndex != -1) {
+                // parent selection is given
+                m_parentSelection = true;
+            }
             int propertyIndex = configuration.indexOf(CONFIGURATION_PROPERTY);
             if (propertyIndex != -1) {
                 // property is given
@@ -338,6 +542,16 @@ public class CmsCategoryWidget extends A_CmsWidget {
                     property = property.substring(0, property.indexOf('|'));
                 }
                 m_property = property;
+            }
+            int selectionTypeIndex = configuration.indexOf(CONFIGURATION_SELECTIONTYPE);
+            if (selectionTypeIndex != -1) {
+                String selectionType = configuration.substring(
+                    selectionTypeIndex + CONFIGURATION_SELECTIONTYPE.length() + 1);
+                if (selectionType.indexOf('|') != -1) {
+                    // cut eventual following configuration values
+                    selectionType = selectionType.substring(0, selectionType.indexOf('|'));
+                }
+                m_selectiontype = selectionType;
             }
         }
         super.setConfiguration(configuration);
@@ -379,14 +593,14 @@ public class CmsCategoryWidget extends A_CmsWidget {
 
     /**
      * Generates html code for the category selection.<p>
-     * 
+     *
      * @param baseId the widget id
      * @param level the category deep level
      * @param options the list of {@link CmsSelectWidgetOption} objects
      * @param selected the selected option
      * @param hasError if to display error message
      * @param last if it is the last level
-     * 
+     *
      * @return html code
      */
     protected String buildSelectBox(
@@ -437,10 +651,10 @@ public class CmsCategoryWidget extends A_CmsWidget {
 
     /**
      * Returns the default locale in the content of the given resource.<p>
-     * 
+     *
      * @param cms the cms context
      * @param resource the resource path to get the default locale for
-     * 
+     *
      * @return the default locale of the resource
      */
     protected Locale getDefaultLocale(CmsObject cms, String resource) {
@@ -459,10 +673,10 @@ public class CmsCategoryWidget extends A_CmsWidget {
 
     /**
      * Returns the right resource, depending on the locale.<p>
-     * 
+     *
      * @param cms the cms context
      * @param param the widget parameter
-     * 
+     *
      * @return the resource to get/set the categories for
      */
     protected CmsResource getResource(CmsObject cms, I_CmsWidgetParameter param) {
@@ -498,42 +712,5 @@ public class CmsCategoryWidget extends A_CmsWidget {
             }
         }
         return file;
-    }
-
-    /**
-     * Returns the starting category depending on the configuration options.<p>
-     * 
-     * @param cms the cms context
-     * @param referencePath the right resource path
-     * 
-     * @return the starting category
-     */
-    protected String getStartingCategory(CmsObject cms, String referencePath) {
-
-        String ret = "";
-        if (CmsStringUtil.isEmptyOrWhitespaceOnly(m_category) && CmsStringUtil.isEmptyOrWhitespaceOnly(m_property)) {
-            ret = "/";
-        } else if (CmsStringUtil.isEmptyOrWhitespaceOnly(m_property)) {
-            ret = m_category;
-        } else {
-            // use the given property from the right file
-            if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(referencePath)) {
-                try {
-                    ret = cms.readPropertyObject(referencePath, m_property, true).getValue("/");
-                } catch (CmsException ex) {
-                    // should never happen
-                    if (LOG.isErrorEnabled()) {
-                        LOG.error(ex.getLocalizedMessage(), ex);
-                    }
-                }
-            }
-        }
-        if (!ret.endsWith("/")) {
-            ret += "/";
-        }
-        if (ret.startsWith("/")) {
-            ret = ret.substring(1);
-        }
-        return ret;
     }
 }

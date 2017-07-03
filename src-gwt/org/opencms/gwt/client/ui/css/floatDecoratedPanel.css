@@ -1,3 +1,5 @@
+@external html-face;
+
 .primary {
 }
 
@@ -5,24 +7,27 @@
 	width: auto;
 }
 
-@if user.agent ie6 {
-	.floatBox * {
-		display: inline; 
-	}
-} @else {
-}	
-
 .floatDecoratedPanel {
 	zoom: 1;
 }
 
-.decorationBox {
+.decorationBox.decorationBoxSmall {
 	float:left;
-	margin-top: 12px;
+	margin-top: 0px;
 }
 
-@if user.agent ie6 {
-	.decorationBox * { 
-		display: inline;
-	}
-} 
+.decorationBox.decorationBoxSmall .html-face {
+	line-height: 22px !important;
+	vertical-align: middle !important;
+}
+
+
+.decorationBox {
+	float:left;
+	margin-top: 0px;
+}
+
+.decorationBox .html-face {
+	line-height: 40px !important;
+	vertical-align: middle !important;
+}

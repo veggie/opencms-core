@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,6 +38,7 @@ import org.opencms.gwt.client.ui.input.CmsTextBox;
 import org.opencms.gwt.client.ui.input.I_CmsFormWidget;
 import org.opencms.gwt.client.ui.input.form.CmsWidgetFactoryRegistry;
 import org.opencms.gwt.client.ui.input.form.I_CmsFormWidgetFactory;
+import org.opencms.util.CmsStringUtil;
 
 import java.util.Date;
 import java.util.Map;
@@ -65,6 +66,8 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
@@ -80,7 +83,38 @@ import com.google.gwt.user.datepicker.client.DatePicker;
 /**
  * A text box that shows a date time picker widget when the user clicks on it.
  */
-public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWidget, I_CmsHasInit, HasKeyPressHandlers {
+public class CmsDateBox extends Composite
+implements HasValue<Date>, I_CmsFormWidget, I_CmsHasInit, HasKeyPressHandlers {
+
+    /**
+     * Drag and drop event preview handler.<p>
+     *
+     * To be used while dragging.<p>
+     */
+    protected class CloseEventPreviewHandler implements NativePreviewHandler {
+
+        /**
+         * @see com.google.gwt.user.client.Event.NativePreviewHandler#onPreviewNativeEvent(com.google.gwt.user.client.Event.NativePreviewEvent)
+         */
+        public void onPreviewNativeEvent(NativePreviewEvent event) {
+
+            Event nativeEvent = Event.as(event.getNativeEvent());
+            switch (DOM.eventGetType(nativeEvent)) {
+                case Event.ONMOUSEMOVE:
+                    break;
+                case Event.ONMOUSEUP:
+                    break;
+                case Event.ONKEYDOWN:
+                    break;
+                case Event.ONMOUSEWHEEL:
+                    hidePopup();
+                    break;
+                default:
+                    // do nothing
+            }
+        }
+
+    }
 
     /**
      * This inner class implements the handler for the date box widget.<p>
@@ -162,6 +196,9 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
         // GWT interface, nothing to do here
     }
 
+    /** Dummy value used for invalid dates. */
+    public static final Date INVALID_DATE = new Date(Integer.MIN_VALUE + 37); // can't use Long.MIN_VALUE since this leads to an invalid Date object in GWT
+
     /** The widget type identifier for this widget. */
     public static final String WIDGET_TYPE = "datebox";
 
@@ -194,9 +231,22 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     @UiField
     protected CmsRadioButton m_pm;
 
+    /** Event preview handler registration. */
+    protected HandlerRegistration m_previewHandlerRegistration;
+
     /** The text box to input the time. */
     @UiField
     protected CmsTextBox m_time;
+
+    /** The panel for the time selection. */
+    @UiField
+    protected FlowPanel m_timeField;
+
+    /** True if invalid values should be allowed. */
+    private boolean m_allowInvalidValue;
+
+    /** The value for show date only. */
+    private boolean m_dateOnly;
 
     /** The initial date shown, when the date picker is opened and no date was set before. */
     private Date m_initialDate;
@@ -215,7 +265,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * The event preview handler.<p>
-     * 
+     *
      * Blurs the time box if the user clicks outside of it.<p>
      */
     private NativePreviewHandler m_previewHandler = new NativePreviewHandler() {
@@ -241,8 +291,9 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     public CmsDateBox() {
 
         initWidget(uiBinder.createAndBindUi(this));
+        m_box.colorWhite();
 
-        m_popup = new CmsPopup();
+        m_popup = new CmsPopup(Messages.get().key(Messages.GUI_DATEBOX_TITLE_0));
         m_ampmGroup = new CmsRadioButtonGroup();
 
         m_am.setText(Messages.get().key(Messages.GUI_DATE_AM_0));
@@ -257,6 +308,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
         CmsDateBoxHandler dateBoxHandler = new CmsDateBoxHandler();
         m_picker.addValueChangeHandler(dateBoxHandler);
+
         m_box.addBlurHandler(dateBoxHandler);
         m_box.addClickHandler(dateBoxHandler);
         m_box.addKeyPressHandler(dateBoxHandler);
@@ -272,6 +324,13 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
         m_popup.setModal(true);
         m_popup.removePadding();
         m_popup.setBackgroundColor(I_CmsLayoutBundle.INSTANCE.constants().css().backgroundColorDialog());
+        m_popup.addDialogClose(new Command() {
+
+            public void execute() {
+
+                m_box.setPreventShowError(false);
+            }
+        });
         m_popup.addCloseHandler(dateBoxHandler);
         m_popup.addAutoHidePartner(m_box.getElement());
         m_popup.setAutoHideEnabled(true);
@@ -312,6 +371,18 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     }
 
     /**
+     * Returns true if invalid values should be allowed.<p>
+     *
+     * If invalid values are allowed, methods returning a Date will return a special dummy date in case the date is invalid.
+     *
+     * @return true if invalid values should be allowed
+     */
+    public boolean allowInvalidValue() {
+
+        return m_allowInvalidValue;
+    }
+
+    /**
      * @see org.opencms.gwt.client.ui.input.I_CmsFormWidget#getApparentValue()
      */
     public String getApparentValue() {
@@ -337,16 +408,28 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Returns the value of the date box as String in form of a long.<p>
-     * 
+     *
      * @see org.opencms.gwt.client.ui.input.I_CmsFormWidget#getFormValueAsString()
      */
     public String getFormValueAsString() {
 
         Date value = getValue();
         if (value == null) {
-            return null;
+            return "";
+        } else if (allowInvalidValue() && value.equals(INVALID_DATE)) {
+            return "INVALID_DATE";
         }
         return String.valueOf(getValue().getTime());
+    }
+
+    /**
+     * Returns the text box of this widget.<p>
+     *
+     * @return the CmsText Box
+     */
+    public CmsTextBox getTextField() {
+
+        return m_box;
     }
 
     /**
@@ -357,18 +440,27 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
         Date date = null;
         if (isEnabled()) {
             try {
-                date = CmsDateConverter.toDate(m_box.getText());
+                if (m_dateOnly) {
+                    date = CmsDateConverter.toDayDate(m_box.getText());
+                } else {
+                    date = CmsDateConverter.toDate(m_box.getText());
+                }
                 setErrorMessage(null);
             } catch (Exception e) {
                 setErrorMessage(Messages.get().key(Messages.ERR_DATEBOX_INVALID_DATE_FORMAT_0));
+                if (allowInvalidValue()) {
+                    // empty is actually a valid value for date fields, so we have to return a different value to distinguish between the cases
+                    return INVALID_DATE;
+                }
             }
         }
+
         return date;
     }
 
     /**
      * Returns the date value as formated String or an empty String if the date value is null.<p>
-     * 
+     *
      * @return the date value as formated String
      */
     public String getValueAsFormatedString() {
@@ -378,7 +470,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Returns <code>true</code> if the box and the time input fields don't have any errors.<p>
-     * 
+     *
      * @return <code>true</code> if the box and the time input fields don't have any errors
      */
     public boolean hasErrors() {
@@ -399,7 +491,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Checks if the String in the date box input field is a valid date format.<p>
-     * 
+     *
      * @return <code>true</code> if the String in the date box input field is a valid date format
      */
     public boolean isValideDateBox() {
@@ -413,7 +505,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     }
 
     /**
-     * Updates the date box when the user has clicked on the time field.<p> 
+     * Updates the date box when the user has clicked on the time field.<p>
      */
     public void onTimeClick() {
 
@@ -429,11 +521,43 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     }
 
     /**
+     * Enables or disables whether invalid values are allowed.<p>
+     *
+     * If invalid values are allowed, they will be returned as a special dummy date (INVALID_DATE).
+     *
+     * @param allowInvalidValue true if invalid values should be allowed
+     */
+    public void setAllowInvalidValue(boolean allowInvalidValue) {
+
+        m_allowInvalidValue = allowInvalidValue;
+    }
+
+    /**
      * @see org.opencms.gwt.client.ui.input.I_CmsFormWidget#setAutoHideParent(org.opencms.gwt.client.ui.I_CmsAutoHider)
      */
     public void setAutoHideParent(I_CmsAutoHider autoHideParent) {
 
         m_autoHideParent = autoHideParent;
+    }
+
+    /**
+     * Sets the value if the date only should be shown.
+     * @param dateOnly if the date only should be shown
+     */
+    public void setDateOnly(boolean dateOnly) {
+
+        if (m_dateOnly != dateOnly) {
+            m_dateOnly = dateOnly;
+            if (m_dateOnly) {
+                m_time.removeFromParent();
+                m_am.removeFromParent();
+                m_pm.removeFromParent();
+            } else {
+                m_timeField.add(m_time);
+                m_timeField.add(m_am);
+                m_timeField.add(m_pm);
+            }
+        }
     }
 
     /**
@@ -460,12 +584,12 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Expects the value as String in form of a long.<p>
-     * 
+     *
      * @see org.opencms.gwt.client.ui.input.I_CmsFormWidget#setFormValueAsString(java.lang.String)
      */
     public void setFormValueAsString(String value) {
 
-        if (value != null) {
+        if (!CmsStringUtil.isEmpty(value)) {
             try {
                 long time = Long.parseLong(value);
                 setValue(new Date(time));
@@ -481,12 +605,23 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Sets the initial date shown, when the date picker is opened and no date was set before.<p>
-     * 
+     *
      * @param initialDate the initial date
      */
     public void setInitialDate(Date initialDate) {
 
         m_initialDate = initialDate;
+    }
+
+    /**
+     * Sets the name of the input field.<p>
+     *
+     * @param name of the input field
+     */
+    public void setName(String name) {
+
+        m_time.setName(name);
+
     }
 
     /**
@@ -504,10 +639,15 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
         m_tmpValue = value;
         if (fireEvents) {
-            fireChange(getValue(), value);
-            m_oldValue = value;
+            fireChange(value);
         }
-        m_box.setFormValueAsString(CmsDateConverter.toString(value));
+        if (value == null) {
+            m_box.setFormValueAsString("");
+        } else if (m_dateOnly) {
+            m_box.setFormValueAsString(CmsDateConverter.toDateString(value));
+        } else {
+            m_box.setFormValueAsString(CmsDateConverter.toString(value));
+        }
     }
 
     /**
@@ -523,13 +663,31 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Fires the value change event if needed.<p>
-     * 
-     * @param oldValue the old value
+     *
      * @param newValue the new value
      */
-    protected void fireChange(Date oldValue, Date newValue) {
+    protected void fireChange(Date newValue) {
 
-        ValueChangeEvent.<Date> fireIfNotEqual(this, oldValue, CalendarUtil.copyDate(newValue));
+        ValueChangeEvent.<Date> fireIfNotEqual(this, m_oldValue, CalendarUtil.copyDate(newValue));
+        m_oldValue = newValue;
+    }
+
+    /**
+     * Hides the date time popup.<p>
+     */
+    protected void hidePopup() {
+
+        if (CmsDateConverter.validateTime(getTimeText())) {
+            // before hiding the date picker remove the date box popup from the auto hide partners of the parent popup
+            if (m_autoHideParent != null) {
+                m_autoHideParent.removeAutoHidePartner(getElement());
+            }
+            m_popup.hide();
+            if (m_previewHandlerRegistration != null) {
+                m_previewHandlerRegistration.removeHandler();
+            }
+            m_previewHandlerRegistration = null;
+        }
     }
 
     /**
@@ -542,7 +700,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * The date box on blur action.<p>
-     * 
+     *
      * If the date box loses the focus the date time picker should be updated from the date box value.<p>
      */
     protected void onDateBoxBlur() {
@@ -555,7 +713,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * The date box on click action.<p>
-     * 
+     *
      * If the date box is clicked the time date picker should be shown.<p>
      */
     protected void onDateBoxClick() {
@@ -568,13 +726,13 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     /**
      * The date box on key down action.<p>
      * <ul>
-     * <li>If enter or tab is pressed in the date box the date time 
+     * <li>If enter or tab is pressed in the date box the date time
      * picker should be updated with the value from the date box.</li>
      * <li>If the escape key is pressed the picker should be hided.</li>
      * <li>If the up key is pressed the value should be taken from the date box.</li>
      * <li>If the down key is pressed the picker should be hided.</li>
      * </ul>
-     *  
+     *
      * @param event the key down event
      */
     protected void onDateBoxKeyPress(KeyPressEvent event) {
@@ -597,8 +755,9 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
                     public void execute() {
 
                         updateCloseBehavior();
-                        if (isValideDateBox()) {
+                        if (isValideDateBox() || allowInvalidValue()) {
                             setErrorMessage(null);
+                            fireChange(getValue());
                         }
                     }
                 });
@@ -615,7 +774,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     }
 
     /**
-     * If the value of the picker changes, the value of the date time picker should be updated.<p> 
+     * If the value of the picker changes, the value of the date time picker should be updated.<p>
      */
     protected void onPickerValueChanged() {
 
@@ -635,11 +794,11 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     }
 
     /**
-     * If the user presses enter in the time field the value of the 
+     * If the user presses enter in the time field the value of the
      * picker should be updated and the the popup should be closed.<p>
-     * 
+     *
      * In any other case the popup should be prevented to being closed.<p>
-     * 
+     *
      * @param event the key pressed event
      */
     protected void onTimeKeyPressed(KeyPressEvent event) {
@@ -655,6 +814,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
                     public void execute() {
 
                         executeTimeAction();
+                        fireChange(getValue());
                     }
                 });
                 break;
@@ -663,7 +823,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Blurs the time box if the user clicks outside of it.<p>
-     *  
+     *
      * @param event the native preview event
      */
     protected void previewNativeEvent(NativePreviewEvent event) {
@@ -683,7 +843,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Updates the auto hide partner from the parent widget.<p>
-     * 
+     *
      * If there is any invalid user input the parent widget should not be closed automatically.<p>
      */
     protected void updateCloseBehavior() {
@@ -719,7 +879,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
         if (!isValidTime()) {
             m_time.setErrorMessageWidth((m_popup.getOffsetWidth() - 32) + Unit.PX.toString());
             m_time.setErrorMessage(Messages.get().key(Messages.ERR_DATEBOX_INVALID_TIME_FORMAT_0));
-        } else if (isValidTime()) {
+        } else {
             m_time.setErrorMessage(null);
         }
         updateCloseBehavior();
@@ -727,7 +887,7 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
 
     /**
      * Returns the time text field value as string.<p>
-     * 
+     *
      * @return the time text field value as string
      */
     private String getTimeText() {
@@ -746,32 +906,18 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
     }
 
     /**
-     * Hides the date time popup.<p>
-     */
-    private void hidePopup() {
-
-        if (CmsDateConverter.validateTime(getTimeText())) {
-            // before hiding the date picker remove the date box popup from the auto hide partners of the parent popup
-            if (m_autoHideParent != null) {
-                m_autoHideParent.removeAutoHidePartner(getElement());
-            }
-            m_popup.hide();
-        }
-    }
-
-    /**
      * Checks if the String in the time input field is a valid time format.<p>
-     * 
+     *
      * @return <code>true</code> if the String in the time input field is a valid time format
      */
     private boolean isValidTime() {
 
-        return CmsDateConverter.validateTime(getTimeText());
+        return m_dateOnly || CmsDateConverter.validateTime(getTimeText());
     }
 
     /**
      * Sets the value of the date picker.<p>
-     * 
+     *
      * @param date the value to set
      * @param fireEvents signals whether the value changed event should be fired or not
      */
@@ -798,29 +944,32 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
         updateFromTextBox(true);
         m_box.setPreventShowError(true);
         m_popup.showRelativeTo(m_box);
+        if (m_previewHandlerRegistration != null) {
+            m_previewHandlerRegistration.removeHandler();
+        }
+        m_previewHandlerRegistration = Event.addNativePreviewHandler(new CloseEventPreviewHandler());
     }
 
     /**
      * Sets the value of the date box.<p>
-     * 
-     * @param date the new date
      */
     private void updateFromPicker() {
 
         checkTime();
         Date date = m_picker.getValue();
-        String timeAsString = getTimeText();
-        date = CmsDateConverter.getDateWithTime(date, timeAsString);
+        if (!m_dateOnly) {
+            String timeAsString = getTimeText();
+            date = CmsDateConverter.getDateWithTime(date, timeAsString);
+        }
         setValue(date);
         setErrorMessage(null);
-        fireChange(m_oldValue, date);
-        m_oldValue = date;
+        fireChange(date);
     }
 
     /**
      * Updates the picker if the user manually modified the date of the text box.<p>
-     * 
-     * @param initial <code>true</code> if the datebox is being initially opened 
+     *
+     * @param initial flag indicating if the date box is being initialized
      */
     private void updateFromTextBox(boolean initial) {
 
@@ -830,7 +979,6 @@ public class CmsDateBox extends Composite implements HasValue<Date>, I_CmsFormWi
         }
         setPickerValue(date, false);
         m_time.setErrorMessage(null);
-        fireChange(m_oldValue, getValue());
-        m_oldValue = date;
+        fireChange(getValue());
     }
 }

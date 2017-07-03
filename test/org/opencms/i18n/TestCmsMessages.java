@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,20 +27,20 @@
 
 package org.opencms.i18n;
 
-import java.util.Locale;
+import org.opencms.test.OpenCmsTestCase;
 
-import junit.framework.TestCase;
+import java.util.Locale;
 
 /**
  * Tests for the CmsMessages.<p>
- * 
+ *
  * @since 6.0.0
  */
-public class TestCmsMessages extends TestCase {
+public class TestCmsMessages extends OpenCmsTestCase {
 
     /**
      * Tests if message will be returned in the correct locale.<p>
-     * 
+     *
      * @throws Exception if the test fails
      */
     public void testLocale() throws Exception {
@@ -52,7 +52,7 @@ public class TestCmsMessages extends TestCase {
 
     /**
      * Tests parameter replacement in messages.<p>
-     * 
+     *
      * @throws Exception if the test fails
      */
     public void testMessageWithParameters() throws Exception {
@@ -70,7 +70,7 @@ public class TestCmsMessages extends TestCase {
 
     /**
      * Tests for for missing localized keys.<p>
-     * 
+     *
      * @throws Exception if the test fails
      */
     public void testUnknownKeys() throws Exception {
@@ -80,7 +80,7 @@ public class TestCmsMessages extends TestCase {
         // check for null value
         assertTrue(CmsMessages.isUnknownKey(value));
 
-        // test key formatted as unknown 
+        // test key formatted as unknown
         value = CmsMessages.formatUnknownKey("somekey");
         assertTrue(CmsMessages.isUnknownKey(value));
 

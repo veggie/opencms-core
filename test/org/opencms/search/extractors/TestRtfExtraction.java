@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,25 +27,15 @@
 
 package org.opencms.search.extractors;
 
+import org.opencms.test.OpenCmsTestCase;
+
 import java.io.InputStream;
 import java.util.Map;
-
-import junit.framework.TestCase;
 
 /**
  * Tests the text extraction form a RTF file.<p>
  */
-public class TestRtfExtraction extends TestCase {
-
-    /**
-     * Default JUnit constructor.<p>
-     * 
-     * @param arg0 JUnit parameters
-     */
-    public TestRtfExtraction(String arg0) {
-
-        super(arg0);
-    }
+public class TestRtfExtraction extends OpenCmsTestCase {
 
     /**
      * Tests the basic RTF extraction.<p>
@@ -54,15 +44,20 @@ public class TestRtfExtraction extends TestCase {
      */
     public void testBasicRtfExtraction() throws Exception {
 
-        // open an input stream for the test file        
+        // open an input stream for the test file
         InputStream in = getClass().getClassLoader().getResourceAsStream("org/opencms/search/extractors/test1.rtf");
 
         // extract the content
         I_CmsExtractionResult extractionResult = CmsExtractorRtf.getExtractor().extractText(in);
         Map<String, String> items = extractionResult.getContentItems();
-        assertEquals(2, items.size());
+        assertEquals(5, items.size());
         assertTrue(items.containsKey(I_CmsExtractionResult.ITEM_CONTENT));
         assertTrue(items.containsKey(I_CmsExtractionResult.ITEM_RAW));
+        assertTrue(items.containsKey(I_CmsExtractionResult.ITEM_AUTHOR));
+        assertTrue(items.containsKey(I_CmsExtractionResult.ITEM_TITLE));
+        assertEquals("Alkacon Software \u2013 The OpenCms experts", items.get(I_CmsExtractionResult.ITEM_TITLE));
+        assertTrue(items.containsKey(I_CmsExtractionResult.ITEM_COMPANY));
+        assertEquals("Alkacon Software", items.get(I_CmsExtractionResult.ITEM_COMPANY));
         String result = extractionResult.getContent();
         assertEquals(result, items.get(I_CmsExtractionResult.ITEM_CONTENT));
 

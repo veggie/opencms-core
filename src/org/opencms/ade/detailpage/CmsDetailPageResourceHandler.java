@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,6 +29,7 @@ package org.opencms.ade.detailpage;
 
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
+import org.opencms.file.CmsResourceFilter;
 import org.opencms.i18n.CmsMessageContainer;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
@@ -37,6 +38,7 @@ import org.opencms.main.I_CmsResourceInit;
 import org.opencms.main.OpenCms;
 import org.opencms.security.CmsPermissionViolationException;
 import org.opencms.security.CmsSecurityException;
+import org.opencms.site.CmsSite;
 import org.opencms.util.CmsFileUtil;
 import org.opencms.util.CmsUUID;
 import org.opencms.workplace.CmsWorkplace;
@@ -49,7 +51,7 @@ import org.apache.commons.logging.Log;
 
 /**
  * Resource init handler for detail-pages.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsDetailPageResourceHandler implements I_CmsResourceInit {
@@ -69,11 +71,11 @@ public class CmsDetailPageResourceHandler implements I_CmsResourceInit {
     }
 
     /**
-     * Returns the current detail content UID, or <code>null</code> if this is not a request to a content detail page.<p>
-     * 
+     * Returns the current detail content UUID, or <code>null</code> if this is not a request to a content detail page.<p>
+     *
      * @param req the current request
-     * 
-     * @return the current detail content UID, or <code>null</code> if this is not a request to a content detail page
+     *
+     * @return the current detail content UUID, or <code>null</code> if this is not a request to a content detail page
      */
     public static CmsUUID getDetailId(ServletRequest req) {
 
@@ -83,9 +85,9 @@ public class CmsDetailPageResourceHandler implements I_CmsResourceInit {
 
     /**
      * Returns the current detail content resource, or <code>null</code> if this is not a request to a content detail page.<p>
-     * 
+     *
      * @param req the current request
-     * 
+     *
      * @return the current detail content resource, or <code>null</code> if this is not a request to a content detail page
      */
     public static CmsResource getDetailResource(ServletRequest req) {
@@ -96,28 +98,30 @@ public class CmsDetailPageResourceHandler implements I_CmsResourceInit {
     /**
      * @see org.opencms.main.I_CmsResourceInit#initResource(org.opencms.file.CmsResource, org.opencms.file.CmsObject, javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
      */
-    public CmsResource initResource(CmsResource resource, CmsObject cms, HttpServletRequest req, HttpServletResponse res)
+    public CmsResource initResource(
+        CmsResource resource,
+        CmsObject cms,
+        HttpServletRequest req,
+        HttpServletResponse res)
     throws CmsResourceInitException, CmsSecurityException {
 
-        // check if the resource was already found
-        boolean abort = (resource != null);
-        // check if the resource comes from the /system/ folder
-        abort |= cms.getRequestContext().getUri().startsWith(CmsWorkplace.VFS_PATH_SYSTEM);
+        // check if the resource was already found or the path starts with '/system/'
+        boolean abort = (resource != null) || cms.getRequestContext().getUri().startsWith(CmsWorkplace.VFS_PATH_SYSTEM);
         if (abort) {
-            // skip in all cases above 
+            // skip in all cases above
             return resource;
         }
         String path = cms.getRequestContext().getUri();
         path = CmsFileUtil.removeTrailingSeparator(path);
         try {
-            cms.readResource(path);
+            cms.readResource(path, CmsResourceFilter.IGNORE_EXPIRATION);
         } catch (CmsSecurityException e) {
             // It may happen that a path is both an existing VFS path and a valid detail page link.
             // If this is the case, and the user has insufficient permissions to read the resource at the path,
-            // no resource should be displayed, even if the user would have access to the detail page. 
+            // no resource should be displayed, even if the user would have access to the detail page.
             return null;
         } catch (CmsException e) {
-            // ignore 
+            // ignore
         }
         String detailName = CmsResource.getName(path);
         try {
@@ -125,7 +129,7 @@ public class CmsDetailPageResourceHandler implements I_CmsResourceInit {
 
             if (detailId != null) {
                 // check existence / permissions
-                CmsResource detailRes = cms.readResource(detailId);
+                CmsResource detailRes = cms.readResource(detailId, CmsResourceFilter.ignoreExpirationOffline(cms));
                 // change OpenCms request URI to detail page
                 CmsResource detailPage = cms.readDefaultFile(CmsResource.getFolderPath(path));
                 if (!isValidDetailPage(cms, detailPage, detailRes)) {
@@ -134,6 +138,7 @@ public class CmsDetailPageResourceHandler implements I_CmsResourceInit {
                 if (res != null) {
                     // response will be null if this run through the init handler is only for determining the locale
                     req.setAttribute(ATTR_DETAIL_CONTENT_RESOURCE, detailRes);
+                    cms.getRequestContext().setDetailResource(detailRes);
                 }
                 // set the resource path
                 cms.getRequestContext().setUri(cms.getSitePath(detailPage));
@@ -156,16 +161,25 @@ public class CmsDetailPageResourceHandler implements I_CmsResourceInit {
 
     /**
      * Checks whether the given detail page is valid for the given resource.<p>
-     * 
+     *
      * @param cms the CMS context
-     * @param page the detail page 
+     * @param page the detail page
      * @param detailRes the detail resource
-     * 
-     * @return true if the given detail page is valid 
+     *
+     * @return true if the given detail page is valid
      */
     protected boolean isValidDetailPage(CmsObject cms, CmsResource page, CmsResource detailRes) {
 
+        if (OpenCms.getSystemInfo().isRestrictDetailContents()) {
+            // in 'restrict detail contents mode', do not allow detail contents from a real site on a detail page of a different real site
+            CmsSite pageSite = OpenCms.getSiteManager().getSiteForRootPath(page.getRootPath());
+            CmsSite detailSite = OpenCms.getSiteManager().getSiteForRootPath(detailRes.getRootPath());
+            if ((pageSite != null)
+                && (detailSite != null)
+                && !pageSite.getSiteRoot().equals(detailSite.getSiteRoot())) {
+                return false;
+            }
+        }
         return OpenCms.getADEManager().isDetailPage(cms, page);
     }
-
 }

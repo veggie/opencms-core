@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,6 +29,7 @@ package org.opencms.setup.xml;
 
 import org.opencms.i18n.CmsEncoder;
 import org.opencms.setup.CmsSetupBean;
+import org.opencms.setup.CmsUpdateInfo;
 import org.opencms.util.CmsStringUtil;
 
 import java.util.ArrayList;
@@ -40,8 +41,8 @@ import java.util.Map;
 
 /**
  * Manages all changes to be made to xml configuration files.<p>
- * 
- * @since 6.1.8 
+ *
+ * @since 6.1.8
  */
 public class CmsSetupXmlManager {
 
@@ -64,9 +65,9 @@ public class CmsSetupXmlManager {
 
     /**
      * Executes all user selected plugins.<p>
-     * 
+     *
      * @param setupBean the setup bean
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     public void execute(CmsSetupBean setupBean) throws Exception {
@@ -86,7 +87,7 @@ public class CmsSetupXmlManager {
 
     /**
      * Returns the plugins.<p>
-     * 
+     *
      * @return a map of [filenames, list of plugins]
      */
     public Map<String, List<I_CmsSetupXmlUpdate>> getPlugins() {
@@ -96,11 +97,11 @@ public class CmsSetupXmlManager {
 
     /**
      * Returns html for displaying a plugin selection box.<p>
-     * 
+     *
      * @param setupBean the setup bean
-     * 
+     *
      * @return html code
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     public String htmlAvailablePlugins(CmsSetupBean setupBean) throws Exception {
@@ -129,10 +130,10 @@ public class CmsSetupXmlManager {
 
     /**
      * Initializes the plug-ins.<p>
-     * 
+     *
      * @param detectedVersion detected mayor version
      */
-    public void initialize(int detectedVersion) {
+    public void initialize(double detectedVersion) {
 
         m_selectedPlugins = new ArrayList<String>();
         m_plugins = new ArrayList<I_CmsSetupXmlUpdate>();
@@ -165,9 +166,7 @@ public class CmsSetupXmlManager {
         // search
         m_plugins.add(new org.opencms.setup.xml.v7.CmsXmlRemovePageSearchIndexSource1());
         m_plugins.add(new org.opencms.setup.xml.v7.CmsXmlRemoveSysSearchIndex());
-        m_plugins.add(new org.opencms.setup.xml.v7.CmsXmlAddDEHelpSearchIndex());
-
-        m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddADESearch());
+        m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddSolrSearch());
 
         // system
         m_plugins.add(new org.opencms.setup.xml.v7.CmsXmlRemoveResourceHandlers());
@@ -179,6 +178,8 @@ public class CmsSetupXmlManager {
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddTimezone());
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlUpdateFlexcache());
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddSharedFolderConfiguration());
+
+        m_plugins.add(new org.opencms.setup.xml.v10.CmsXmlAddRequestHandlers());
 
         // vfs
         m_plugins.add(new org.opencms.setup.xml.v7.CmsXmlRemoveResourceLoaders());
@@ -199,6 +200,7 @@ public class CmsSetupXmlManager {
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddWidgets());
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddCollectors());
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddTypeMappings());
+        m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlAddTranslationRules());
         //m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlUpdateSchemaTypes());
 
         // workplace
@@ -216,12 +218,25 @@ public class CmsSetupXmlManager {
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlUpdateContextMenuEntries());
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlChangeDefaultUpload());
         m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlUpdateExplorerTypes());
+        if (CmsUpdateInfo.INSTANCE.needToSetCategoryFolder()) {
+            m_plugins.add(new org.opencms.setup.xml.v8.CmsXmlSetCategoryFolder());
+        }
+
+        m_plugins.add(new org.opencms.setup.xml.v9.CmsXmlUpdateDefaultPermissions());
+        m_plugins.add(new org.opencms.setup.xml.v9.CmsXmlCleanUpSearchConfiguration());
+
+        m_plugins.add(new org.opencms.setup.xml.v9.CmsXmlUpdateContextMenuEntries());
+        m_plugins.add(new org.opencms.setup.xml.v10.CmsXmlUpdateFiletypeIcons());
+        m_plugins.add(new org.opencms.setup.xml.v10.CmsXmlChangeExplorerTypeAccess());
+        m_plugins.add(new org.opencms.setup.xml.v10.CmsXmlUpdateAvailabilityMenuEntries());
+        m_plugins.add(new org.opencms.setup.xml.v10.CmsXmlUpdatePreferences());
+
         setup();
     }
 
     /**
      * Bean property setter method user from the <code>step_5_xmlupdate.jsp</code>.<p>
-     * 
+     *
      * @param value the value to set
      */
     public void setSelectedPlugins(String value) {
@@ -231,13 +246,13 @@ public class CmsSetupXmlManager {
 
     /**
      * Generates html code for the given plugin at the given position.<p>
-     * 
+     *
      * @param plugin the plugin
      * @param pos the position
      * @param setupBean the setup bean
-     * 
+     *
      * @return html code
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     private String htmlPlugin(CmsSetupBean setupBean, I_CmsSetupXmlUpdate plugin, int pos) throws Exception {

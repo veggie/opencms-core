@@ -5,16 +5,15 @@
 	<ui:with field="images" type="org.opencms.gwt.client.ui.css.I_CmsImageBundle" />
 	<ui:with field="resources" type="org.opencms.gwt.client.ui.css.I_CmsLayoutBundle" />
 	<g:FlowPanel ui:field="m_panel" styleName="{resources.toolbarCss.toolbar}">
-		<cms:CmsToolbarNotificationWidget />
+		<cms:CmsNotificationWidget />
 		<g:FlowPanel styleName="{resources.toolbarCss.toolbarBackground}">
-			<g:HorizontalPanel styleName="{resources.toolbarCss.toolbarContent}" >
-				<g:cell horizontalAlignment="ALIGN_LEFT" verticalAlignment="ALIGN_MIDDLE">
-					<g:FlowPanel ui:field="m_buttonPanelLeft" styleName="{resources.toolbarCss.toolbarButtonsLeft}"></g:FlowPanel>
-			 	</g:cell>
-				<g:cell horizontalAlignment="ALIGN_RIGHT" verticalAlignment="ALIGN_MIDDLE">
-					<g:FlowPanel ui:field="m_buttonPanelRight" styleName="{resources.toolbarCss.toolbarButtonsRight}"></g:FlowPanel>
-				</g:cell>
-			</g:HorizontalPanel>
+			<g:FlowPanel styleName="{resources.toolbarCss.toolbarContent}" >
+				<g:HTMLPanel styleName="{resources.toolbarCss.toolbarCenter}">
+					<span class="{resources.toolbarCss.toolbarLogo}"></span>
+	  			</g:HTMLPanel>
+				<g:FlowPanel ui:field="m_buttonPanelLeft" styleName="{resources.toolbarCss.toolbarButtonsLeft}"></g:FlowPanel>
+			 	<g:FlowPanel ui:field="m_buttonPanelRight" styleName="{resources.toolbarCss.toolbarButtonsRight}"><cms:CmsQuickLauncher ui:field="m_quickLauncher" /><cms:CmsUserInfo ui:field="m_userInfo" /></g:FlowPanel>
+			</g:FlowPanel>
 		</g:FlowPanel>
 	</g:FlowPanel>
 </ui:UiBinder> 

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,7 +57,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestCreateWriteResource(String arg0) {
@@ -67,7 +67,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -112,7 +112,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test creation of invalid resources that have only dots in their name.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateDotnameResources() throws Throwable {
@@ -164,7 +164,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the create resource method for a folder.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateFolder() throws Throwable {
@@ -190,7 +190,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
         // state must be "new"
         assertState(cms, resourcename, CmsResource.STATE_NEW);
-        // date last modified 
+        // date last modified
         assertDateLastModifiedAfter(cms, resourcename, timestamp);
         // date created
         assertDateCreatedAfter(cms, resourcename, timestamp);
@@ -207,7 +207,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the create a folder again.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateFolderAgain() throws Throwable {
@@ -235,27 +235,30 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
         // delete resource and try again
         cms.deleteResource(resourcename, CmsResource.DELETE_PRESERVE_SIBLINGS);
+        // the resource needs to be published first
+        OpenCms.getPublishManager().publishResource(cms, resourcename);
+        OpenCms.getPublishManager().waitWhileRunning();
         cms.createResource(resourcename, CmsResourceTypeFolder.getStaticTypeId(), null, null);
 
         // ensure created resource is a folder
         assertIsFolder(cms, resourcename);
         // project must be current project
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
-        // state must be "changed"
-        assertState(cms, resourcename, CmsResource.STATE_CHANGED);
-        // date last modified 
+        // state must be "new"
+        assertState(cms, resourcename, CmsResource.STATE_NEW);
+        // date last modified
         assertDateLastModifiedAfter(cms, resourcename, timestamp);
         // the user last modified must be the current user
         assertUserLastModified(cms, resourcename, cms.getRequestContext().getCurrentUser());
         // date created
-        assertDateCreated(cms, resourcename, original.getDateCreated());
-        // the user created must be the original
-        assertUserCreated(cms, resourcename, cms.readUser(original.getUserCreated()));
+        assertDateCreatedAfter(cms, resourcename, timestamp);
+        // the user created must be the current
+        assertUserCreated(cms, resourcename, cms.getRequestContext().getCurrentUser());
 
         // compare id's
         CmsResource created = cms.readResource(resourcename);
-        if (!created.getResourceId().equals(original.getResourceId())) {
-            fail("A created folder that replaced a deleted folder must have the same resource id!");
+        if (created.getResourceId().equals(original.getResourceId())) {
+            fail("A created folder that replaced a deleted folder must not have the same resource id!");
         }
 
         // publish the project
@@ -268,7 +271,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the create resource method.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateResource() throws Throwable {
@@ -290,7 +293,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
         // state must be "new"
         assertState(cms, resourcename, CmsResource.STATE_NEW);
-        // date last modified 
+        // date last modified
         assertDateLastModifiedAfter(cms, resourcename, timestamp);
         // date created
         assertDateCreatedAfter(cms, resourcename, timestamp);
@@ -309,7 +312,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the create resource method for an already existing resource.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateResourceAgain() throws Throwable {
@@ -341,13 +344,16 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
         // delete resource and try again
         cms.deleteResource(resourcename, CmsResource.DELETE_PRESERVE_SIBLINGS);
+        // the resource needs to be published first
+        OpenCms.getPublishManager().publishResource(cms, resourcename);
+        OpenCms.getPublishManager().waitWhileRunning();
         cms.createResource(resourcename, CmsResourceTypePlain.getStaticTypeId(), content, null);
 
         // project must be current project
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
-        // state must be "changed"
-        assertState(cms, resourcename, CmsResource.STATE_CHANGED);
-        // date last modified 
+        // state must be "new"
+        assertState(cms, resourcename, CmsResource.STATE_NEW);
+        // date last modified
         assertDateLastModifiedAfter(cms, resourcename, timestamp);
         // the user last modified must be the current user
         assertUserLastModified(cms, resourcename, cms.getRequestContext().getCurrentUser());
@@ -374,7 +380,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the create resource method for jsp files without permissions.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateResourceJsp() throws Throwable {
@@ -403,7 +409,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test resource creation in a locked folder.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateResourceLockedFolder() throws Throwable {
@@ -437,7 +443,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the create resource method.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testCreateResourceWithSpecialChars() throws Throwable {
@@ -459,7 +465,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
         // state must be "new"
         assertState(cms, resourcename, CmsResource.STATE_NEW);
-        // date last modified 
+        // date last modified
         assertDateLastModifiedAfter(cms, resourcename, timestamp);
         // date created
         assertDateCreatedAfter(cms, resourcename, timestamp);
@@ -478,7 +484,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the import resource method with a folder.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testImportFolder() throws Throwable {
@@ -519,7 +525,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
         // state must be "new"
         assertState(cms, resourcename, CmsResource.STATE_NEW);
-        // date last modified 
+        // date last modified
         assertDateLastModified(cms, resourcename, timestamp);
         // date created
         assertDateCreated(cms, resourcename, timestamp);
@@ -536,7 +542,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the import resource method for an existing folder.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testImportFolderAgain() throws Throwable {
@@ -580,7 +586,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
         // state must be "new"
         assertState(cms, resourcename, CmsResource.STATE_CHANGED);
-        // date last modified 
+        // date last modified
         assertDateLastModified(cms, resourcename, timestamp);
         // the user last modified must be the current user
         assertUserLastModified(cms, resourcename, cms.getRequestContext().getCurrentUser());
@@ -597,7 +603,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the import resource method.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testImportResource() throws Throwable {
@@ -640,13 +646,13 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
         // state must be "new"
         assertState(cms, resourcename, CmsResource.STATE_NEW);
-        // date last modified 
+        // date last modified
         assertDateLastModified(cms, resourcename, timestamp);
         // date created
         assertDateCreated(cms, resourcename, timestamp);
         // the user last modified must be the current user
         assertUserLastModified(cms, resourcename, cms.getRequestContext().getCurrentUser());
-        // the content 
+        // the content
         assertContent(cms, resourcename, content);
 
         // publish the project
@@ -659,7 +665,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the import resource method.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testImportResourceAgain() throws Throwable {
@@ -706,7 +712,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         assertProject(cms, resourcename, cms.getRequestContext().getCurrentProject());
         // state must be "new"
         assertState(cms, resourcename, CmsResource.STATE_CHANGED);
-        // date last modified 
+        // date last modified
         assertDateLastModified(cms, resourcename, timestamp);
         // the user last modified must be the current user
         assertUserLastModified(cms, resourcename, cms.getRequestContext().getCurrentUser());
@@ -723,7 +729,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Test the import of a sibling.<p>
-     * 
+     *
      * @throws Throwable if something goes wrong
      */
     public void testImportSibling() throws Throwable {
@@ -735,7 +741,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
         CmsProperty prop2 = new CmsProperty(CmsPropertyDefinition.PROPERTY_DESCRIPTION, "The description", null);
         CmsProperty prop3 = new CmsProperty(CmsPropertyDefinition.PROPERTY_KEYWORDS, "The keywords", null);
 
-        List properties = new ArrayList();
+        List<CmsProperty> properties = new ArrayList<CmsProperty>();
         properties.add(prop1);
 
         String siblingname = "/folder1/test1.html";
@@ -883,7 +889,7 @@ public class TestCreateWriteResource extends OpenCmsTestCase {
 
     /**
      * Tests to overwrite invisible resource.<p>
-     * 
+     *
      * @throws Exception if the test fails
      */
     public void testOverwriteInvisibleResource() throws Exception {

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,7 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
@@ -90,7 +90,9 @@ function cmsCloseDialog(fieldId){
  * 
  * @return void
  */
-function cmsOpenDialog(title, dialogUrl, fieldId, height, width){
+function cmsOpenDialog(title, dialogUrl, fieldId){
+    var width = window.innerWidth;
+    var height = window.innerHeight;
 	var _dialogElementId="cms_dialog_"+fieldId;
 	if (!(document.getElementById(_dialogElementId))){
 	 // 'allowtransparency' attribute needs to be set for IE7+IE8, 
@@ -99,7 +101,7 @@ function cmsOpenDialog(title, dialogUrl, fieldId, height, width){
 	 var _iframe = $('<iframe '+ ($.browser.msie ? 'allowtransparency="true" ':'')+'src="'+dialogUrl+'" name="cms_iframe_' + fieldId+'" style="width: 100%; height: 100%; border: none;" scrolling="no" frameborder="0" framespacing="0"/>');
      var _iframeBox = $('<div/>').appendTo(document.body);
          _iframeBox.css({
-            'width': '100%',
+            'width': width+'px',
             'height': height+'px',
             'padding': '0px',
             'overflow': 'visible'
@@ -119,10 +121,11 @@ function cmsOpenDialog(title, dialogUrl, fieldId, height, width){
                _iframeBox.append(_iframe);
                _iframeBox.closest('.galleryDialog').css('overflow', 'visible');
             },
+            position: 'center',
             resizable: false,
             autoOpen: true,
-            width: width + 4 + ($.browser.msie ? 6 : 0),
-            height: height + ($.browser.msie ? 11 : -2)
+            width: width ,
+            height: height
          });
 	}
 }
@@ -190,7 +193,7 @@ function cmsOpenImagePreview(title, context, fieldId){
 	    }}).append(_previewImage).appendTo(document.body);
 		_imageBox.dialog({
             /** title: title, */
-	    dialogClass: 'galleryDialog hideCaption',
+	    dialogClass: 'imagePreview hideCaption',
             modal: true,
             zIndex: 99999,
             open: function(){
@@ -198,8 +201,8 @@ function cmsOpenImagePreview(title, context, fieldId){
             		_imageBox.css('width', _boxWidth);
             		_imageBox.parent().css('padding','2px');
             	}
-            	_imageBox.closest('.galleryDialog').css('overflow', 'visible');
-            	_imageBox.closest('.galleryDialog').css('margin-top', '20px');
+            	_imageBox.closest('.imagePreview').css('overflow', 'visible');
+            	_imageBox.closest('.imagePreview').css('margin-top', '20px');
             },
             close: function() {
 				_imageBox.dialog('destroy').remove();
@@ -215,12 +218,28 @@ function cmsOpenImagePreview(title, context, fieldId){
          });
 	 
 	     _previewImage.load(function() {
-	         _imageBox.dialog( "option", "position", 'center' );
+	         _cmsUpdateDialogPosition(_imageBox);
 	     });
 	}
 }
 
-
+function _cmsUpdateDialogPosition(dialogContent){
+    if ($.browser.msie && navigator.appVersion.match(/MSIE [6-8]./)){
+        var dialogHeight=dialogContent.height();
+        var dialogWidth=dialogContent.width();
+        var top=(document.body.clientHeight-dialogHeight)/2+document.body.scrollTop;
+        if (top<0){
+            top=0;
+        }
+        var left=(document.body.clientWidth-dialogWidth)/2+document.body.scrollLeft;
+        if (left<0){
+            left=0;
+        }
+        dialogContent.parent().css({"top": top+"px", "left": left+"px"});
+    }else{
+        dialogContent.dialog( "option", "position", "center" );
+    }
+}
 
 /**
  * Opens a modal preview dialog.<p>

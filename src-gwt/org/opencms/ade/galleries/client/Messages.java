@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,8 +30,8 @@ package org.opencms.ade.galleries.client;
 import org.opencms.gwt.client.util.CmsMessages;
 
 /**
- * Convenience class to access the localized messages of this OpenCms package.<p> 
- * 
+ * Convenience class to access the localized messages of this OpenCms package.<p>
+ *
  * @since 8.0.0
  */
 public final class Messages {
@@ -124,6 +124,18 @@ public final class Messages {
     public static final String GUI_IMAGE_HSPACE_0 = "GUI_IMAGE_HSPACE_0";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_IMAGE_INFO_DATE_LAST_CHANGED_0 = "GUI_IMAGE_INFO_DATE_LAST_CHANGED_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_IMAGE_INFO_DESCRIPTION_0 = "GUI_IMAGE_INFO_DESCRIPTION_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_IMAGE_INFO_DIMENSION_0 = "GUI_IMAGE_INFO_DIMENSION_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_IMAGE_INFO_LAST_CHANGED_BY_0 = "GUI_IMAGE_INFO_LAST_CHANGED_BY_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_IMAGE_INSERT_COPYRIGHT_0 = "GUI_IMAGE_INSERT_COPYRIGHT_0";
 
     /** Message constant for key in the resource bundle. */
@@ -179,6 +191,9 @@ public final class Messages {
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_PARAMS_LABEL_INCLUDING_EXPIRED_0 = "GUI_PARAMS_LABEL_INCLUDING_EXPIRED_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_PARAMS_LABEL_SCOPE_0 = "GUI_PARAMS_LABEL_SCOPE_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_PARAMS_LABEL_SEARCH_0 = "GUI_PARAMS_LABEL_SEARCH_0";
@@ -253,6 +268,9 @@ public final class Messages {
     public static final String GUI_PREVIEW_TAB_PROPERTIES_0 = "GUI_PREVIEW_TAB_PROPERTIES_0";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_PREVIEW_TITLE_0 = "GUI_PREVIEW_TITLE_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_PRIVIEW_BUTTON_NOT_EDITABLE_0 = "GUI_PRIVIEW_BUTTON_NOT_EDITABLE_0";
 
     /** Message constant for key in the resource bundle. */
@@ -262,7 +280,16 @@ public final class Messages {
     public static final String GUI_QUICK_FINDER_SEARCH_0 = "GUI_QUICK_FINDER_SEARCH_0";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_QUICK_FINDER_FILTER_0 = "GUI_QUICK_FINDER_FILTER_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_RESULT_BUTTON_DELETE_0 = "GUI_RESULT_BUTTON_DELETE_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_RESULT_NO_PARAMS_0 = "GUI_RESULT_NO_PARAMS_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_SCOPE_EVERYTHING_0 = "GUI_SCOPE_EVERYTHING_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_SCOPE_SHARED_0 = "GUI_SCOPE_SHARED_0";
@@ -281,6 +308,9 @@ public final class Messages {
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_SEARCH_SCOPE_0 = "GUI_SEARCH_SCOPE_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_SHOW_SYSTEM_TYPES_0 = "GUI_SHOW_SYSTEM_TYPES_0";
 
     /** Message constant for key in the resource bundle. */
     public static final String GUI_SORT_LABEL_DATELASTMODIFIED_ASC_0 = "GUI_SORT_LABEL_DATELASTMODIFIED_ASC_0";
@@ -352,6 +382,9 @@ public final class Messages {
     public static final String GUI_TAB_SEARCH_LANGUAGE_NOT_SEL_0 = "GUI_TAB_SEARCH_LANGUAGE_NOT_SEL_0";
 
     /** Message constant for key in the resource bundle. */
+    public static final String GUI_TAB_SEARCH_SEARCH_EXISTING_0 = "GUI_TAB_SEARCH_SEARCH_EXISTING_0";
+
+    /** Message constant for key in the resource bundle. */
     public static final String GUI_TAB_TITLE_CATEGORIES_0 = "GUI_TAB_TITLE_CATEGORIES_0";
 
     /** Message constant for key in the resource bundle. */
@@ -372,6 +405,18 @@ public final class Messages {
     /** Message constant for key in the resource bundle. */
     public static final String GUI_TAB_TITLE_VFS_0 = "GUI_TAB_TITLE_VFS_0";
 
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_TAB_TYPES_CREATE_NEW_0 = "GUI_TAB_TYPES_CREATE_NEW_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_VIEW_LABEL_BIG_ICONS_0 = "GUI_VIEW_LABEL_BIG_ICONS_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_VIEW_LABEL_DETAILS_0 = "GUI_VIEW_LABEL_DETAILS_0";
+
+    /** Message constant for key in the resource bundle. */
+    public static final String GUI_VIEW_LABEL_SMALL_ICONS_0 = "GUI_VIEW_LABEL_SMALL_ICONS_0";
+
     /** Name of the used resource bundle. */
     private static final String BUNDLE_NAME = "org.opencms.ade.galleries.clientmessages";
 
@@ -388,7 +433,7 @@ public final class Messages {
 
     /**
      * Returns an instance of this localized message accessor.<p>
-     * 
+     *
      * @return an instance of this localized message accessor
      */
     public static CmsMessages get() {
@@ -401,7 +446,7 @@ public final class Messages {
 
     /**
      * Returns the bundle name for this OpenCms package.<p>
-     * 
+     *
      * @return the bundle name for this OpenCms package
      */
     public String getBundleName() {

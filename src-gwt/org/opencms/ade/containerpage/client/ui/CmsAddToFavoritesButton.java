@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,14 +34,14 @@ import com.google.gwt.event.dom.client.ClickEvent;
 
 /**
  * Add to favorites button.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsAddToFavoritesButton extends A_CmsToolbarOptionButton {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param handler the container page handler
      */
     public CmsAddToFavoritesButton(CmsContainerpageHandler handler) {
@@ -60,6 +60,20 @@ public class CmsAddToFavoritesButton extends A_CmsToolbarOptionButton {
             button.disable("Can not add empty element to favorites.");
         }
         return button;
+    }
+
+    /**
+     * @see org.opencms.ade.containerpage.client.ui.A_CmsToolbarOptionButton#isOptionAvailable(org.opencms.ade.containerpage.client.ui.CmsContainerPageElementPanel)
+     */
+    @Override
+    public boolean isOptionAvailable(CmsContainerPageElementPanel element) {
+
+        try {
+            element.getStructureId();
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /**

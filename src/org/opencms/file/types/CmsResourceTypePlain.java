@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,18 +47,16 @@ import java.util.Set;
 
 /**
  * Resource type descriptor for the type "plain".<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsResourceTypePlain extends A_CmsResourceType {
 
-    /** Indicates that the static configuration of the resource type has been frozen. */
-    private static boolean m_staticFrozen;
-
-    /** The static type id of this resource type. */
+    /** Static type id. */
     private static int m_staticTypeId;
 
     /** The type id of this resource type. */
+    @SuppressWarnings("unused")
     private static final int RESOURCE_TYPE_ID = 1;
 
     /** The name of this resource type. */
@@ -73,13 +71,11 @@ public class CmsResourceTypePlain extends A_CmsResourceType {
     public CmsResourceTypePlain() {
 
         super();
-        m_typeId = RESOURCE_TYPE_ID;
-        m_typeName = RESOURCE_TYPE_NAME;
     }
 
     /**
      * Returns the static type id of this (default) resource type.<p>
-     * 
+     *
      * @return the static type id of this (default) resource type
      */
     public static int getStaticTypeId() {
@@ -89,7 +85,7 @@ public class CmsResourceTypePlain extends A_CmsResourceType {
 
     /**
      * Returns the static type name of this (default) resource type.<p>
-     * 
+     *
      * @return the static type name of this (default) resource type
      */
     public static String getStaticTypeName() {
@@ -127,7 +123,7 @@ public class CmsResourceTypePlain extends A_CmsResourceType {
     /**
      * A plain resource might appear as a sub-element in a JSP,
      * therefore it needs cache properties.<p>
-     * 
+     *
      * @see org.opencms.file.types.I_CmsResourceType#getCachePropertyDefault()
      */
     @Override
@@ -151,30 +147,10 @@ public class CmsResourceTypePlain extends A_CmsResourceType {
     @Override
     public void initConfiguration(String name, String id, String className) throws CmsConfigurationException {
 
-        if ((OpenCms.getRunLevel() > OpenCms.RUNLEVEL_2_INITIALIZING) && m_staticFrozen) {
-            // configuration already frozen
-            throw new CmsConfigurationException(Messages.get().container(
-                Messages.ERR_CONFIG_FROZEN_3,
-                this.getClass().getName(),
-                getStaticTypeName(),
-                new Integer(getStaticTypeId())));
+        super.initConfiguration(name, id, className);
+        if (name.equals(RESOURCE_TYPE_NAME)) {
+            m_staticTypeId = m_typeId;
         }
-
-        if (!RESOURCE_TYPE_NAME.equals(name)) {
-            // default resource type MUST have default name
-            throw new CmsConfigurationException(Messages.get().container(
-                Messages.ERR_INVALID_RESTYPE_CONFIG_NAME_3,
-                this.getClass().getName(),
-                RESOURCE_TYPE_NAME,
-                name));
-        }
-
-        // freeze the configuration
-        m_staticFrozen = true;
-
-        super.initConfiguration(RESOURCE_TYPE_NAME, id, className);
-        // set static members with values from the configuration        
-        m_staticTypeId = m_typeId;
     }
 
     /**
@@ -195,8 +171,11 @@ public class CmsResourceTypePlain extends A_CmsResourceType {
      * @see org.opencms.file.types.A_CmsResourceType#moveResource(org.opencms.file.CmsObject, org.opencms.db.CmsSecurityManager, org.opencms.file.CmsResource, java.lang.String)
      */
     @Override
-    public void moveResource(CmsObject cms, CmsSecurityManager securityManager, CmsResource resource, String destination)
-    throws CmsException, CmsIllegalArgumentException {
+    public void moveResource(
+        CmsObject cms,
+        CmsSecurityManager securityManager,
+        CmsResource resource,
+        String destination) throws CmsException, CmsIllegalArgumentException {
 
         Set<String> references = getReferencingStrongLinks(cms, resource);
         super.moveResource(cms, securityManager, resource, destination);
@@ -309,12 +288,12 @@ public class CmsResourceTypePlain extends A_CmsResourceType {
 
     /**
      * Returns a set of root paths of files that are including the given resource using the 'link.strong' macro.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param resource the resource to check
-     * 
+     *
      * @return the set of referencing paths
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     protected Set<String> getReferencingStrongLinks(CmsObject cms, CmsResource resource) throws CmsException {
@@ -329,7 +308,7 @@ public class CmsResourceTypePlain extends A_CmsResourceType {
 
     /**
      * Removes the referencing resources from the cache.<p>
-     * 
+     *
      * @param references the references to remove
      */
     protected void removeReferencingFromCache(Set<String> references) {

@@ -20,7 +20,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,44 +28,73 @@
 
 package org.opencms.ade.configuration;
 
-import org.opencms.ade.detailpage.CmsDetailPageInfo;
+import org.opencms.ade.configuration.formatters.CmsFormatterConfigurationCache;
 import org.opencms.db.CmsPublishedResource;
 import org.opencms.db.CmsResourceState;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
-import org.opencms.file.types.CmsResourceTypeXmlContainerPage;
+import org.opencms.file.CmsVfsResourceNotFoundException;
 import org.opencms.file.types.I_CmsResourceType;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
 import org.opencms.main.CmsRuntimeException;
+import org.opencms.main.OpenCms;
 import org.opencms.util.CmsStringUtil;
 import org.opencms.util.CmsUUID;
+import org.opencms.util.CmsWaitHandle;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Maps;
 
 /**
  * This is the internal cache class used for storing configuration data. It is not public because it is only meant
  * for internal use.<p>
- * 
+ *
  * It stores an instance of {@link CmsADEConfigData} for each active configuration file in the sitemap,
  * and a single instance which represents the merged configuration from all the modules. When a sitemap configuration
  * file is updated, only the single instance for that configuration file is updated, whereas if a module configuration file
  * is changed, the configuration of all modules will be read again.<p>
  */
-class CmsConfigurationCache {
+class CmsConfigurationCache implements I_CmsGlobalConfigurationCache {
+
+    /** ID which is used to signal that the complete configuration should be reloaded. */
+    public static final CmsUUID ID_UPDATE_ALL = CmsUUID.getConstantUUID("all");
+
+    /** ID which is used to signal that the element views should be updated. */
+    public static final CmsUUID ID_UPDATE_ELEMENT_VIEWS = CmsUUID.getConstantUUID("elementViews");
+
+    /** ID which is used to signal that the folder types should be updated. */
+    public static final CmsUUID ID_UPDATE_FOLDERTYPES = CmsUUID.getConstantUUID("foldertypes");
+
+    /** ID which is used to signal that the module configuration should be updated. */
+    public static final CmsUUID ID_UPDATE_MODULES = CmsUUID.getNullUUID();
+
+    public static final String SITEMAP_MASTER_CONFIG = "sitemap_master_config";
+
+    /** The interval at which the tasks which checks for configuration updates runs, in milliseconds. */
+    public static final int TASK_DELAY_MILLIS = 3 * 1000;
+
+    /** Debug flag. */
+    protected static boolean DEBUG;
 
     /** The log instance for this class. */
     private static final Log LOG = CmsLog.getLog(CmsConfigurationCache.class);
-
-    /** The key that is used for the map entry which indicates that the module configuration needs to be read. */
-    private static final String MODULE_CONFIG_KEY = "__MODULE_CONFIG_KEY__";
 
     /** The resource type for sitemap configurations. */
     protected I_CmsResourceType m_configType;
@@ -76,44 +105,104 @@ class CmsConfigurationCache {
     /** The CMS context used for reading configuration data. */
     private CmsObject m_cms;
 
-    /** The configuration files which have been changed but not read yet. */
-    private Map<String, CmsUUID> m_configurationsToRead = new HashMap<String, CmsUUID>();
+    /** Cache for keeping track of which pages are detail pages. */
+    private LoadingCache<CmsResource, Boolean> m_detailPageIdCache = CacheBuilder.newBuilder().expireAfterWrite(
+        60,
+        TimeUnit.MINUTES).maximumSize(30000).concurrencyLevel(8).build(new CacheLoader<CmsResource, Boolean>() {
 
-    /** The cached content types for folders. */
-    private Map<String, String> m_folderTypes = new HashMap<String, String>();
+            @SuppressWarnings("synthetic-access")
+            @Override
+            public Boolean load(CmsResource key) throws Exception {
 
-    /** The merged configuration from all the modules. */
-    private CmsADEConfigData m_moduleConfiguration;
+                if (m_state == null) {
+                    // this can only happen before the ADE manager is initialized
+                    return Boolean.FALSE;
+                }
+                try {
+                    return Boolean.valueOf(m_state.isDetailPage(m_cms, key));
+                } catch (Exception e) {
+                    LOG.error(e.getLocalizedMessage(), e);
+                    return Boolean.FALSE;
+                }
+            }
+        });
+
+    /** The element view resource type. */
+    private I_CmsResourceType m_elementViewType;
 
     /** A cache which stores resources' paths by their structure IDs. */
-    private Map<CmsUUID, String> m_pathCache = Collections.synchronizedMap(new HashMap<CmsUUID, String>());
+    private ConcurrentHashMap<CmsUUID, String> m_pathCache = new ConcurrentHashMap<CmsUUID, String>();
 
-    /** The configurations from the sitemap / VFS. */
-    private Map<String, CmsADEConfigData> m_siteConfigurations = new HashMap<String, CmsADEConfigData>();
+    /** The current configuration state (immutable). */
+    private volatile CmsADEConfigCacheState m_state;
 
-    /** 
-     * Creates a new cache instance.<p>
-     * 
-     * @param cms the CMS object used for reading the configuration data
-     * @param configType the sitemap configuration file type 
-     * @param moduleConfigType the module configuration file type 
+    /** Scheduled future which is used to cancel the scheduled task. */
+    private ScheduledFuture<?> m_taskFuture;
+
+    /**
+     *  A set of IDs which represent the configuration updates to perform. The IDs in this set
+     * are either the structure IDs of sitemap configurations to reload, or special IDs which
+     * are not structure IDs but signal e.g. that the complete configuration should be reloaded.
      */
-    public CmsConfigurationCache(CmsObject cms, I_CmsResourceType configType, I_CmsResourceType moduleConfigType) {
+    private CmsSynchronizedUpdateSet<CmsUUID> m_updateSet = new CmsSynchronizedUpdateSet<CmsUUID>();
+
+    /** A wait handle which is used for waiting until the update task has run (e.g. for testing purposes). */
+    private CmsWaitHandle m_waitHandle = new CmsWaitHandle();
+
+    /**
+     * Creates a new cache instance.<p>
+     *
+     * @param cms the CMS object used for reading the configuration data
+     * @param configType the sitemap configuration file type
+     * @param moduleConfigType the module configuration file type
+     * @param elementViewType the element view resource type
+     */
+    public CmsConfigurationCache(
+        CmsObject cms,
+        I_CmsResourceType configType,
+        I_CmsResourceType moduleConfigType,
+        I_CmsResourceType elementViewType) {
 
         m_cms = cms;
         m_configType = configType;
         m_moduleConfigType = moduleConfigType;
+        m_elementViewType = elementViewType;
+    }
+
+    /**
+     * Gets the base path for a given sitemap configuration file.<p>
+     *
+     * @param siteConfigFile the root path of the sitemap configuration file
+     *
+     * @return the base path for the sitemap configuration file
+     */
+    public static String getBasePath(String siteConfigFile) {
+
+        if (siteConfigFile.endsWith(CmsADEManager.CONFIG_SUFFIX)) {
+            return CmsResource.getParentFolder(CmsResource.getParentFolder(siteConfigFile));
+        }
+        return null;
+    }
+
+    /**
+     * @see org.opencms.ade.configuration.I_CmsGlobalConfigurationCache#clear()
+     */
+    public void clear() {
+
+        m_updateSet.add(ID_UPDATE_ALL);
+        m_detailPageIdCache.invalidateAll();
+        m_pathCache.clear();
     }
 
     /**
      * Looks up the root path for a given structure id.<p>
      *
      * This is used for correcting the paths of cached resource objects.<p>
-     * 
-     * @param structureId the structure id 
+     *
+     * @param structureId the structure id
      * @return the root path for the structure id
-     * 
-     * @throws CmsException if the resource with the given id was not found or another error occurred 
+     *
+     * @throws CmsException if the resource with the given id was not found or another error occurred
      */
     public String getPathForStructureId(CmsUUID structureId) throws CmsException {
 
@@ -126,315 +215,155 @@ class CmsConfigurationCache {
         return res.getRootPath();
     }
 
-    /** 
-     * Gets the base path for a given sitemap configuration file.<p>
-     * 
-     * @param siteConfigFile the root path of the sitemap configuration file
-     *  
-     * @return the base path for the sitemap configuration file 
+    /**
+     * Gets the currently cached configuration state.<p>
+     *
+     * @return the currently cached configuration state
      */
-    protected String getBasePath(String siteConfigFile) {
+    public CmsADEConfigCacheState getState() {
 
-        if (siteConfigFile.endsWith(CmsADEManager.CONFIG_SUFFIX)) {
-            return CmsResource.getParentFolder(CmsResource.getParentFolder(siteConfigFile));
-        }
-        return siteConfigFile;
+        return m_state;
     }
 
     /**
-     * Gets all the detail pages for a given type.<p>
-     * 
-     * @param type the name of the type 
-     * 
-     * @return the detail pages for that type 
+     * Gets the wait handle which can be used to wait until the update task has run.<p>
+     *
+     * @return the wait handle
      */
-    protected synchronized List<String> getDetailPages(String type) {
+    public CmsWaitHandle getWaitHandleForUpdateTask() {
 
-        readRemainingConfigurations();
-        List<String> result = new ArrayList<String>();
-        for (CmsADEConfigData configData : m_siteConfigurations.values()) {
-            for (CmsDetailPageInfo pageInfo : configData.getDetailPagesForType(type)) {
-                result.add(pageInfo.getUri());
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Gets the merged module configuration.<p>
-     * @return the merged module configuration instance
-     */
-    protected synchronized CmsADEConfigData getModuleConfiguration() {
-
-        return m_moduleConfiguration;
-    }
-
-    /**
-     * Helper method to retrieve the parent folder type.<p>
-     * 
-     * @param rootPath the path of a resource 
-     * @return the parent folder content type 
-     */
-    protected synchronized String getParentFolderType(String rootPath) {
-
-        readRemainingConfigurations();
-        String parent = CmsResource.getParentFolder(rootPath);
-        if (parent == null) {
-            return null;
-        }
-        String type = m_folderTypes.get(parent);
-        if (type == null) {
-            return null;
-        }
-        return type;
-    }
-
-    /**
-     * Helper method for getting the best matching sitemap configuration object for a given root path, ignoring the module 
-     * configuration.<p>
-     * 
-     * For example, if there are configurations available for the paths /a, /a/b/c, /a/b/x and /a/b/c/d/e, then 
-     * the method will return the configuration object for /a/b/c when passed the path /a/b/c/d.
-     * 
-     * If no configuration data is found for the path, null will be returned.<p> 
-     * 
-     * @param path a root path  
-     * @return the configuration data for the given path, or null if none was found 
-     */
-    protected synchronized CmsADEConfigData getSiteConfigData(String path) {
-
-        if (path == null) {
-            return null;
-        }
-        readRemainingConfigurations();
-        String normalizedPath = CmsStringUtil.joinPaths("/", path, "/");
-        List<String> prefixes = new ArrayList<String>();
-        for (String key : m_siteConfigurations.keySet()) {
-            if (normalizedPath.startsWith(CmsStringUtil.joinPaths("/", key, "/"))) {
-                prefixes.add(key);
-            }
-        }
-        if (prefixes.size() == 0) {
-            return null;
-        }
-        Collections.sort(prefixes);
-        // for any two prefixes of a string, one is a prefix of the other. so the alphabetically last
-        // prefix is the longest prefix of all.
-        return m_siteConfigurations.get(prefixes.get(prefixes.size() - 1));
+        return m_waitHandle;
     }
 
     /**
      * Initializes the cache by reading in all the configuration files.<p>
      */
-    protected synchronized void initialize() {
+    public void initialize() {
 
-        m_siteConfigurations.clear();
-        try {
-            List<CmsResource> configFileCandidates = m_cms.readResources(
-                "/",
-                CmsResourceFilter.DEFAULT.addRequireType(m_configType.getTypeId()));
-            for (CmsResource candidate : configFileCandidates) {
-                if (isSitemapConfiguration(candidate.getRootPath(), candidate.getTypeId())) {
-                    update(candidate);
-                }
+        if (m_taskFuture != null) {
+            // in case initialize has been called before on this object, cancel the existing task
+            m_taskFuture.cancel(false);
+            m_taskFuture = null;
+        }
+        m_state = readCompleteConfiguration();
+        // In debug mode, use a shorter delay to speed up the test cases
+        long delay = DEBUG ? 500 : TASK_DELAY_MILLIS;
+        m_taskFuture = OpenCms.getExecutor().scheduleWithFixedDelay(new Runnable() {
+
+            public void run() {
+
+                performUpdate();
             }
-        } catch (Exception e) {
-            LOG.error(e.getLocalizedMessage(), e);
-        }
-        refreshModuleConfiguration();
-        try {
-            initializeFolderTypes();
-        } catch (Exception e) {
-            LOG.error(e.getLocalizedMessage(), e);
-        }
-
+        }, delay, delay, TimeUnit.MILLISECONDS);
     }
 
     /**
-     * Initializes the cached folder types.<p>
-     * 
-     * @throws CmsException if something goes wrong 
+     * Checks if the given resource is a detail page.<p>
+     * Delegates the actual work to the cache state, but also caches the result.<p>
+     *
+     * @param cms the current CMS context
+     * @param resource the resource to check
+     * @return true if the given resource is a detail page
      */
-    protected synchronized void initializeFolderTypes() throws CmsException {
+    public boolean isDetailPage(CmsObject cms, CmsResource resource) {
 
-        LOG.info("Computing folder types for detail pages...");
-        m_folderTypes.clear();
-        List<CmsADEConfigData> configDataObjects = new ArrayList<CmsADEConfigData>(m_siteConfigurations.values());
-        for (CmsADEConfigData configData : configDataObjects) {
-            Map<String, String> folderTypes = configData.getFolderTypes();
-            m_folderTypes.putAll(folderTypes);
-        }
-        if (m_moduleConfiguration != null) {
-            Map<String, String> folderTypes = m_moduleConfiguration.getFolderTypes();
-            m_folderTypes.putAll(folderTypes);
+        try {
+            boolean result = m_detailPageIdCache.get(resource).booleanValue();
+            if (!result) {
+                // We want new detail pages to be available fast, so we don't cache negative results
+                m_detailPageIdCache.invalidate(resource);
+            }
+            return result;
+        } catch (ExecutionException e) {
+            LOG.error(e.getLocalizedMessage(), e);
+            return true;
         }
     }
 
     /**
-     * Checks whether the given resource is configured as a detail page.<p>
-     * 
-     * @param cms the current CMS context  
-     * @param resource the resource to test 
-     * 
-     * @return true if the resource is configured as a detail page 
+     * Reads the complete configuration (sitemap and module configurations).<p>
+     *
+     * @return an object representing the currently active configuration
      */
-    protected synchronized boolean isDetailPage(CmsObject cms, CmsResource resource) {
+    public CmsADEConfigCacheState readCompleteConfiguration() {
 
-        readRemainingConfigurations();
-        CmsResource folder;
-        if (resource.isFile()) {
-            if (!CmsResourceTypeXmlContainerPage.isContainerPage(resource)) {
-                return false;
-            }
+        long beginTime = System.currentTimeMillis();
+        Map<CmsUUID, CmsADEConfigDataInternal> siteConfigurations = Maps.newHashMap();
+        if (m_cms.existsResource("/")) {
             try {
-                folder = m_cms.readResource(CmsResource.getParentFolder(resource.getRootPath()));
-            } catch (CmsException e) {
-                LOG.error(e.getLocalizedMessage(), e);
-                return false;
-            }
-        } else {
-            folder = resource;
-        }
-        List<CmsDetailPageInfo> allDetailPages = new ArrayList<CmsDetailPageInfo>();
-        // First collect all detail page infos 
-        for (CmsADEConfigData configData : m_siteConfigurations.values()) {
-            List<CmsDetailPageInfo> detailPageInfos = configData.getAllDetailPages();
-            allDetailPages.addAll(detailPageInfos);
-        }
-        // First pass: check if the structure id or path directly match one of the configured detail pages.
-        for (CmsDetailPageInfo info : allDetailPages) {
-            if (folder.getStructureId().equals(info.getId())
-                || folder.getRootPath().equals(info.getUri())
-                || resource.getStructureId().equals(info.getId())
-                || resource.getRootPath().equals(info.getUri())) {
-                return true;
-            }
-        }
-        // Second pass: configured detail pages may be actual container pages rather than folders 
-        String normalizedFolderRootPath = CmsStringUtil.joinPaths(folder.getRootPath(), "/");
-        for (CmsDetailPageInfo info : allDetailPages) {
-            String parentPath = CmsResource.getParentFolder(info.getUri());
-            String normalizedParentPath = CmsStringUtil.joinPaths(parentPath, "/");
-            if (normalizedParentPath.equals(normalizedFolderRootPath)) {
-                try {
-                    CmsResource infoResource = m_cms.readResource(info.getId());
-                    if (infoResource.isFile()) {
-                        return true;
-                    }
-                } catch (CmsException e) {
-                    LOG.warn(e.getLocalizedMessage(), e);
+                List<CmsResource> configFileCandidates = m_cms.readResources(
+                    "/",
+                    CmsResourceFilter.DEFAULT.addRequireType(m_configType.getTypeId()));
+                if (OpenCms.getResourceManager().hasResourceType(SITEMAP_MASTER_CONFIG)) {
+                    List<CmsResource> masterCandidates = m_cms.readResources(
+                        "/",
+                        CmsResourceFilter.DEFAULT.addRequireType(
+                            OpenCms.getResourceManager().getResourceType(SITEMAP_MASTER_CONFIG)));
+                    configFileCandidates.addAll(masterCandidates);
                 }
+                for (CmsResource candidate : configFileCandidates) {
+                    if (isSitemapConfiguration(candidate.getRootPath(), candidate.getTypeId())) {
+                        try {
+                            CmsConfigurationReader reader = new CmsConfigurationReader(m_cms);
+                            String basePath = getBasePath(candidate.getRootPath());
+                            CmsADEConfigDataInternal data = reader.parseSitemapConfiguration(basePath, candidate);
+                            siteConfigurations.put(candidate.getStructureId(), data);
+                        } catch (Exception e) {
+                            LOG.error(
+                                "Error processing sitemap configuration "
+                                    + candidate.getRootPath()
+                                    + ": "
+                                    + e.getLocalizedMessage(),
+                                e);
+                        }
+
+                    }
+                }
+            } catch (Exception e) {
+                LOG.error(e.getLocalizedMessage(), e);
             }
         }
-        return false;
-    }
+        List<CmsADEConfigDataInternal> moduleConfigs = loadModuleConfiguration();
+        Map<CmsUUID, CmsElementView> elementViews = loadElementViews();
+        CmsADEConfigCacheState result = new CmsADEConfigCacheState(
+            m_cms,
+            siteConfigurations,
+            moduleConfigs,
+            elementViews);
+        long endTime = System.currentTimeMillis();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("readCompleteConfiguration took " + (endTime - beginTime) + "ms");
+        }
+        return result;
 
-    /**
-     * Checks whether the given path/type combination belongs to a module configuration file.<p>
-     * 
-     * @param rootPath the root path of the resource 
-     * @param type the type id of the resource 
-     * 
-     * @return true if the path/type combination belongs to a module configuration 
-     */
-    protected boolean isModuleConfiguration(String rootPath, int type) {
-
-        return type == m_moduleConfigType.getTypeId();
-    }
-
-    /** 
-     * Returns true if this an online configuration cache.<p>
-     * 
-     * @return true if this is an online cache, false if it is an offline cache 
-     */
-    protected boolean isOnline() {
-
-        return m_cms.getRequestContext().getCurrentProject().isOnlineProject();
-    }
-
-    /**
-     * Checks whether the given path/type combination belongs to a sitemap configuration.<p> 
-     * 
-     * @param rootPath the root path 
-     * @param type the resource type id 
-     * 
-     * @return true if the path/type belong to an active sitemap configuration 
-     */
-    protected boolean isSitemapConfiguration(String rootPath, int type) {
-
-        return rootPath.endsWith(CmsADEManager.CONFIG_SUFFIX) && (type == m_configType.getTypeId());
-    }
-
-    /**
-     * Reloads the module configuration.<p>
-     */
-    protected synchronized void refreshModuleConfiguration() {
-
-        LOG.info("Refreshing module configuration.");
-        CmsConfigurationReader reader = new CmsConfigurationReader(m_cms);
-        m_moduleConfiguration = reader.readModuleConfigurations();
-        m_moduleConfiguration.initialize(m_cms);
     }
 
     /**
      * Removes a published resource from the cache.<p>
-     * 
-     * @param res the published resource 
+     *
+     * @param res the published resource
      */
-    protected void remove(CmsPublishedResource res) {
+    public void remove(CmsPublishedResource res) {
 
         remove(res.getStructureId(), res.getRootPath(), res.getType());
     }
 
     /**
      * Removes a resource from the cache.<p>
-     * 
-     * @param res the resource to remove 
+     *
+     * @param res the resource to remove
      */
-    protected void remove(CmsResource res) {
+    public void remove(CmsResource res) {
 
         remove(res.getStructureId(), res.getRootPath(), res.getTypeId());
     }
 
     /**
-     * Removes the cache entry for the given resource data.<p>
-     * 
-     * @param structureId the resource structure id 
-     * @param rootPath the resource root path 
-     * @param type the resource type 
-     */
-    protected void remove(CmsUUID structureId, String rootPath, int type) {
-
-        if (CmsResource.isTemporaryFileName(rootPath)) {
-            return;
-        }
-        try {
-            updateFolderTypes(rootPath);
-        } catch (CmsException e) {
-            LOG.error(e.getLocalizedMessage(), e);
-        }
-        m_pathCache.remove(structureId);
-        if (isSitemapConfiguration(rootPath, type)) {
-            synchronized (this) {
-                String basePath = getBasePath(rootPath);
-                removePath(basePath);
-                LOG.info("Removing config file from cache: " + rootPath);
-            }
-        } else if (isModuleConfiguration(rootPath, type)) {
-            LOG.info("Removing module configuration " + rootPath);
-            synchronized (this) {
-                m_configurationsToRead.put(MODULE_CONFIG_KEY, CmsUUID.getNullUUID());
-            }
-        }
-
-    }
-
-    /**
      * Updates the cache entry for the given published resource.<p>
-     * 
+     *
      * @param res a published resource
      */
-    protected void update(CmsPublishedResource res) {
+    public void update(CmsPublishedResource res) {
 
         try {
             update(res.getStructureId(), res.getRootPath(), res.getType(), res.getState());
@@ -444,12 +373,12 @@ class CmsConfigurationCache {
         }
     }
 
-    /** 
+    /**
      * Updates the cache entry for the given resource.<p>
-     * 
+     *
      * @param res the resource for which the cache entry should be updated
      */
-    protected void update(CmsResource res) {
+    public void update(CmsResource res) {
 
         try {
             update(res.getStructureId(), res.getRootPath(), res.getTypeId(), res.getState());
@@ -459,116 +388,262 @@ class CmsConfigurationCache {
         }
     }
 
+    protected boolean isMacroFormatter(int type, String rootPath) {
+
+        boolean result = false;
+        try {
+            I_CmsResourceType resType = OpenCms.getResourceManager().getResourceType(type);
+            result = CmsFormatterConfigurationCache.TYPE_MACRO_FORMATTER.equals(resType.getTypeName())
+                && CmsResource.getParentFolder(rootPath).endsWith("/.content/.formatters");
+        } catch (Exception e) {
+            LOG.debug(e.getMessage(), e);
+        }
+        return result;
+    }
+
     /**
-     * Updates the cache entry for the given resource data.<p>
-     * 
-     * @param structureId the structure id of the resource  
-     * @param rootPath the root path of the resource 
-     * @param type the type id of the resource 
-     * @param state the state of the resource 
+     * Checks whether the given path/type combination belongs to a module configuration file.<p>
+     *
+     * @param rootPath the root path of the resource
+     * @param type the type id of the resource
+     *
+     * @return true if the path/type combination belongs to a module configuration
      */
-    protected void update(CmsUUID structureId, String rootPath, int type, CmsResourceState state) {
+    protected boolean isModuleConfiguration(String rootPath, int type) {
+
+        return type == m_moduleConfigType.getTypeId();
+    }
+
+    /**
+     * Returns true if this an online configuration cache.<p>
+     *
+     * @return true if this is an online cache, false if it is an offline cache
+     */
+    protected boolean isOnline() {
+
+        return m_cms.getRequestContext().getCurrentProject().isOnlineProject();
+    }
+
+    /**
+     * Checks whether the given path/type combination belongs to a sitemap configuration.<p>
+     *
+     * @param rootPath the root path
+     * @param type the resource type id
+     *
+     * @return true if the path/type belong to an active sitemap configuration
+     */
+    protected boolean isSitemapConfiguration(String rootPath, int type) {
+
+        if (type == m_configType.getTypeId()) {
+            return rootPath.endsWith(CmsADEManager.CONFIG_SUFFIX);
+        } else {
+            return OpenCms.getResourceManager().matchResourceType(SITEMAP_MASTER_CONFIG, type);
+        }
+    }
+
+    /**
+     * Loads the available element views.<p>
+     *
+     * @return the element views
+     */
+    protected Map<CmsUUID, CmsElementView> loadElementViews() {
+
+        List<CmsElementView> views = new ArrayList<CmsElementView>();
+        views.add(CmsElementView.DEFAULT_ELEMENT_VIEW);
+        try {
+            CmsResourceFilter filter = CmsResourceFilter.ONLY_VISIBLE_NO_DELETED.addRequireType(
+                m_elementViewType.getTypeId());
+            List<CmsResource> groups = m_cms.readResources("/", filter);
+            for (CmsResource res : groups) {
+                try {
+                    views.add(new CmsElementView(m_cms, res));
+                } catch (Exception e) {
+                    LOG.error(e.getMessage(), e);
+                }
+            }
+        } catch (CmsException e) {
+            LOG.error(e.getLocalizedMessage(), e);
+        }
+        Collections.sort(views, new CmsElementView.ElementViewComparator());
+        Map<CmsUUID, CmsElementView> elementViews = new LinkedHashMap<CmsUUID, CmsElementView>();
+        for (CmsElementView view : views) {
+            elementViews.put(view.getId(), view);
+        }
+        return elementViews;
+    }
+
+    /**
+     * Loads a list of module configurations from the VFS.<p>
+     *
+     * @return the module configurations
+     */
+    protected List<CmsADEConfigDataInternal> loadModuleConfiguration() {
+
+        if (m_cms.existsResource("/")) {
+            CmsConfigurationReader reader = new CmsConfigurationReader(m_cms);
+            List<CmsADEConfigDataInternal> moduleConfigs = reader.readModuleConfigurations();
+            return moduleConfigs;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Checks if any configuration updates are required, and performs them if necessary.<p>
+     *
+     * This should only be called from the scheduled update task.<p>
+     */
+    protected void performUpdate() {
+
+        // Wrap a try-catch around everything, because an escaping exception would cancel the task from which this is called
+        try {
+            Set<CmsUUID> updateIds = m_updateSet.removeAll();
+            CmsADEConfigCacheState oldState = m_state;
+            if (!updateIds.isEmpty() || (oldState == null)) {
+                try {
+                    // Although  the updates are performed in a scheduled task, it is still possible
+                    // that the task is scheduled immediately after a configuration update event. So
+                    // here we ensure that there is at least a small delay between the event and the
+                    // actual update. This is required to prevent problems with other caches.
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+                if (updateIds.contains(ID_UPDATE_ALL) || (oldState == null)) {
+                    m_state = readCompleteConfiguration();
+                } else {
+                    boolean updateModules = updateIds.remove(ID_UPDATE_MODULES);
+                    boolean updateElementViews = updateIds.remove(ID_UPDATE_ELEMENT_VIEWS);
+                    updateIds.remove(ID_UPDATE_FOLDERTYPES); // folder types are always updated when the update set is not empty, so at this point we don't care whether the id for folder type updates actually is in the update set
+                    Map<CmsUUID, CmsADEConfigDataInternal> updateMap = Maps.newHashMap();
+                    for (CmsUUID structureId : updateIds) {
+                        CmsADEConfigDataInternal sitemapConfig = parseSitemapConfiguration(structureId);
+                        // sitemapConfig may be null at this point
+                        updateMap.put(structureId, sitemapConfig);
+                    }
+                    List<CmsADEConfigDataInternal> moduleConfigs = null;
+                    if (updateModules) {
+                        moduleConfigs = loadModuleConfiguration();
+                    }
+                    Map<CmsUUID, CmsElementView> elementViews = null;
+                    if (updateElementViews) {
+                        elementViews = loadElementViews();
+                    }
+                    m_state = oldState.createUpdatedCopy(updateMap, moduleConfigs, elementViews);
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("Could not perform configuration cache update: " + e.getMessage(), e);
+        }
+        m_waitHandle.release();
+    }
+
+    /**
+     * Removes the cache entry for the given resource data.<p>
+     *
+     * @param structureId the resource structure id
+     * @param rootPath the resource root path
+     * @param type the resource type
+     */
+    protected void remove(CmsUUID structureId, String rootPath, int type) {
 
         if (CmsResource.isTemporaryFileName(rootPath)) {
             return;
         }
-
-        try {
-            updateFolderTypes(rootPath);
-        } catch (CmsException e) {
-            LOG.error(e.getLocalizedMessage(), e);
-        }
-        synchronized (m_pathCache) {
-            m_pathCache.remove(structureId);
-            m_pathCache.put(structureId, rootPath);
-        }
+        m_pathCache.remove(structureId);
         if (isSitemapConfiguration(rootPath, type)) {
-            synchronized (this) {
-                // Do not update the configuration right now, because reading configuration files while handling 
-                // an event may lead to cache problems. Instead, the configuration file is read when the configuration
-                // is queried.
-                LOG.info("Changed configuration file " + rootPath + "(" + structureId + "), will be read later");
-                m_configurationsToRead.put(rootPath, structureId);
-            }
+            m_updateSet.add(structureId);
         } else if (isModuleConfiguration(rootPath, type)) {
-            LOG.info("Changed module configuration file " + rootPath + "(" + structureId + ")");
-            synchronized (this) {
-                m_configurationsToRead.put(MODULE_CONFIG_KEY, CmsUUID.getNullUUID());
-            }
+            m_updateSet.add(ID_UPDATE_MODULES);
+        } else if (isElementView(type)) {
+            m_updateSet.add(ID_UPDATE_ELEMENT_VIEWS);
+        } else if (m_state.getFolderTypes().containsKey(rootPath)) {
+            m_updateSet.add(ID_UPDATE_FOLDERTYPES);
         }
     }
 
     /**
-    * Updates the cached folder types.<p>
-    * 
-    * @param rootPath the folder root path 
-    * @throws CmsException if something goes wrong 
-    */
-    protected synchronized void updateFolderTypes(String rootPath) throws CmsException {
-
-        if (m_folderTypes.containsKey(rootPath)) {
-            LOG.info("Updating folder types because of a change at " + rootPath);
-            synchronized (this) {
-                initializeFolderTypes();
-            }
-        }
-    }
-
-    /**
-     * Reads the configuration files which have changed but not been read yet.<p>
+     * Updates the cache entry for the given resource data.<p>
+     *
+     * @param structureId the structure id of the resource
+     * @param rootPath the root path of the resource
+     * @param type the type id of the resource
+     * @param resState the state of the resource
      */
-    private synchronized void readRemainingConfigurations() {
+    protected void update(CmsUUID structureId, String rootPath, int type, CmsResourceState resState) {
 
-        if (m_configurationsToRead.isEmpty()) {
-            // do not initialize folder types if there were no changes!
+        if (CmsResource.isTemporaryFileName(rootPath)) {
             return;
         }
-        for (Map.Entry<String, CmsUUID> entry : m_configurationsToRead.entrySet()) {
-            String rootPath = entry.getKey();
-            CmsUUID structureId = entry.getValue();
-            if (rootPath.equals(MODULE_CONFIG_KEY)) {
-                refreshModuleConfiguration();
-            } else {
-                try {
-                    // remove the original entry first, so that the configuration will be gone if reading the 
-                    // configuration file fails.
-                    m_siteConfigurations.remove(rootPath);
-                    CmsResource configRes = m_cms.readResource(structureId);
-                    CmsConfigurationReader reader = new CmsConfigurationReader(m_cms);
-                    LOG.info("Reading configuration file " + rootPath + "(" + structureId + ")");
-                    String basePath = getBasePath(rootPath);
-                    CmsADEConfigData configData = reader.parseSitemapConfiguration(basePath, configRes);
-                    configData.initialize(m_cms);
-                    m_siteConfigurations.put(basePath, configData);
-                } catch (CmsException e) {
-                    LOG.warn(e.getLocalizedMessage(), e);
-                } catch (CmsRuntimeException e) {
-                    LOG.warn(e.getLocalizedMessage(), e);
-                }
-            }
-        }
-        m_configurationsToRead.clear();
-        // Methods which recursively call this method must be called after this point,
-        // because it will lead to an infinite recursion otherwise.
+        m_pathCache.replace(structureId, rootPath);
+        if (isSitemapConfiguration(rootPath, type)) {
+            m_updateSet.add(structureId);
+        } else if (isModuleConfiguration(rootPath, type)) {
+            LOG.info("Changed module configuration file " + rootPath + "(" + structureId + ")");
+            m_updateSet.add(ID_UPDATE_MODULES);
+        } else if (isElementView(type)) {
+            m_updateSet.add(ID_UPDATE_ELEMENT_VIEWS);
+        } else if (m_state.getFolderTypes().containsKey(rootPath)) {
+            m_updateSet.add(ID_UPDATE_FOLDERTYPES);
+        } else if (isMacroFormatter(type, rootPath)) {
+            try {
+                String path = CmsResource.getParentFolder(CmsResource.getParentFolder(rootPath));
+                path = CmsStringUtil.joinPaths(path, ".config");
+                CmsResourceFilter filter = CmsResourceFilter.IGNORE_EXPIRATION;
+                if (m_cms.existsResource(path, filter)) {
 
-        try {
-            initializeFolderTypes();
-        } catch (CmsException e) {
-            LOG.warn(e.getLocalizedMessage(), e);
-        } catch (CmsRuntimeException e) {
-            LOG.warn(e.getLocalizedMessage(), e);
+                    CmsResource config = m_cms.readResource(path, filter);
+                    m_updateSet.add(config.getStructureId());
+                }
+            } catch (Exception e) {
+                LOG.warn(e.getMessage(), e);
+            }
         }
     }
 
     /**
-     * Remove a sitemap configuration from the cache by its base path.<p>
-     * 
-     * @param rootPath the base path for the sitemap configuration 
+     * Parses a sitemap configuration from a resource given its structure id, and either returns
+     * the parsed sitemap configuration, or null if reading or parsing the resource fails or if
+     * the resource is not a valid sitemap configuration.<p>
+     *
+     * @param id the structure id of a resource
+     * @return the sitemap configuration parsed from the resource, or null on failure
      */
-    private void removePath(String rootPath) {
+    CmsADEConfigDataInternal parseSitemapConfiguration(CmsUUID id) {
 
-        m_configurationsToRead.remove(rootPath);
-        m_siteConfigurations.remove(rootPath);
+        try {
+            CmsResource configResource = m_cms.readResource(id);
+            // Path or type may have changed in the meantime, so need to check if it's still a sitemap configuration
+            if (isSitemapConfiguration(configResource.getRootPath(), configResource.getTypeId())) {
+                CmsConfigurationReader reader = new CmsConfigurationReader(m_cms);
+                String basePath = getBasePath(configResource.getRootPath());
+                CmsADEConfigDataInternal result = reader.parseSitemapConfiguration(basePath, configResource);
+                return result;
+            } else {
+                LOG.info("Not a valid sitemap configuration anymore: " + configResource.getRootPath());
+                return null;
+            }
+        } catch (Exception e) {
+            if (e instanceof CmsVfsResourceNotFoundException) {
+                LOG.info("Configuration file with ID " + id + " was not found.");
+            } else {
+                LOG.warn(e.getLocalizedMessage(), e);
+            }
+            return null;
+
+        }
+    }
+
+    /**
+     * Checks if the given type id is of the element view type.<p>
+     *
+     * @param type the type id to check
+     *
+     * @return <code>true</code> if the given type id is of the element view type
+     */
+    private boolean isElementView(int type) {
+
+        return type == m_elementViewType.getTypeId();
     }
 
 }

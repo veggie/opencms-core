@@ -7,10 +7,12 @@
 # In this node the global search options are configured.
 -->
 <!ELEMENT search (
+	solr?,
 	cache?,
 	directory,
 	timeout,
 	offlineUpdateFrequency?,
+	maxIndexWaitTime?,
 	forceunlock?,
 	excerpt,
 	extractionCacheMaxAge?,
@@ -25,6 +27,22 @@
 <!ATTLIST search
 	class CDATA #IMPLIED
 >
+
+<!--
+# Configuration node for the Solr Server
+-->
+<!ELEMENT solr (
+	home?,
+	configfile?,
+	commitWithinMs?
+)>
+<!ATTLIST solr
+	enabled (true|false|TRUE|FALSE) #REQUIRED
+	serverUrl CDATA #IMPLIED
+>
+<!ELEMENT home (#PCDATA)>
+<!ELEMENT configfile (#PCDATA)>
+<!ELEMENT commitWithinMs (#PCDATA)>
 
 <!--
 # the size of the search result LFU map.
@@ -45,6 +63,11 @@
 # Time in milliseconds to update offline indexes.
 -->
 <!ELEMENT offlineUpdateFrequency (#PCDATA)>
+
+<!--
+# Time in milliseconds to wait maximally for the update of offline indexes after edit operations.
+-->
+<!ELEMENT maxIndexWaitTime (#PCDATA)>
 
 <!--
 # The state of unlocking during the indexing threads (always|never|onlyfull), 
@@ -211,7 +234,7 @@
 <!ELEMENT fieldconfiguration (
 	name,
 	description?,
-	fields
+	fields?
 )>
 <!ATTLIST fieldconfiguration
 	class CDATA #IMPLIED
@@ -235,6 +258,7 @@
 	analyzer CDATA #IMPLIED
 	boost CDATA #IMPLIED
 	default CDATA #IMPLIED
+	type CDATA #IMPLIED
 >
 
 <!--

@@ -1,4 +1,4 @@
-@external multiLineLabel; 
+@external multiLineLabel, oc-spinner, oc-spinner-circle, oc-spinner-dots, oc-spinner-bg, oc-spin-center; 
 
 .truncatingLabel{
 	overflow: hidden;
@@ -7,21 +7,32 @@
 	text-overflow: ellipsis;
 }
 
-@if user.agent ie6 {
-	.inlineBlock {
-		display: inline;
-	}
-} @else {
-	.inlineBlock {
-		display: inline-block;
-	}
+.inlineBlock {
+	display: inline-block;
 }
 
 .truncatingLabel.multiLineLabel{
 	white-space: normal;
 }
 
-div.toolTip.cornerAll, div.toolTip{
+.toolTip *{
+	margin: 0;
+	padding: 0;
+	border: none;
+	color: value("constants.css.textColor");
+	font-family: value("constants.css.fontFamily");
+	font-size: value("constants.css.fontSize");
+	line-height: value("constants.css.lineHeight");
+	background: transparent;
+	text-align: left;
+	height: auto;
+	width: auto;
+	min-height: 0;
+	max-height: none;
+	min-width: 0;
+	max-width: none;
+}
+div.toolTip.cornerAll, div.toolTip {
 	position: absolute;
 	z-index: value("constants.css.zIndexDND");
 	border: 1px solid value("constants.css.borderColor");
@@ -32,18 +43,8 @@ div.toolTip.cornerAll, div.toolTip{
 	color: value("constants.css.textColor");
 }
 
-@if user.agent ie6 {
-	.toolTip {
-		filter: literal("progid:DXImageTransform.Microsoft.Alpha( Opacity=85, FinishOpacity=0, Style=0, StartX=0,  FinishX=100, StartY=0, FinishY=100)");
-	}
-} @elif user.agent ie8 {
-	.toolTip {
-		-ms-filter: "progid:DXImageTransform.Microsoft.Alpha( Opacity=85, FinishOpacity=0, Style=0, StartX=0,  FinishX=100, StartY=0, FinishY=100)";
-	}
-} @else {
-	.toolTip {
-		opacity: 0.85;
-	}
+.toolTip {
+	opacity: 0.85;
 }
 
 .toolTip p{
@@ -52,17 +53,64 @@ div.toolTip.cornerAll, div.toolTip{
 	padding: 0px;
 }
 
-.textSmall{
+div.header{
+	border: 2px solid value("constants.css.borderColor");
+	background: value("constants.css.backgroundColorDialog");
+	width: value("constants.css.toolbarWidth");
+	padding: 10px 0px;
+	margin: 0px auto 10px;
+	position: relative;
+}
+
+/** joined vendor prefix style, for better fall back behavior */
+div.header{
+	background-image: value("constants.css.gradientFormDialog");
+}
+
+div.header h2{
+	font-size: value("constants.css.fontSizeBig");
+	font-weight: bold;
+	margin: 0px;
+	vertical-align: middle;
+}
+
+div.header > div{
+	float:left;
+	font-size: value("constants.css.fontSize");
+	margin: 0px 0px 0px 10px;
+	vertical-align: middle;
+}
+div.header p{
+	font-size: value("constants.css.fontSize");
+	margin: 8px 0px;
+}
+
+div.header div.headerButtons{
+	position: absolute;
+	top: 10px;
+	right: 20px;
+}
+
+div.header div.headerButtons > div{
+	float: right;
+}
+
+/** Override some Vaadin CSS rules. */ 
+div.header h2 { 
+	margin-top: 0px !important; 
+}
+
+.textSmall, div.textSmall{
 	font-family: value("constants.css.fontFamily");
 	font-size: value("constants.css.fontSizeSmall");
 	line-height: value("constants.css.lineHeightSmall");
 }
-.textMedium{
+.textMedium, div.textMedium{
 	font-family: value("constants.css.fontFamily");
 	font-size: value("constants.css.fontSize");
 	line-height: value("constants.css.lineHeight");
 }
-.textBig{
+.textBig, div.textBig{
 	font-family: value("constants.css.fontFamily");
 	font-size: value("constants.css.fontSizeBig");
 	line-height: value("constants.css.lineHeightBig");
@@ -88,13 +136,15 @@ div.toolTip.cornerAll, div.toolTip{
 .clearFix:after {
     content: ".";
     display: block;
-    height: 0;
+    height: 0 !important;
+    min-height: 0 !important;
     clear: both;
     visibility: hidden;
+    overflow: hidden !important;
 }
 
-@sprite div.disablingOverlay{
-	gwt-image: 'gwtImages.placeholderImage';
+div.disablingOverlay{
+	background-image: value("constants.css.gradientInvalid");
 	display: block;
 	position:absolute;
 	z-index: value("constants.css.zIndexInline");
@@ -108,35 +158,22 @@ div.toolTip.cornerAll, div.toolTip{
 .hideOverlay div.disablingOverlay{
 	background: transparent;
 }
-.cornerAll, .buttonCornerAll, .cornerBottom, .cornerTop{}
-/** browser specific styles **/
-@if user.agent ie8 {
-	/** ie7, ie8 **/
-	.shadow{
-		/** standard box-shadow is a gradient, but this is a solid color, so it has to be a bit lighter to look similar */ 
-		-ms-filter: "progid:DXImageTransform.Microsoft.DropShadow(color=value('constants.css.boxShadowColorIE'),offX=2,offY=2)"; 
-	}
-	
-} @else {
-	/** opera, ie9, firefox, chrome */
-	.cornerAll{
-		border-radius: value("constants.css.borderRadius");
-	}
-	.buttonCornerAll{
-		border-radius: value("constants.css.borderRadiusButton");
-	}
-	.cornerBottom{
-		border-bottom-left-radius: value("constants.css.borderRadius");
-		border-bottom-right-radius: value("constants.css.borderRadius");
-	}
-	.cornerTop{
-		border-top-left-radius: value("constants.css.borderRadius");
-		border-top-right-radius: value("constants.css.borderRadius");
-	}
-	
-	.shadow{
-		box-shadow: 2px 2px 6px value("constants.css.boxShadowColorOther");
-	}
+.cornerAll{
+	border-radius: value("constants.css.borderRadius");
+}
+.buttonCornerAll{
+	border-radius: value("constants.css.borderRadiusButton");
+}
+.cornerBottom{
+	border-bottom-left-radius: value("constants.css.borderRadius");
+	border-bottom-right-radius: value("constants.css.borderRadius");
+}
+.cornerTop{
+	border-top-left-radius: value("constants.css.borderRadius");
+	border-top-right-radius: value("constants.css.borderRadius");
+}
+.shadow{
+	box-shadow: value("constants.css.boxShadow");
 }
 
 .clearStyles, .clearStyles *{
@@ -157,3 +194,105 @@ div.toolTip.cornerAll, div.toolTip{
 	max-width: none;
 }
 
+div.simpleFormRow{
+	height: 34px;
+	overflow: hidden;
+}
+div.simpleFormLabel{
+	vertical-align: middle;
+	width: 25%;
+	float: left;
+	padding-top: 5px;
+}
+div.simpleFormInputBox{
+	vertical-align: middle;
+	width: 70%;
+	float: right;
+}
+
+/** loading animation styles */
+.oc-spinner-bg {
+	background-color: #fff;        
+	top:0;
+	margin:0;
+	border-radius: 100%;    
+	display: block;
+	box-shadow: 0 0 32px #666;
+	height: 60px;
+	width: 60px;
+	position: absolute;
+}
+
+.oc-spinner, .oc-spinner-circle, .oc-spinner-dots  { 
+	top: -2px;
+	margin: 0;
+	display: block;
+	position: absolute;
+	font-size: 64px !important;
+	line-height: 64px !important;
+	font-family: opencms-font !important;
+}
+
+.oc-spinner {
+	color: #b31b34;
+}
+
+.oc-spinner-dots {
+	color: #fff;
+	animation: spin 2s infinite linear;
+	-webkit-animation: spin 2s infinite linear;
+}
+	
+.oc-spinner-circle {
+	color: #003084;
+	margin: 0 auto;
+	animation: spin-inner 4s infinite linear;
+	-webkit-animation: spin-inner 4s infinite linear;
+}
+
+.oc-spin-center {
+	position: fixed;
+	left: 50%;
+	top: 50%;  
+	text-align: center;
+	margin-top: -50px;
+	margin-left: -32px; 
+	display: block;
+}
+
+@keyframes spin-inner {
+    50% {
+        opacity: 0.25;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+@-webkit-keyframes spin-inner {
+    50% {
+        -webkit-opacity: 0.25;
+    }
+    100% {
+        -webkit-opacity: 1;
+    }
+}
+
+@-webkit-keyframes spin {
+	0% { 
+		-webkit-transform: rotate(0deg);
+	} 
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+	0% { 
+		transform: rotate(0deg);
+	} 
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

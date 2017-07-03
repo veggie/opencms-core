@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,22 +34,32 @@ import org.apache.commons.pool.BasePoolableObjectFactory;
 
 /**
  * Implementation of the jpa pool entity manager factory.<p>
- * 
- * @since 8.0.0 
+ *
+ * @since 8.0.0
  */
 public class CmsPoolEntityManagerFactory extends BasePoolableObjectFactory {
 
     /** EntityManagerFactory which creates EntityManager instances. */
     protected EntityManagerFactory m_emFactory;
 
-    /** 
+    /**
      * Public constructor.<p>
-     * 
+     *
      * @param emFactory the entity manager factory
      */
     public CmsPoolEntityManagerFactory(EntityManagerFactory emFactory) {
 
-        this.m_emFactory = emFactory;
+        m_emFactory = emFactory;
+    }
+
+    /**
+     * @see org.apache.commons.pool.BasePoolableObjectFactory#destroyObject(java.lang.Object)
+     */
+    @Override
+    public void destroyObject(Object obj) {
+
+        EntityManager em = (EntityManager)obj;
+        em.close();
     }
 
     /**
@@ -69,15 +79,5 @@ public class CmsPoolEntityManagerFactory extends BasePoolableObjectFactory {
 
         EntityManager em = (EntityManager)obj;
         em.clear();
-    }
-
-    /**
-     * @see org.apache.commons.pool.BasePoolableObjectFactory#destroyObject(java.lang.Object)
-     */
-    @Override
-    public void destroyObject(Object obj) {
-
-        EntityManager em = (EntityManager)obj;
-        em.close();
     }
 }

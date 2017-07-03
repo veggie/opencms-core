@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,8 +37,8 @@ import org.apache.commons.logging.Log;
 
 /**
  * Imports an OpenCms export file into the VFS.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsDatabaseImportThread extends A_CmsReportThread {
 
@@ -53,7 +53,7 @@ public class CmsDatabaseImportThread extends A_CmsReportThread {
 
     /**
      * Imports an OpenCms export file into the VFS.<p>
-     * 
+     *
      * @param cms the current OpenCms context object
      * @param importFile the file to import
      * @param keepPermissions if set, the permissions set on existing resources will not be modified
@@ -69,6 +69,7 @@ public class CmsDatabaseImportThread extends A_CmsReportThread {
     /**
      * @see org.opencms.report.A_CmsReportThread#getReportUpdate()
      */
+    @Override
     public String getReportUpdate() {
 
         return getReport().getReportUpdate();
@@ -77,16 +78,24 @@ public class CmsDatabaseImportThread extends A_CmsReportThread {
     /**
      * @see java.lang.Runnable#run()
      */
+    @Override
     public void run() {
 
         CmsImportParameters parameters = new CmsImportParameters(m_importFile, "/", m_keepPermissions);
-
+        boolean indexingAlreadyPaused = OpenCms.getSearchManager().isOfflineIndexingPaused();
         try {
+            if (!indexingAlreadyPaused) {
+                OpenCms.getSearchManager().pauseOfflineIndexing();
+            }
             OpenCms.getImportExportManager().importData(getCms(), getReport(), parameters);
         } catch (Throwable e) {
             getReport().println(e);
             if (LOG.isErrorEnabled()) {
                 LOG.error(Messages.get().getBundle().key(Messages.ERR_DB_IMPORT_0), e);
+            }
+        } finally {
+            if (!indexingAlreadyPaused) {
+                OpenCms.getSearchManager().resumeOfflineIndexing();
             }
         }
     }

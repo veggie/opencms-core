@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,8 +31,8 @@ import org.opencms.util.A_CmsModeIntEnumeration;
 
 /**
  * The visibility modes of a context menu item in the explorer view.<p>
- * 
- * @since 6.5.6 
+ *
+ * @since 6.5.6
  */
 public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
 
@@ -51,9 +51,12 @@ public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
     /** The name of the message key for the visibility mode. */
     private String m_messageKey;
 
+    /** The prioritization flag. */
+    private boolean m_prioritized;
+
     /**
      * Private constructor.<p>
-     * 
+     *
      * @param mode the menu item visibility mode integer representation
      */
     private CmsMenuItemVisibilityMode(int mode) {
@@ -63,11 +66,11 @@ public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
 
     /**
      * Returns the menu item visibility mode for the given mode value.<p>
-     * 
+     *
      * This is used only for serialization and should not be accessed for other purposes.<p>
-     *  
+     *
      * @param type the mode value to get the item visibility mode for
-     * 
+     *
      * @return the menu item visibility mode for the given mode value
      */
     public static CmsMenuItemVisibilityMode valueOf(int type) {
@@ -86,22 +89,22 @@ public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
 
     /**
      * Adds the name of the message key for the visibility mode.<p>
-     * 
+     *
      * @param messageKey the name of the message key for the visibility mode
      * @return an extended visibility mode containing the message key
      */
     public CmsMenuItemVisibilityMode addMessageKey(String messageKey) {
 
-        CmsMenuItemVisibilityMode mode = (CmsMenuItemVisibilityMode)clone();
+        CmsMenuItemVisibilityMode mode = clone();
         mode.m_messageKey = messageKey;
         return mode;
     }
 
     /**
      * Returns the name of the message key for the visibility mode.<p>
-     * 
+     *
      * Is usually used as description for the inactive visibility modes.<p>
-     * 
+     *
      * @return the name of the message key for the visibility mode
      */
     public String getMessageKey() {
@@ -111,7 +114,7 @@ public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
 
     /**
      * Returns if the mode is set to {@link #VISIBILITY_ACTIVE}.<p>
-     * 
+     *
      * @return true if the mode is set to {@link #VISIBILITY_ACTIVE}, otherwise false
      */
     public boolean isActive() {
@@ -121,7 +124,7 @@ public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
 
     /**
      * Returns if the mode is set to {@link #VISIBILITY_INACTIVE}.<p>
-     * 
+     *
      * @return true if the mode is set to {@link #VISIBILITY_INACTIVE}, otherwise false
      */
     public boolean isInActive() {
@@ -131,7 +134,7 @@ public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
 
     /**
      * Returns if the mode is set to {@link #VISIBILITY_INVISIBLE}.<p>
-     * 
+     *
      * @return true if the mode is set to {@link #VISIBILITY_INVISIBLE}, otherwise false
      */
     public boolean isInVisible() {
@@ -140,11 +143,40 @@ public final class CmsMenuItemVisibilityMode extends A_CmsModeIntEnumeration {
     }
 
     /**
+     * Returns the prioritization flag.<p>
+     *
+     * @return prioritization flag
+     */
+    public boolean isPrioritized() {
+
+        return m_prioritized;
+    }
+
+    /**
+     * Returns a prioritized instance of the visibility mode.<p>
+     *
+     * @param prioritized <code>true</code> to prioritize
+     *
+     * @return the new visibility mode instance
+     */
+    public CmsMenuItemVisibilityMode prioritize(boolean prioritized) {
+
+        if (m_prioritized != prioritized) {
+            CmsMenuItemVisibilityMode result = clone();
+            result.m_prioritized = prioritized;
+            return result;
+        } else {
+            return this;
+        }
+    }
+
+    /**
      * @see java.lang.Object#clone()
      */
-    protected Object clone() {
+    @Override
+    protected CmsMenuItemVisibilityMode clone() {
 
-        return new CmsMenuItemVisibilityMode(this.getMode());
+        return new CmsMenuItemVisibilityMode(getMode());
     }
 
 }

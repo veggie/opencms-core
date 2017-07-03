@@ -1,4 +1,8 @@
+@external html-face;
+
 .popup, .popupContent{}
+
+
 
 .menuPanel{ /* the panel (table) the context menu is set as widget. */
 	background: value("constants.css.backgroundColorDialog");
@@ -7,46 +11,77 @@
 div.cmsMenuBar { /* the outer menu bar */
 	background: value("constants.css.backgroundColorDialog");
 	color: value("constants.css.textColor");
+	padding: 2px 0;
 }
 .cmsMenuBar .cmsMenuItem { /* menu items */
 	cursor: pointer;
 	clear: both;
-	padding: 4px value("constants.css.defaultSpace");
+	padding: 2px value("constants.css.defaultSpace");
 	min-width: 180px;
+	display: block;
+	margin: 5px 2px 0;
+	position: relative;
+	border-radius: value("constants.css.borderRadius");
+}
+
+.cmsMenuBar .cmsMenuItem:before{
+	content:"";
+	position: absolute;
+	margin-top:-5px;
+	left: -2px;
+	right: -2px;
+	height: 0;
 	border-style: solid;
 	border-width: 1px 0px 0px 0px;
 	border-color: value("constants.css.borderColor");
 }
-.cmsMenuBar .cmsMenuItem:first-child {
+.cmsMenuBar .cmsMenuItem:first-child{
+	margin-top: 0;
+}
+.cmsMenuBar .cmsMenuItem:first-child:before {
 	border: 0;
 }
-@sprite .cmsMenuBar .cmsMenuItem.selected { /* selected menu items */ 
-	background-color: #E0E0E0;
-	gwt-image: "backgrounds.stateBackground";
-	background-position: 50% 50%;
-	height: auto;
+.cmsMenuBar .cmsMenuItem.selected { /* selected menu items */ 
+	background: #356EE1;
+	color: #EFF2F8;
 }
-.cmsMenuBar .cmsMenuItem.disabled { /* menu item disabled */
+
+div.cmsMenuBar .cmsMenuItem.selected * {
+	color: #EFF2F8;
+}
+.cmsMenuBar .cmsMenuItem.disabled, .cmsMenuBar .cmsMenuItem.disabled .label, .cmsMenuBar .cmsMenuItem.disabled .html-face { /* menu item disabled */
 	color: value("constants.css.textColorDisabled");
 	cursor: default;
 }
-.cmsMenuBar .cmsMenuItem .image { /* image for a menu item */
-	float: left;
-	margin: 3px 0px 0px 2px;
-	height: 16px;
-	width: 16px;
-	overflow: hidden;
-}
-.cmsMenuBar .cmsMenuItem .label { /* menu item label */
-	padding: 4px 4px 4px 0px;
-	margin: 0px 0px 0px 26px;
+.cmsMenuBar .cmsMenuItem .label, .cmsMenuBar .cmsMenuItem .html-face { /* menu item label */
+	padding: 4px;
+	margin: 0px 0px 0px 20px;
 	font-size: value("constants.css.fontSizeBig");
+	text-align: left;
+	line-height: value("constants.css.lineHeight");
 }
+
+.cmsMenuBar .cmsMenuItem > div{
+	display: block;
+}
+
+.cmsMenuItem .iconBox { 
+	float: left;
+	width: 24px; 
+}
+
+.cmsMenuBar .cmsMenuItem .html-face > span{
+	margin-right: 6px;
+}
+
 .cmsMenuBar .cmsMenuItem .arrow { /* symbol for sub menus */
 	float: right;
 	margin-right: 2px;
-	margin-top: 4px;
+	margin-top: 6px;
+	font-size: 16px;
 }
+
+
 .cmsMenuBar .menuItemSeparator { /* section breaks between menu items */ 
 	height: 3px;
 	line-height: 0px;
@@ -61,43 +96,11 @@ div.cmsMenuBar { /* the outer menu bar */
 }
 div.menuInfoLabel {
 	background-color: value("constants.css.backgroundColorDialog");
-	padding: 4px;
+	font-size: value("constants.css.fontSizeBig");
+	padding: 8px 26px;
 	cursor: default;
 }
 
-.cmsMenuBar .cmsMenuItem .itemIcon {
-	float: left;
-	margin-top: 1px;
-}
-@if user.agent ie6 {
-	.cmsMenuBar .cmsMenuItem.disabled .itemIcon {
-		filter: literal("alpha(opacity = 50)");
-	}
-} @elif user.agent ie8 {
-	.cmsMenuBar .cmsMenuItem.disabled .itemIcon {
-		-ms-filter: "alpha(opacity = 50)";
-	}
-} @else {
-	.cmsMenuBar .cmsMenuItem.disabled .itemIcon {
-        opacity: 0.5;
-	}
-}
 
 
-@if user.agent ie6 { /* IE6 HACK for the separator */
-	.cmsMenuBar .menuItemSeparator {
-		margin-top: -1px;
-	}
-}
 
-.cmsMenuBar, .menuPanel{
-	border-radius: 8px;
-}
-.cmsMenuBar .cmsMenuItem:last-child{
-	border-bottom-left-radius: 8px;
-	border-bottom-right-radius: 8px;
-}
-.cmsMenuBar .cmsMenuItem:first-child{
-	border-top-left-radius: 8px;
-	border-top-right-radius: 8px;
-}

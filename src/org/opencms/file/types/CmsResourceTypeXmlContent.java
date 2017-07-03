@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,6 @@ import org.opencms.file.CmsProperty;
 import org.opencms.file.CmsRequestContext;
 import org.opencms.file.CmsResource;
 import org.opencms.file.CmsResourceFilter;
-import org.opencms.loader.CmsLoaderException;
 import org.opencms.loader.CmsXmlContentLoader;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
@@ -44,12 +43,16 @@ import org.opencms.relations.CmsLink;
 import org.opencms.relations.CmsRelationType;
 import org.opencms.security.CmsPermissionSet;
 import org.opencms.staticexport.CmsLinkTable;
+import org.opencms.util.CmsMacroResolver;
+import org.opencms.util.CmsStringUtil;
+import org.opencms.workplace.editors.I_CmsPreEditorActionDefinition;
 import org.opencms.xml.CmsXmlContentDefinition;
 import org.opencms.xml.CmsXmlEntityResolver;
-import org.opencms.xml.CmsXmlException;
 import org.opencms.xml.containerpage.CmsFormatterConfiguration;
+import org.opencms.xml.content.CmsDefaultXmlContentHandler;
 import org.opencms.xml.content.CmsXmlContent;
 import org.opencms.xml.content.CmsXmlContentFactory;
+import org.opencms.xml.content.I_CmsXmlContentHandler;
 import org.opencms.xml.types.CmsXmlHtmlValue;
 import org.opencms.xml.types.CmsXmlVarLinkValue;
 import org.opencms.xml.types.CmsXmlVfsFileValue;
@@ -57,8 +60,8 @@ import org.opencms.xml.types.I_CmsXmlContentValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -67,10 +70,13 @@ import org.apache.commons.logging.Log;
 
 /**
  * Resource type descriptor for the type "xmlcontent".<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
+
+    /** The name for the choose model file form action. */
+    public static final String DIALOG_CHOOSEMODEL = "choosemodel";
 
     /** Configuration key for the (optional) schema. */
     public static final String CONFIGURATION_SCHEMA = "schema";
@@ -82,15 +88,68 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
     private String m_schema;
 
     /**
+     * Returns the possible model files for the new resource.<p>
+     *
+     * @param cms the current users context to work with
+     * @param currentFolder the folder
+     * @param newResourceTypeName the resource type name for the new resource to create
+     * @return the possible model files for the new resource
+     */
+    public static List<CmsResource> getModelFiles(CmsObject cms, String currentFolder, String newResourceTypeName) {
+
+        try {
+
+            I_CmsResourceType resType = OpenCms.getResourceManager().getResourceType(newResourceTypeName);
+            I_CmsPreEditorActionDefinition preEditorAction = OpenCms.getWorkplaceManager().getPreEditorConditionDefinition(
+                resType);
+            // get the global master folder if configured
+            String masterFolder = preEditorAction.getConfiguration().getString(
+                CmsDefaultXmlContentHandler.APPINFO_MODELFOLDER,
+                null);
+            // get the schema for the resource type to create
+            String schema = resType.getConfiguration().get(CmsResourceTypeXmlContent.CONFIGURATION_SCHEMA);
+            CmsXmlContentDefinition contentDefinition = CmsXmlContentDefinition.unmarshal(cms, schema);
+            // get the content handler for the resource type to create
+            I_CmsXmlContentHandler handler = contentDefinition.getContentHandler();
+            String individualModelFolder = handler.getModelFolder();
+            if (CmsStringUtil.isNotEmpty(individualModelFolder)) {
+                masterFolder = individualModelFolder;
+            }
+
+            if (CmsStringUtil.isNotEmpty(masterFolder)) {
+                // store the original URI
+                String uri = cms.getRequestContext().getUri();
+                try {
+                    // set URI to current folder
+                    cms.getRequestContext().setUri(currentFolder);
+                    CmsMacroResolver resolver = CmsMacroResolver.newInstance().setCmsObject(cms);
+                    // resolve eventual macros
+                    masterFolder = resolver.resolveMacros(masterFolder);
+                } finally {
+                    // switch back to stored URI
+                    cms.getRequestContext().setUri(uri);
+                }
+
+                if (CmsStringUtil.isNotEmpty(masterFolder) && cms.existsResource(masterFolder)) {
+                    // folder for master files exists, get all files of the same resource type
+                    CmsResourceFilter filter = CmsResourceFilter.ONLY_VISIBLE_NO_DELETED.addRequireType(
+                        resType.getTypeId());
+                    return cms.readResources(masterFolder, filter, false);
+                }
+            }
+        } catch (Throwable t) {
+            // error determining resource type, should never happen
+        }
+        return Collections.emptyList();
+    }
+
+    /**
      * Returns <code>true</code> in case the given resource is an XML content.<p>
-     * 
-     * Internally this checks if the content loader for the given resource is 
-     * identical to the XML content loader.<p>
-     * 
+     *
      * @param resource the resource to check
-     * 
+     *
      * @return <code>true</code> in case the given resource is an XML content
-     * 
+     *
      * @since 7.0.2
      */
     public static boolean isXmlContent(CmsResource resource) {
@@ -99,11 +158,7 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
         if (resource != null) {
             // avoid array index out of bound exception:
             if (!resource.isFolder()) {
-                try {
-                    result = OpenCms.getResourceManager().getLoader(resource) instanceof CmsXmlContentLoader;
-                } catch (CmsLoaderException e) {
-                    // result will be false
-                }
+                result = OpenCms.getResourceManager().getResourceType(resource) instanceof CmsResourceTypeXmlContent;
             }
         }
         return result;
@@ -130,7 +185,8 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
         CmsSecurityManager securityManager,
         String resourcename,
         byte[] content,
-        List<CmsProperty> properties) throws CmsException {
+        List<CmsProperty> properties)
+    throws CmsException {
 
         boolean hasModelUri = false;
         CmsXmlContent newContent = null;
@@ -142,7 +198,7 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
             Locale locale = getLocaleForNewContent(cms, securityManager, resourcename, properties);
             String modelUri = (String)cms.getRequestContext().getAttribute(CmsRequestContext.ATTRIBUTE_MODEL);
 
-            // must set URI of OpenCms user context to parent folder of created resource, 
+            // must set URI of OpenCms user context to parent folder of created resource,
             // in order to allow reading of properties for default values
             CmsObject newCms = OpenCms.initCmsObject(cms);
             newCms.getRequestContext().setUri(CmsResource.getParentFolder(resourcename));
@@ -169,6 +225,7 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
         if (hasModelUri) {
             CmsFile file = cms.readFile(resource);
             newContent = CmsXmlContentFactory.unmarshal(cms, file);
+            newContent.setAutoCorrectionEnabled(true);
             resource = newContent.getHandler().prepareForWrite(cms, newContent, file);
         }
 
@@ -216,12 +273,27 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
             // no content definition found, use the preview formatter
         }
         if (result == null) {
-            LOG.warn(Messages.get().getBundle().key(
-                Messages.LOG_WARN_NO_FORMATTERS_DEFINED_1,
-                cd == null ? resource.getRootPath() : cd.getSchemaLocation()));
+            LOG.warn(
+                Messages.get().getBundle().key(
+                    Messages.LOG_WARN_NO_FORMATTERS_DEFINED_1,
+                    cd == null ? resource.getRootPath() : cd.getSchemaLocation()));
             result = CmsFormatterConfiguration.EMPTY_CONFIGURATION;
         }
         return result;
+    }
+
+    /**
+     * @see org.opencms.file.types.A_CmsResourceType#getGalleryPreviewProvider()
+     */
+    @Override
+    public String getGalleryPreviewProvider() {
+
+        if (m_galleryPreviewProvider == null) {
+            m_galleryPreviewProvider = getConfiguration().getString(
+                CONFIGURATION_GALLERY_PREVIEW_PROVIDER,
+                DEFAULT_GALLERY_PREVIEW_PROVIDER);
+        }
+        return m_galleryPreviewProvider;
     }
 
     /**
@@ -235,7 +307,7 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
 
     /**
      * Returns the configured xsd schema uri.<p>
-     * 
+     *
      * @return the configured xsd schema uri, or <code>null</code> if not set
      */
     public String getSchema() {
@@ -253,8 +325,16 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
         if (m_schema != null) {
             // unmarshal the XML schema, this is required to update the resource bundle cache
             try {
-                CmsXmlContentDefinition.unmarshal(cms, m_schema);
-            } catch (CmsXmlException e) {
+                if (cms.existsResource(m_schema)) {
+                    CmsXmlContentDefinition.unmarshal(cms, m_schema);
+                } else {
+                    LOG.debug(
+                        Messages.get().getBundle().key(
+                            Messages.LOG_WARN_SCHEMA_RESOURCE_DOES_NOT_EXIST_2,
+                            m_schema,
+                            getTypeName()));
+                }
+            } catch (Throwable e) {
                 // unable to unmarshal the XML schema configured
                 LOG.error(Messages.get().getBundle().key(Messages.ERR_BAD_XML_SCHEMA_2, m_schema, getTypeName()), e);
             }
@@ -287,8 +367,8 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
         } finally {
             cms.getRequestContext().setRequestTime(requestTime);
         }
-
-        Set<CmsLink> links = new HashSet<CmsLink>();
+        // using linked set to keep the link order
+        Set<CmsLink> links = new LinkedHashSet<CmsLink>();
 
         // add XSD link
         CmsLink xsdLink = getXsdLink(cms, xmlContent);
@@ -354,7 +434,7 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
             CmsPermissionSet.ACCESS_WRITE,
             true,
             CmsResourceFilter.ALL);
-        // read the XML content, use the encoding set in the property       
+        // read the XML content, use the encoding set in the property
         CmsXmlContent xmlContent = CmsXmlContentFactory.unmarshal(cms, resource, false);
         // call the content handler for post-processing
         resource = xmlContent.getHandler().prepareForWrite(cms, xmlContent, resource);
@@ -365,13 +445,13 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
 
     /**
      * Gets the locale which should be used for creating an empty content.<p>
-     * 
-     * @param cms the current CMS context 
+     *
+     * @param cms the current CMS context
      * @param securityManager the security manager
-     * @param resourcename the name of the resource to create 
-     * @param properties the properties for the resource to create 
-     * 
-     * @return the locale to use 
+     * @param resourcename the name of the resource to create
+     * @param properties the properties for the resource to create
+     *
+     * @return the locale to use
      */
     protected Locale getLocaleForNewContent(
         CmsObject cms,
@@ -379,15 +459,22 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
         String resourcename,
         List<CmsProperty> properties) {
 
-        return OpenCms.getLocaleManager().getDefaultLocales(cms, CmsResource.getParentFolder(resourcename)).get(0);
+        Locale locale = (Locale)(cms.getRequestContext().getAttribute(CmsRequestContext.ATTRIBUTE_NEW_RESOURCE_LOCALE));
+        if (locale != null) {
+            return locale;
+        }
+        List<Locale> locales = OpenCms.getLocaleManager().getDefaultLocales(
+            cms,
+            CmsResource.getParentFolder(resourcename));
+        return locales.get(0);
     }
 
     /**
      * Creates a new link object for the schema definition.<p>
-     * 
+     *
      * @param cms the current CMS context
      * @param xmlContent the xml content to crete the link for
-     * 
+     *
      * @return the generated link
      */
     protected CmsLink getXsdLink(CmsObject cms, CmsXmlContent xmlContent) {
@@ -399,7 +486,7 @@ public class CmsResourceTypeXmlContent extends A_CmsResourceTypeLinkParseable {
             }
             schema = schema.substring(CmsXmlEntityResolver.OPENCMS_SCHEME.length() - 1);
         } else if (CmsXmlEntityResolver.isCachedSystemId(schema)) {
-            // schema may not exist as a VFS file because it has just been cached (some test cases do this) 
+            // schema may not exist as a VFS file because it has just been cached (some test cases do this)
             return null;
         }
         try {

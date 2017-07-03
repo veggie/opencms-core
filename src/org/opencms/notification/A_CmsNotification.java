@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,6 +30,7 @@ package org.opencms.notification;
 import org.opencms.db.CmsUserSettings;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsUser;
+import org.opencms.i18n.CmsMessages;
 import org.opencms.mail.CmsHtmlMail;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
@@ -50,13 +51,16 @@ import org.apache.commons.mail.EmailException;
 /**
  * Abstract class to create a notfication which will be send as a html mail to
  * a user in OpenCms.
- * 
+ *
  * @since 6.5.3
  */
 public abstract class A_CmsNotification extends CmsHtmlMail {
 
     /** The log object for this class. */
     private static final Log LOG = CmsLog.getLog(A_CmsNotification.class);
+
+    /** The xml-content to read subject, header and footer of the notification. */
+    protected CmsXmlContent m_mailContent;
 
     /** The CmsObject. */
     private CmsObject m_cms;
@@ -67,15 +71,12 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
     /** The macro resolver used. */
     private CmsMacroResolver m_macroResolver;
 
-    /** The xml-content to read subject, header and footer of the notification. */
-    private CmsXmlContent m_mailContent;
-
     /** The receiver of the notification. */
     private CmsUser m_receiver;
 
     /**
      * Creates a new A_CmsNotification.<p>
-     * 
+     *
      * @param cms the cms object to use
      * @param receiver the receiver of the notification
      */
@@ -85,14 +86,15 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
         m_receiver = receiver;
 
         m_macroResolver = new CmsMacroResolver();
+        m_macroResolver.setCmsObject(cms);
     }
 
     /**
      * Adds a new macro to the used macro resolver. Macros are used for the xml
      * content file.
-     * 
+     *
      * @param key The key of the macro.
-     * @param value The value of the macro. 
+     * @param value The value of the macro.
      */
     public void addMacro(String key, String value) {
 
@@ -132,6 +134,7 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
     /**
      * @see org.apache.commons.mail.Email#send()
      */
+    @Override
     public String send() throws EmailException {
 
         String messageID = null;
@@ -150,7 +153,7 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
             m_mailContent = CmsXmlContentFactory.unmarshal(m_cms, m_cms.readFile(getNotificationContent()));
 
             // detect locale
-            List locales = m_mailContent.getLocales();
+            List<Locale> locales = m_mailContent.getLocales();
             Locale userLocale = new CmsUserSettings(m_receiver).getLocale();
             if (locales.contains(userLocale)) {
                 // mail is localized in the user locale, use that
@@ -160,7 +163,12 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
                 m_locale = OpenCms.getWorkplaceManager().getDefaultLocale();
             } else {
                 // use any localization
-                m_locale = (Locale)locales.get(0);
+                m_locale = locales.get(0);
+            }
+
+            String mailCharset = Messages.get().getBundle(m_locale).key(Messages.GUI_MAIL_CHARSET_0);
+            if (!CmsMessages.isUnknownKey(mailCharset)) {
+                setCharset(mailCharset);
             }
 
             // define macro resolver
@@ -184,24 +192,26 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
             msg.append("\n<br/><br/>\n");
 
             // append footer from xmlcontent
-            msg.append(CmsMacroResolver.resolveMacros(
-                m_mailContent.getStringValue(m_cms, "Footer", m_locale),
-                m_macroResolver));
+            msg.append(
+                CmsMacroResolver.resolveMacros(
+                    m_mailContent.getStringValue(m_cms, "Footer", m_locale),
+                    m_macroResolver));
 
             // append html footer
             appenHtmlFooter(msg);
 
             addTo(m_receiver.getEmail(), m_receiver.getFirstname() + ' ' + m_receiver.getLastname());
-            setSubject(CmsMacroResolver.resolveMacros(
-                m_mailContent.getStringValue(m_cms, "Subject", m_locale),
-                m_macroResolver));
+            setSubject(
+                CmsMacroResolver.resolveMacros(
+                    m_mailContent.getStringValue(m_cms, "Subject", m_locale),
+                    m_macroResolver));
             setHtmlMsg(msg.toString());
 
             // send mail
             super.send();
 
             // get MIME message ID
-            messageID = this.getMimeMessage().getMessageID();
+            messageID = getMimeMessage().getMessageID();
 
         } catch (CmsException e) {
             LOG.error(Messages.get().getBundle().key(Messages.LOG_NOTIFICATION_SEND_ERROR_0), e);
@@ -213,38 +223,50 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
 
     /**
      * Append the html-code to start a html mail message to the given buffer.<p>
-     * 
+     *
      * @param buffer The StringBuffer to add the html code to.
      */
     protected void appendHtmlHeader(StringBuffer buffer) {
 
-        buffer.append("<html><head><style type=\"text/css\">\n");
-        buffer.append("<!--\n");
-        buffer.append("body { font-family: Verdana, Arial, Helvetica, sans-serif; background-color:#ffefdb; }\n");
-        buffer.append("a { color:#b22222; text-decoration:none; }\n");
-        buffer.append("table { white-space: nowrap; font-size: x-small; }\n");
-        buffer.append("tr.trow1 { background-color: #cdc0b0; }\n");
-        buffer.append("tr.trow2 { background-color: #eedfcc; }\n");
-        buffer.append("tr.trow3 { background-color: #ffefdb; }\n");
-        buffer.append("--></style>\n");
-        buffer.append("</head><body><span style='font-size:8.0pt;'>");
+        buffer.append("<html>\r\n");
+        buffer.append("  <head>\r\n");
+        buffer.append("    <style type=\"text/css\">\r\n");
+        buffer.append("      body { font-family: Verdana, Arial, Helvetica, sans-serif; background-color:white; }\r\n");
+        buffer.append("      a { color:#b31b43; text-decoration:none; font-weight: bold; }\r\n");
+        buffer.append("      a:hover { color:#b31b43; text-decoration:underline; font-weight: bold; }\r\n");
+        buffer.append("      div.publish_link { margin: 20px 0; }\r\n");
+        buffer.append("      table { white-space: nowrap; font-size: small; }\r\n");
+        buffer.append("      tr.trow1 { background-color: #cdc0b0; }\r\n");
+        buffer.append("      tr.trow2 { background-color: #eedfcc; }\r\n");
+        buffer.append("      tr.trow3 { background-color: #ffefdb; }\r\n");
+        buffer.append(
+            "      th.rescol { border-width: 1px 0 2px 1px; border-style: solid; border-color: #222222; padding: 5px; }\r\n");
+        buffer.append(
+            "      th.titlecol { border-width: 1px 1px 2px 1px; border-style: solid; border-color: #222222; padding: 5px; }\r\n");
+        buffer.append(
+            "      td.rescol { border-width: 0 0 1px 1px; border-style: solid; border-color: #222222; padding: 5px; }\r\n");
+        buffer.append(
+            "      td.titlecol { border-width: 0 1px 1px 1px; border-style: solid; border-color: #222222; padding: 5px; }\r\n");
+        buffer.append("    </style>\r\n");
+        buffer.append("  </head>\r\n");
+        buffer.append("  <body>\r\n");
     }
 
     /**
      * Append the html-code to finish a html mail message to the given buffer.
-     * 
-     * @param buffer The StringBuffer to add the html code to. 
+     *
+     * @param buffer The StringBuffer to add the html code to.
      */
     protected void appenHtmlFooter(StringBuffer buffer) {
 
-        buffer.append("</span></body></html>");
+        buffer.append("  </body>\r\n" + "</html>");
     }
 
     /**
      * Overwrite the method to generate the message body of the notification. This
      * text is placed between the header and the footer of the defined xmlcontent
      * and the required html code is added.<p>
-     * 
+     *
      * @return The text to be inserted in the notification.
      */
     protected abstract String generateHtmlMsg();
@@ -252,7 +274,7 @@ public abstract class A_CmsNotification extends CmsHtmlMail {
     /**
      * Overwrite the method to return the path to the xmlcontent, where the subject,
      * the header and the footer are defined.<p>
-     * 
+     *
      * @return The path to the xmlcontent file.
      */
     protected abstract String getNotificationContent();

@@ -5,7 +5,7 @@
 .labelColumn {
 	width: 200px;
 	float: left;
-	line-height: 16px;
+	line-height: value("constants.css.inputHeight");
 }
 
 .inlineBlock {

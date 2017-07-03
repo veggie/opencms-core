@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,16 +38,16 @@ import java.io.File;
 
 import org.dom4j.Document;
 
-/** 
+/**
  * Tests the setup xml helper class.<p>
- * 
+ *
  * @since 6.1.8
  */
 public class TestCmsSetupXmlHelper extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestCmsSetupXmlHelper(String arg0) {
@@ -57,7 +57,7 @@ public class TestCmsSetupXmlHelper extends OpenCmsTestCase {
 
     /**
      * Tests reading xml file.<p>
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     public void testXmlModification() throws Exception {
@@ -98,26 +98,20 @@ public class TestCmsSetupXmlHelper extends OpenCmsTestCase {
         assertEquals(expected, value);
 
         // test adding a new node
-        xPath = baseXp + "test1/test2/test3";
-        expected = "test4";
+        xPath = baseXp + CmsWorkplaceConfiguration.N_GALLERY_DEFAULT_SCOPE;
+        expected = "root";
         assertEquals(1, xmlHelper.setValue(inputFile, xPath, expected));
         value = xmlHelper.getValue(inputFile, xPath);
         assertEquals(expected, value);
 
-        // test adding a new attribute
+        //        // test adding a new attribute
         xPath = baseXp
             + CmsWorkplaceConfiguration.N_LOCALIZEDFOLDERS
             + "/"
             + I_CmsXmlConfiguration.N_RESOURCE
-            + "[2]/@test-attr";
-        expected = "test-value";
-        assertEquals(1, xmlHelper.setValue(inputFile, xPath, expected));
-        value = xmlHelper.getValue(inputFile, xPath);
-        assertEquals(expected, value);
-
-        // test adding a new node in a list
-        xPath = baseXp + "test1/test2[2]/test5";
-        expected = "test6";
+            + "[3]/@"
+            + I_CmsXmlConfiguration.A_URI;
+        expected = "/test-value/";
         assertEquals(1, xmlHelper.setValue(inputFile, xPath, expected));
         value = xmlHelper.getValue(inputFile, xPath);
         assertEquals(expected, value);
@@ -148,7 +142,7 @@ public class TestCmsSetupXmlHelper extends OpenCmsTestCase {
         assertEquals(expected, value);
 
         // test removing a node
-        xPath = baseXp + "test1";
+        xPath = baseXp + CmsWorkplaceConfiguration.N_GALLERY_DEFAULT_SCOPE;
         assertEquals(1, xmlHelper.setValue(inputFile, xPath, null));
         assertNull(xmlHelper.getValue(inputFile, xPath));
 
@@ -157,10 +151,12 @@ public class TestCmsSetupXmlHelper extends OpenCmsTestCase {
             + CmsWorkplaceConfiguration.N_LOCALIZEDFOLDERS
             + "/"
             + I_CmsXmlConfiguration.N_RESOURCE
-            + "[2]/@test-attr";
+            + "[3]/@"
+            + I_CmsXmlConfiguration.A_URI;
         assertEquals(1, xmlHelper.setValue(inputFile, xPath, null));
         assertNull(xmlHelper.getValue(inputFile, xPath));
-        assertNotNull(xmlHelper.getValue(inputFile, xPath.substring(0, xPath.lastIndexOf('/')) + "/@uri"));
+        xPath = baseXp + CmsWorkplaceConfiguration.N_LOCALIZEDFOLDERS + "/" + I_CmsXmlConfiguration.N_RESOURCE + "[3]";
+        assertEquals(1, xmlHelper.setValue(inputFile, xPath, null));
 
         // test removing non existent node
         xPath = baseXp + "test1";

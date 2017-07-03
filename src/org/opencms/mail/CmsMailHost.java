@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,8 +29,8 @@ package org.opencms.mail;
 
 /**
  * Contains the configuration of an individual mail host.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsMailHost implements Comparable<CmsMailHost> {
 
@@ -43,7 +43,7 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
     /** The password to use for authentication. */
     private String m_password;
 
-   /** The port to use. */
+    /** The port to use. */
     private int m_port;
 
     /** The protocol to use. */
@@ -52,17 +52,28 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
     /** The user name to use for authentication. */
     private String m_username;
 
+    /** The security setting. */
+    private String m_security;
+
     /**
      * Creates a new mail host.<p>
-     * 
+     *
      * @param hostname the name of the mail host
      * @param order the order in which the host is tried
      * @param protocol the protocol to use (default "smtp")
-     * @param username the user name to use for authentication 
+     * @param security the security setting
+     * @param username the user name to use for authentication
      * @param password the password to use for authentication
      * @param port the port, if < 0 then 25 is used
      */
-    public CmsMailHost(String hostname, Integer port, Integer order, String protocol, String username, String password) {
+    public CmsMailHost(
+        String hostname,
+        Integer port,
+        Integer order,
+        String protocol,
+        String security,
+        String username,
+        String password) {
 
         m_hostname = hostname;
         int portInt = port.intValue();
@@ -70,6 +81,7 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
         m_protocol = (protocol != null) ? protocol : CmsMailSettings.MAIL_DEFAULT_PROTOCOL;
         m_username = username;
         m_password = password;
+        m_security = security;
         m_order = order;
     }
 
@@ -104,7 +116,7 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
 
     /**
      * Returns the host name.<p>
-     * 
+     *
      * @return the host name
      */
     public String getHostname() {
@@ -114,7 +126,7 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
 
     /**
      * Returns the order of this mail host.<p>
-     * 
+     *
      * @return the order of this mail host
      */
     public Integer getOrder() {
@@ -124,7 +136,7 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
 
     /**
      * Returns the password used for authentication.<p>
-     * 
+     *
      * @return the password used for authentication
      */
     public String getPassword() {
@@ -141,10 +153,10 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
 
         return m_port;
     }
-    
+
     /**
      * Returns the protocol used for mail sending, default is "smtp".<p>
-     * 
+     *
      * @return the protocol used for mail sending
      */
     public String getProtocol() {
@@ -153,8 +165,18 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
     }
 
     /**
+     * Gets the value of the security setting.<p>
+     *
+     * @return the value of the security setting
+     */
+    public String getSecurity() {
+
+        return m_security;
+    }
+
+    /**
      * Returns the user name used for authentication.<p>
-     * 
+     *
      * @return the user name used for authentication
      */
     public String getUsername() {
@@ -162,22 +184,22 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
         return m_username;
     }
 
-    /** 
+    /**
      * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
 
-        return m_hostname.hashCode() * 1117 + m_protocol.hashCode() * 2003 + m_username.hashCode();
+        return (m_hostname.hashCode() * 1117) + (m_protocol.hashCode() * 2003) + m_username.hashCode();
     }
 
     /**
-     * Returns <code>true</code> only if authentication is enabled, 
+     * Returns <code>true</code> only if authentication is enabled,
      * the default is <code>false</code>.<p>
-     * 
-     * Authentication is enabled only if both "username" and "password" 
+     *
+     * Authentication is enabled only if both "username" and "password"
      * are not <code>null</code>.<p>
-     * 
+     *
      * @return <code>true</code> only if authentication is enabled
      */
     public boolean isAuthenticating() {
@@ -200,7 +222,9 @@ public class CmsMailHost implements Comparable<CmsMailHost> {
         buf.append(" order=");
         buf.append(m_order);
         buf.append(" protocol=");
+
         buf.append(getProtocol());
+        buf.append(" security=" + getSecurity());
         if (isAuthenticating()) {
             buf.append(" user=");
             buf.append(getUsername());

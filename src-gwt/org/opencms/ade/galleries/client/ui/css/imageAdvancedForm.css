@@ -14,6 +14,11 @@ div.input{
 	margin-right: 10px;
 	vertical-align: middle;
 }
+
+div.linkWidget > * { 
+	vertical-align: middle; 
+}
+
 div.selectBox{
 	width: 150px;
 	vertical-align: middle;
@@ -22,12 +27,10 @@ div.selectBox *{
 	font-size: value("constants.css.fontSizeSmall");
 	line-height: 12px;
 }
-@if user.agent ie6 {
-	div.input, div.selectBox{
-		display: inline;
-	}
-} @else {
-	div.input, div.selectBox{
-		display: inline-block;
-	}
+div.input, div.selectBox{
+	display: inline-block;
+}
+
+div.selectBox .input-selectBoxOpener {
+	line-height: 28px; 
 }

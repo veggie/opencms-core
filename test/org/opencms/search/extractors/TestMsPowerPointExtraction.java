@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,30 +27,22 @@
 
 package org.opencms.search.extractors;
 
+import org.opencms.test.OpenCmsTestCase;
+
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
 /**
  * Tests the text extraction form a Pdf file.<p>
  */
-public class TestMsPowerPointExtraction extends TestCase {
-
-    /**
-     * Default JUnit constructor.<p>
-     * 
-     * @param arg0 JUnit parameters
-     */
-    public TestMsPowerPointExtraction(String arg0) {
-
-        super(arg0);
-    }
+public class TestMsPowerPointExtraction extends OpenCmsTestCase {
 
     /**
      * Tests the PowerPoint text extraction for old OLE2 documents.<p>
+     *
+     * Also checks special chars like "&auml; &ouml; &uuml; &Auml; &Ouml; &Uuml; &szlig;"<p>
      *
      * @throws Exception if the test fails
      */
@@ -61,7 +53,8 @@ public class TestMsPowerPointExtraction extends TestCase {
         String path = res.getPath();
         System.out.println("Core POI came from " + path);
 
-        // open an input stream for the test file        
+        // open an input stream for the test file
+        @SuppressWarnings("resource")
         InputStream in = getClass().getClassLoader().getResourceAsStream("org/opencms/search/extractors/test1.ppt");
 
         // extract the content
@@ -90,7 +83,7 @@ public class TestMsPowerPointExtraction extends TestCase {
         assertTrue(result.indexOf("Some content on a second sheet.") > -1);
         assertTrue(result.indexOf("Some content on the third sheet.") > -1);
         // NOTE: Euro symbol conversion fails - possible reason is that Extraction method class handles only ISO
-        // this is "äöüÄÖÜß"
+        // this is "&auml; &ouml; &uuml; &Auml; &Ouml; &Uuml; &szlig;"
         assertTrue(result.indexOf("\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df") > -1);
 
         assertEquals("Alkacon Software - The OpenCms experts", items.get(I_CmsExtractionResult.ITEM_TITLE));
@@ -110,7 +103,8 @@ public class TestMsPowerPointExtraction extends TestCase {
      */
     public void testPPtExtractionOOXML() throws Exception {
 
-        // open an input stream for the test file        
+        // open an input stream for the test file
+        @SuppressWarnings("resource")
         InputStream in = getClass().getClassLoader().getResourceAsStream("org/opencms/search/extractors/test1.pptx");
 
         // extract the content
@@ -139,7 +133,7 @@ public class TestMsPowerPointExtraction extends TestCase {
         assertTrue(result.indexOf("Some content on a second sheet.") > -1);
         assertTrue(result.indexOf("Some content on the third sheet.") > -1);
         // NOTE: Euro symbol conversion fails - possible reason is that Extraction method class handles only ISO
-        // this is "äöüÄÖÜß"
+        // this is "&auml; &ouml; &uuml; &Auml; &Ouml; &Uuml; &szlig;"
         assertTrue(result.indexOf("\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc\u00df") > -1);
 
         assertEquals("Alkacon Software - The OpenCms experts", items.get(I_CmsExtractionResult.ITEM_TITLE));
@@ -149,7 +143,7 @@ public class TestMsPowerPointExtraction extends TestCase {
         assertEquals("Key1, Key2", items.get(I_CmsExtractionResult.ITEM_KEYWORDS));
         assertEquals("M. Manager", items.get(I_CmsExtractionResult.ITEM_MANAGER));
 
-        // either I am doing something wrong or Tika 0.9 does not support the "company" and "comment" meta information        
+        // either I am doing something wrong or Tika 0.9 does not support the "company" and "comment" meta information
         // assertEquals("Alkacon Software", items.get(I_CmsExtractionResult.ITEM_COMPANY));
         // assertEquals("This is the comment", items.get(I_CmsExtractionResult.ITEM_COMMENTS));
 

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Mananagement System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,27 +37,27 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.ThrowableInformation;
 
 /**
- * Extends the default pattern layout of log4j by adding functionality for filtering the 
+ * Extends the default pattern layout of log4j by adding functionality for filtering the
  * stack traces output.<p>
- * 
+ *
  * CAUTION: Do not use classes which instantiate a logger in this class!!!<p>
- * 
+ *
  * Usage (log4j.properties):<br/>
  * log4j.appender.OC.layout=org.opencms.util.CmsPatternLayout<br/>
  * log4j.appender.OC.layout.ConversionPattern=%d{DATE} %5p [%30.30C:%4L] %m%n<br/>
  * log4j.appender.OC.layout.Filter=org.apache.tomcat,org.apache.catalina,org.apache.coyote<br/>
  * log4j.appender.OC.layout.Exclude=org.opencms.workplace.list.A_CmsListDialog<br/>
  * log4j.appender.OC.layout.MaxLength=5<p>
- * 
+ *
  * @since 7.0.5
  */
 public class CmsPatternLayout extends PatternLayout {
 
     /** List of class names which prevents displaying the stack trace. */
-    private List m_excludes;
+    private List<String> m_excludes;
 
     /** List of class names which should be filtered. */
-    private List m_filters;
+    private List<String> m_filters;
 
     /** Maximum length of the filtered stack trace. */
     private int m_maxLength;
@@ -72,20 +72,21 @@ public class CmsPatternLayout extends PatternLayout {
 
     /**
      * Constructs a PatternLayout using the supplied conversion pattern.
-     * 
+     *
      * @param pattern the pattern to use for the layout
      */
     CmsPatternLayout(String pattern) {
 
         super(pattern);
-        m_filters = new ArrayList();
-        m_excludes = new ArrayList();
+        m_filters = new ArrayList<String>();
+        m_excludes = new ArrayList<String>();
         m_maxLength = Integer.MAX_VALUE;
     }
 
     /**
      * @see org.apache.log4j.PatternLayout#format(org.apache.log4j.spi.LoggingEvent)
      */
+    @Override
     public String format(LoggingEvent event) {
 
         String result = super.format(event);
@@ -113,7 +114,7 @@ public class CmsPatternLayout extends PatternLayout {
 
                 // if cause trace starts reset counter (subtrace)
                 if (elem.trim().startsWith("Caused")) {
-                    if (!exclFound && (truncated > 0 || filtered > 0)) {
+                    if (!exclFound && ((truncated > 0) || (filtered > 0))) {
                         trace.append(createSummary(truncated, filtered));
                     }
                     count = 0;
@@ -143,7 +144,7 @@ public class CmsPatternLayout extends PatternLayout {
             if (exclFound) {
                 result += minTrace.toString();
             } else {
-                if (truncated > 0 || filtered > 0) {
+                if ((truncated > 0) || (filtered > 0)) {
                     trace.append(createSummary(truncated, filtered));
                 }
                 result += trace.toString();
@@ -156,6 +157,7 @@ public class CmsPatternLayout extends PatternLayout {
     /**
      * @see org.apache.log4j.PatternLayout#ignoresThrowable()
      */
+    @Override
     public boolean ignoresThrowable() {
 
         return false;
@@ -163,7 +165,7 @@ public class CmsPatternLayout extends PatternLayout {
 
     /**
      * Sets an exclusion for preventing the stack trace output.<p>
-     * 
+     *
      * @param exclude the names of a classes (comma separated) which should prevent the stack trace output
      */
     public void setExclude(String exclude) {
@@ -182,7 +184,7 @@ public class CmsPatternLayout extends PatternLayout {
 
     /**
      * Sets a filter for the stack trace output.<p>
-     * 
+     *
      * @param filter the names of a classes (comma separated) which should be filtered in the stack trace output
      */
     public void setFilter(String filter) {
@@ -201,7 +203,7 @@ public class CmsPatternLayout extends PatternLayout {
 
     /**
      * Sets the maximum length of the stack trace.<p>
-     * 
+     *
      * @param len the maximum length (lines) of the stack trace
      */
     public void setMaxLength(String len) {
@@ -215,10 +217,10 @@ public class CmsPatternLayout extends PatternLayout {
 
     /**
      * Creates a string with the count of filtered and truncated elements.<p>
-     * 
+     *
      * @param truncated the number of truncated elements
      * @param filtered the number of filtered elements
-     * 
+     *
      * @return a string with the count of filtered and truncated elements
      */
     private String createSummary(int truncated, int filtered) {
@@ -239,19 +241,19 @@ public class CmsPatternLayout extends PatternLayout {
 
     /**
      * Checks if the element in the stack trace is filtered.<p>
-     * 
+     *
      * @param element the element in the stack trace to check
      * @param list the list to check against
-     * 
+     *
      * @return true if filtered otherwise false
      */
-    private boolean matches(String element, List list) {
+    private boolean matches(String element, List<String> list) {
 
         boolean result = false;
 
-        Iterator iter = list.iterator();
+        Iterator<String> iter = list.iterator();
         while (iter.hasNext()) {
-            String rule = (String)iter.next();
+            String rule = iter.next();
 
             if (element.trim().startsWith(rule)) {
                 return true;

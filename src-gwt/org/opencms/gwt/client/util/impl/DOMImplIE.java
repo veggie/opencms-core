@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,9 +31,9 @@ import com.google.gwt.dom.client.Document;
 
 /**
  * Helper class for DOM operations not made available by the GWT core classes.<p>
- * 
- * Implementation for MSIE 7 + 8 browsers, do not use for MSIE 9.<p>
- * 
+ *
+ * Implementation for all MSIE browsers.<p>
+ *
  * @since 8.0.0
  */
 public class DOMImplIE extends DOMImpl {
@@ -43,6 +43,10 @@ public class DOMImplIE extends DOMImpl {
      */
     @Override
     public native com.google.gwt.dom.client.Element createIFrameElement(Document doc, String name) /*-{
-        return doc.createElement("<iframe name='" + name + "'/>");
-    }-*/;
+                                                                                                   // attributes need to be set at creation of the iframe DOM element to take effect in rendering
+                                                                                                   return doc
+                                                                                                   .createElement("<iframe name='"
+                                                                                                   + name
+                                                                                                   + "' allowtransparency='true' frameborder='0' scrolling='no' framespacing='0' />");
+                                                                                                   }-*/;
 }

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -55,7 +55,7 @@ public class TestCmsXmlContent75Features extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestCmsXmlContent75Features(String arg0) {
@@ -65,7 +65,7 @@ public class TestCmsXmlContent75Features extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -97,7 +97,7 @@ public class TestCmsXmlContent75Features extends OpenCmsTestCase {
 
     /**
      * Test accessing the XML through a value wrapper.<p>
-     * 
+     *
      * @throws Exception in case something goes wrong
      */
     public void testDirectXmlAccesss() throws Exception {
@@ -112,7 +112,10 @@ public class TestCmsXmlContent75Features extends OpenCmsTestCase {
             "http://www.opencms.org/test3.xsd",
             "org/opencms/xml/content/xmlcontent-definition-3.mod1.xsd");
 
-        cacheSchema(resolver, "http://www.opencms.org/test4.xsd", "org/opencms/xml/content/xmlcontent-definition-4.xsd");
+        cacheSchema(
+            resolver,
+            "http://www.opencms.org/test4.xsd",
+            "org/opencms/xml/content/xmlcontent-definition-4.xsd");
 
         String content;
         CmsXmlContent xmlcontent;
@@ -143,19 +146,19 @@ public class TestCmsXmlContent75Features extends OpenCmsTestCase {
 
         CmsJspContentAccessValueWrapper html = cascade.getValue().get("Html");
         assertEquals("a=b&c=d", html.getXmlText().get("links/link/query"));
-        assertEquals("/sites/default/noexist/index.html", html.getXmlText().get("links/link[3]/target"));
+        assertEquals("/sites/default/noexist/index.html", html.getXmlText().get("links/link[@name='link1']/target"));
 
         assertEquals("/sites/default/index.html", cascade.getXmlText().get("VfsLink[1]/link/target"));
         assertEquals("a=b&c=d", cascade.getXmlText().get("Html/links/link/query"));
     }
 
     /**
-     * Updates the OpenCms XML entity resolver cache with a changed XML schema id.<p> 
-     * 
+     * Updates the OpenCms XML entity resolver cache with a changed XML schema id.<p>
+     *
      * @param resolver the OpenCms XML entity resolver to use
      * @param id the XML schema id to update in the resolver
      * @param filename the name of the file in the RFS where to read the new schema content from
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     private void cacheSchema(CmsXmlEntityResolver resolver, String id, String filename) throws Exception {

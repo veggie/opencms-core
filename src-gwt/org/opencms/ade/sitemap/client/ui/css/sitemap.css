@@ -1,51 +1,57 @@
-.pageCenter {
-	padding: 0px;
-	position: relative;
-	width: 930px;
-	margin: 0 auto;
+body div.pageCenter {
+	padding: 10px;
 }
 
-@sprite .root {
-	gwt-image: "backgrounds.sitemapBackground";
+.root {
+	background: value("constants.css.backgroundColorMenu");
 	font-family: value("constants.css.fontFamily");
-	position: relative;
 	margin: 0;
 	overflow: auto;
 	height: 100%;
-	padding-top: 45px;
 }
 
-@if user.agent ie6 {
-	.root * {
-		zoom: 1; 
-	}
+.toolbar-toolbar + div {
+	margin-top: 72px;
+}
+
+
+.hiddenHeader.hiddenHeader { 
+	display: none; 
+}
+
+.hiddenHeader.hiddenHeader + .page { 
+	margin-top:  72px !important; 
+}
+
+
+/** joined vendor prefix style, for better fall back behavior */
+div.page{
+	background-color: value("constants.css.gradientFormDialogColor");
+	background-image: value("constants.css.gradientFormDialog");
 }
 
 .page {
 	background-color: value("constants.css.backgroundColorDialog");
 	border: 2px solid value("constants.css.borderColor");
 	padding: 10px;
+	width: value("constants.css.toolbarWidth");
+	margin: 0px auto;
 }
 
-div.header{
-	border: 2px solid value("constants.css.borderColor");
-	background: value("constants.css.backgroundColorListItem");
-	padding: 10px;
-	width: 930px;
-	margin: 0px auto 10px;
+
+.headerContainer #locale-header-container { 
+	display: none; 
 }
 
-div.header h2{
-	font-size: value("constants.css.fontSizeBig");
-	font-weight: bold;
-	margin: 0px;
+.headerContainer.headerContainerVaadinMode #locale-header-container { 
+	display: block; 
 }
 
-div.header div{
-	font-size: value("constants.css.fontSize");
-	margin: 0px;
+.headerContainer.headerContainerVaadinMode > *:first-child { 
+	display: none; 
 }
-div.header p{
-	font-size: value("constants.css.fontSize");
-	margin: 8px 0px;
+
+.headerContainer > *:first-child, #locale-header-container > *:first-child {
+	padding: 10px; 
 }
+ 

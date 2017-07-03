@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,6 +28,7 @@
 package org.opencms.importexport;
 
 import org.opencms.main.CmsIllegalArgumentException;
+import org.opencms.module.CmsModule.ExportMode;
 import org.opencms.util.CmsStringUtil;
 
 import java.util.Collections;
@@ -37,8 +38,8 @@ import org.dom4j.Element;
 
 /**
  * Export parameters.<p>
- * 
- * @since 7.0.4 
+ *
+ * @since 7.0.4
  */
 public class CmsExportParameters {
 
@@ -81,6 +82,9 @@ public class CmsExportParameters {
     /** If set, the manifest.xml file will be generated with dtd info. */
     private boolean m_xmlValidation;
 
+    /** The export mode that should be used for the export. */
+    private ExportMode m_exportMode = ExportMode.DEFAULT;
+
     /**
      * Constructor.<p>
      */
@@ -91,7 +95,7 @@ public class CmsExportParameters {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param exportFile the zip file to export to
      * @param moduleElement module informations in a Node for module export
      * @param exportResourceData if the resource data has also to be exported
@@ -103,6 +107,7 @@ public class CmsExportParameters {
      * @param contentAge export contents changed after this date/time
      * @param recursive recursive flag
      * @param inProject if only resources in the current project are exported
+     * @param exportMode the export mode to use
      */
     public CmsExportParameters(
         String exportFile,
@@ -115,7 +120,8 @@ public class CmsExportParameters {
         boolean includeUnchanged,
         long contentAge,
         boolean recursive,
-        boolean inProject) {
+        boolean inProject,
+        ExportMode exportMode) {
 
         setPath(exportFile);
         setResources(resourcesToExport);
@@ -129,6 +135,7 @@ public class CmsExportParameters {
         setExportProjectData(exportProjectData);
         setInProject(inProject);
         setExportAsFiles(false);
+        setExportMode(exportMode);
     }
 
     /**
@@ -139,6 +146,16 @@ public class CmsExportParameters {
     public long getContentAge() {
 
         return m_contentAge;
+    }
+
+    /**
+     * Returns the export mode that should be used.
+     *
+     * @return the export mode that should be used.
+     */
+    public ExportMode getExportMode() {
+
+        return m_exportMode;
     }
 
     /**
@@ -191,8 +208,8 @@ public class CmsExportParameters {
     /**
      * Indicates if the resources are exported in one export .ZIP file (the default) or as individual files.<p>
      *
-     * @return <code>false</code> if the resources will be exported in a .ZIP file, 
-     *      <code>true</code> if the resources will be exported as individual files 
+     * @return <code>false</code> if the resources will be exported in a .ZIP file,
+     *      <code>true</code> if the resources will be exported as individual files
      */
     public boolean isExportAsFiles() {
 
@@ -296,12 +313,22 @@ public class CmsExportParameters {
     /**
      * Controls if the resources are exported in one export .ZIP file (the default) or as individual files.<p>
      *
-     * @param exportAsFiles if <code>false</code>, then the resources will be exported in a .ZIP file, 
-     *      otherwise as individual files 
+     * @param exportAsFiles if <code>false</code>, then the resources will be exported in a .ZIP file,
+     *      otherwise as individual files
      */
     public void setExportAsFiles(boolean exportAsFiles) {
 
         m_exportAsFiles = exportAsFiles;
+    }
+
+    /**
+     * Sets the export mode.
+     *
+     * @param exportMode the export mode to set
+     */
+    public void setExportMode(ExportMode exportMode) {
+
+        m_exportMode = null != exportMode ? exportMode : ExportMode.DEFAULT;
     }
 
     /**
@@ -366,7 +393,7 @@ public class CmsExportParameters {
 
     /**
      * Sets the file path, should be a zip file.<p>
-     * 
+     *
      * @param path the file path
      */
     public void setPath(String path) {

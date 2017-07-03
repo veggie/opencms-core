@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -42,8 +42,8 @@ import org.apache.commons.logging.Log;
 
 /**
  * Deletes a module.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsModuleDeleteThread extends A_CmsReportThread {
 
@@ -51,19 +51,19 @@ public class CmsModuleDeleteThread extends A_CmsReportThread {
     private static final Log LOG = CmsLog.getLog(CmsModuleDeleteThread.class);
 
     /** A list of module name to delete. */
-    private List m_moduleNames;
+    private List<String> m_moduleNames;
 
     /** mode indicating if pre-replacement or final deletion. */
     private boolean m_replaceMode;
 
     /**
      * Creates the module delete thread.<p>
-     * 
+     *
      * @param cms the current cms context
      * @param moduleNames the name of the module
      * @param replaceMode the replace mode
      */
-    public CmsModuleDeleteThread(CmsObject cms, List moduleNames, boolean replaceMode) {
+    public CmsModuleDeleteThread(CmsObject cms, List<String> moduleNames, boolean replaceMode) {
 
         super(cms, Messages.get().getBundle().key(Messages.GUI_DELETE_MODULE_THREAD_NAME_1, moduleNames));
         m_moduleNames = moduleNames;
@@ -77,6 +77,7 @@ public class CmsModuleDeleteThread extends A_CmsReportThread {
     /**
      * @see org.opencms.report.A_CmsReportThread#getReportUpdate()
      */
+    @Override
     public String getReportUpdate() {
 
         return getReport().getReportUpdate();
@@ -85,10 +86,15 @@ public class CmsModuleDeleteThread extends A_CmsReportThread {
     /**
      * @see java.lang.Runnable#run()
      */
+    @Override
     public void run() {
 
         I_CmsReport report = getReport();
+        boolean indexingAlreadyPaused = OpenCms.getSearchManager().isOfflineIndexingPaused();
         try {
+            if (!indexingAlreadyPaused) {
+                OpenCms.getSearchManager().pauseOfflineIndexing();
+            }
             if (LOG.isDebugEnabled()) {
                 LOG.debug(Messages.get().getBundle().key(Messages.LOG_DELETE_THREAD_STARTED_0));
             }
@@ -98,9 +104,9 @@ public class CmsModuleDeleteThread extends A_CmsReportThread {
             m_moduleNames = CmsModuleManager.topologicalSort(m_moduleNames, null);
             Collections.reverse(m_moduleNames);
 
-            Iterator j = m_moduleNames.iterator();
+            Iterator<String> j = m_moduleNames.iterator();
             while (j.hasNext()) {
-                String moduleName = (String)j.next();
+                String moduleName = j.next();
 
                 moduleName = moduleName.replace('\\', '/');
 
@@ -114,6 +120,10 @@ public class CmsModuleDeleteThread extends A_CmsReportThread {
         } catch (Throwable e) {
             report.println(e);
             LOG.error(Messages.get().getBundle().key(Messages.LOG_MODULE_DELETE_FAILED_1, m_moduleNames), e);
+        } finally {
+            if (!indexingAlreadyPaused) {
+                OpenCms.getSearchManager().resumeOfflineIndexing();
+            }
         }
     }
 }

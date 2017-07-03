@@ -1,52 +1,38 @@
-@external html-face, cms_ade_groupcontainer, cmsState, cmsState-up, cmsState-up-hovering, cmsState-up-disabled, cmsState-down, cmsState-down-hovering, cmsState-down-disabled, gwt-TabLayoutPanel;
+@external opencms-icon, opencms-icon-edit-point, html-face, cms_ade_groupcontainer, cmsState, cmsState-up, cmsState-up-hovering, cmsState-up-disabled, cmsState-down, cmsState-down-hovering, cmsState-down-disabled, gwt-TabLayoutPanel;
 
-.toolbarAdd, .toolbarSitemap,
-.toolbarReset, .toolbarPublish, .toolbarClipboard,  .toolbarSave, .toolbarContext{}
+.showButtons, .hideButtons, .elementInfoChanged, .elementInfoUnchanged, .editableElement {}
 
-.menuTabContainer{
-	height: 486px;
-}
-
-.menuTabContainer > div >.gwt-TabLayoutPanel{
+.menuTabContainer > div >.gwt-TabLayoutPanel, .menuTabContainer > div{
 	border: none;
 }
 
-.menuTabContainer > div{
-	border: none;	
-}
-
-.menuTabContainer ul.clipboardList {
-	overflow: auto;
-	/* position relative is required to hide overflowing content caused by layout bug in IE7 */
-	position: relative;
+.menuTabContainer div.clipboardList {
 	border: 1px solid value("constants.css.borderColor");
-	padding: 0 2px;
 	background: value("constants.css.backgroundColorDialog");
-}
-ul.clipboardList{
-	height: 441px;
-}
-
-.showButtons {}
-
-.hideButtons {}
-
-.classicDirectEdit {}
-
-/** hiding buttons in clip-board menu while dragging **/
-.dragStarted .clipboardList .cmsState {
-	display: none;
+	position: absolute;
+	top: 6px;
+	bottom:	6px;
+	left: 6px;
+	right: 6px;
 }
 
-.dragStarted div.directEditButtons{
-	display: none;
+.menuTabContainer div.clipboardList ul{
+	min-height: 82px;
+	padding: 0 2px;
 }
 
-.clipboardList > div  {
+.clipboardList ul > div  {
 	margin: 2px;
 }
 
-div.optionBar{
+/** hiding buttons in clip-board menu while dragging **/
+.dragStarted .clipboardList .cmsState, .dragStarted div.directEditButtons, 
+.cms_ade_groupcontainer.hideElements .hiddenElement, .dragStarted .cms_ade_groupcontainer .hiddenElement{
+	display:none;
+}
+
+
+.dragElement div.optionBar{
 	border: 1px solid transparent;
 	position: absolute;
 	top: 2px;
@@ -68,22 +54,21 @@ div.optionBar{
 	max-width: none;
 }
 
-.toolbarSelection div.expired, .dragging div.expired, .toolbarAdd div.expired, .toolbarClipboard div.expired{
+.dragElement div.optionBar, .dragElement div.optionBar *{
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+}
+
+.editButtonsVisible div.expired, .dragging div.expired{
 	display: block;
 }
-
-/** Force scroll-bar as long as direct edit buttons are visible to avoid any flickering when elements highlighted. */
-body.toolbarSelection{
-	overflow-y: scroll;
-}
-
 
 div.expired{
 	display: none;
 }
 
-@sprite .expired div.expiredOverlay{
-	gwt-image: 'otherImages.invalidElement';
+.expired div.expiredOverlay, .hiddenElement div.hiddenElementOverlay{
+	background-image: value("constants.css.gradientInvalid");
 	position: absolute;
 	height: auto;
 	width: auto;
@@ -93,19 +78,25 @@ div.expired{
 	bottom: 2px;
 }
 
-@if user.agent ie6 {
-	.expired div.expiredOverlay {
-		filter: literal("alpha(opacity = 60)");
-	}
-} @elif user.agent ie8 {
-	.expired div.expiredOverlay {
-		-ms-filter: "alpha(opacity = 60)";
-	}
-} @else {
-	.expired div.expiredOverlay {
-        opacity: 0.6;
-	}
+div.expiredListElementOverlay{
+	background-image: value("constants.css.gradientInvalid");
+	box-sizing: border-box;
+	box-sizing: border-box;
+	padding: 0px;
+	margin: 0px;
+	position: absolute;
+	z-index: 1;
 }
+
+.expired div.expiredOverlay, .hiddenElement div.hiddenElementOverlay, div.expiredListElementOverlay {
+        opacity: 0.6;
+}
+
+.expired div.expiredOverlay, div.expiredListElementOverlay {
+	pointer-events: none; 
+}
+
+
 
 div.toolbarToggle{
 	position: fixed;
@@ -115,13 +106,10 @@ div.toolbarToggle{
 	z-index: value("constants.css.zIndexPopup");
 }
 
-.toolbarToggle, .toolbarToggle *, div.optionBar .cmsState, div.optionBar .html-face, div.optionBar span{
+div.optionBar .cmsState, div.optionBar .html-face, div.optionBar span{
 	margin: 0;
 	padding: 0;
 	border: none;
-	color: value("constants.css.textColor");
-	font-family: value("constants.css.fontFamily");
-	font-size: value("constants.css.fontSize");
 	line-height: value("constants.css.lineHeight");
 	background: transparent;
 	text-align: left;
@@ -133,25 +121,26 @@ div.toolbarToggle{
 	max-width: none;
 }
 
-@sprite .toolbarSelection .optionBar.cmsHovering{
-	gwt-image: "backgrounds.softBackground";
+.editButtonsVisible div.optionBar.cmsHovering{
 	height: auto;
 	border: 1px solid value("constants.css.borderColor");
-	border-radius: 2px;
-	background-color: value("constants.css.backgroundColorSoft");
+	border-radius: value("constants.css.borderRadius");
+	background: value("constants.css.backgroundColorDialog");
 }
 
 .optionBar div.cmsState{
 	display: none;
 }
 
-.dragStarted .optionBar, .dragPlaceholder .optionBar, .groupcontainerEditing .optionBar, .cms_ade_groupcontainer .dragElement .optionBar{
+.dragStarted .optionBar, .dragPlaceholder .optionBar, 
+.groupcontainerEditor .cms_ade_groupcontainer .dragPlaceholder .optionBar, .groupcontainerEditing .optionBar, 
+.cms_ade_groupcontainer .dragElement .optionBar{
 	display: none;
 }
 .emptyGroupContainer{
 	min-height: 27px;
-	background: #ffffff;
-	border: 1px dashed value("constants.css.borderColorHighlight");
+	background-image: value("constants.css.gradientInvalid");
+	border: 1px solid value("constants.css.borderColor");
 }
 
 div.groupcontainerPlaceholder{
@@ -165,105 +154,59 @@ div.groupcontainerPlaceholder{
 	visibility: hidden !important;
 }
 
-@sprite .groupcontainerOverlay{
-	gwt-image: 'otherImages.placeholderImage';
+.groupcontainerOverlay{
+	background-image: value("constants.css.gradientPlaceholder");
 	position: fixed;
 	top: 0;
 	left: 0;
 	width: 100%;
 	height: 100%;
+	z-index: value("constants.css.zIndexHighlighting");
+	opacity: 0.2;
 }
-
-.groupcontainerEditor{}
 
 .groupcontainerEditor .cms_ade_groupcontainer .optionBar{
 	display: block;
 }
 
-.groupcontainerEditing .emptyGroupContainer{
+.groupcontainerEditing .emptyGroupContainer, .editButtonsVisible .dragging div.optionBar.cmsHovering{
 	background: transparent;
 	border: none;
 }
 
-.dragStarted .dragElement.dragging .optionBar{
-	display: block;
+.editButtonsVisible .optionBar .cmsState:last-child,
+.editButtonsVisible .optionBar.cmsHovering .cmsState{
+	display: inline-block;
 }
 
-.toolbarSelection .dragging .optionBar.cmsHovering{
+.optionBar .opencms-icon span.lockedElement.opencms-icon-edit-point:before{
+	content: "\e90d";
+	opacity: 1;
 	background: transparent;
-	border: none;
-}
-.toolbarSelection .dragging .optionBar .toolbarClipboard,
-.toolbarSelection .dragging .optionBar .toolbarRemove, 
-.toolbarSelection .dragging .optionBar .toolbarEdit, 
-.toolbarSelection .dragging .optionBar .toolbarNew, 
-.toolbarSelection .dragging .optionBar .toolbarProperties, 
-.toolbarSelection .dragging .optionBar .toolbarSelection{
-	visibility: hidden;
 }
 
-@if user.agent ie6 {
-	.toolbarSelection .optionBar .toolbarSelection,
-	.toolbarSelection .optionBar.cmsHovering .cmsState{
-		display: inline;
-	}
-} @else {
-	.toolbarSelection .optionBar .toolbarSelection,
-	.toolbarSelection .optionBar.cmsHovering .cmsState{
-		display: inline-block;
-	}
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarClipboard, .optionBar .cmsState-down-hovering .toolbarClipboard, .optionBar .cmsState-down .toolbarClipboard {
-    gwt-image: "images.favoriteIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarClipboard, .optionBar .cmsState-up-disabled .toolbarClipboard, .optionBar .cmsState-down-disabled .toolbarClipboard {
-    gwt-image: "images.favoriteIconDeactivated";
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarRemove, .optionBar .cmsState-down-hovering .toolbarRemove, .optionBar .cmsState-down .toolbarRemove {
-    gwt-image: "images.removeIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarRemove, .optionBar .cmsState-up-disabled .toolbarRemove, .optionBar .cmsState-down-disabled .toolbarRemove {
-    gwt-image: "images.removeIconDeactivated";
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarDelete, .optionBar .cmsState-down-hovering .toolbarDelete, .optionBar .cmsState-down .toolbarDelete {
-    gwt-image: "images.deleteIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarDelete, .optionBar .cmsState-up-disabled .toolbarDelete, .optionBar .cmsState-down-disabled .toolbarDelete {
-    gwt-image: "images.deleteIconDeactivated";
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarEdit, .optionBar .cmsState-down-hovering .toolbarEdit, .optionBar .cmsState-down .toolbarEdit {
-    gwt-image: "images.editIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarEdit{
-    gwt-image: "images.editIconDeactivated";
-}
-/** show lock icon for deactivated edit button **/
-@sprite .optionBar .cmsState-up-disabled .toolbarEdit, .optionBar .cmsState-down-disabled .toolbarEdit {
-	gwt-image: "images.lockIconDeactivated";
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarMove, .optionBar .cmsState-down-hovering .toolbarMove, .optionBar .cmsState-down .toolbarMove {
-    gwt-image: "images.moveIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarMove, .optionBar .cmsState-up-disabled .toolbarMove, .optionBar .cmsState-down-disabled .toolbarMove {
-    gwt-image: "images.moveIconDeactivated";
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarNew, .optionBar .cmsState-down-hovering .toolbarNew, .optionBar .cmsState-down .toolbarNew {
-    gwt-image: "images.addIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarNew, .optionBar .cmsState-up-disabled .toolbarNew, .optionBar .cmsState-down-disabled .toolbarNew {
-    gwt-image: "images.addIconDeactivated";
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarProperties, .optionBar .cmsState-down-hovering .toolbarProperties, .optionBar .cmsState-down .toolbarProperties {
-    gwt-image: "images.propertyIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarProperties, .optionBar .cmsState-up-disabled .toolbarProperties, .optionBar .cmsState-down-disabled .toolbarProperties {
-    gwt-image: "images.propertyIconDeactivated";
-}
-@sprite .optionBar .cmsState-up-hovering .toolbarSelection, .optionBar .cmsState-down-hovering .toolbarSelection, .optionBar .cmsState-down .toolbarSelection {
-    gwt-image: "images.selectionIconActive";
-}
-@sprite .optionBar .cmsState-up .toolbarSelection, .optionBar .cmsState-up-disabled .toolbarSelection, .optionBar .cmsState-down-disabled .toolbarSelection {
-    gwt-image: "images.selectionIconDeactivated";
+.optionBar .opencms-icon .opencms-icon-edit-point:before, .optionBar div.opencms-icon.cmsState-up-disabled .opencms-icon-edit-point:before {
+	background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMTYwIDE2MCI+DQogIDxwYXRoIGQ9Ik0xMTYgMTcuN2E3MiA3MiAwIDAgMSAyNi4zIDk4LjRBNzIgNzIgMCAwIDEgNDQgMTQyLjUgNzIgNzIgMCAwIDEgMTcuNiA0NCA3MiA3MiAwIDAgMSAxMTYgMTcuNyIvPg0KICA8cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTA0IDM4LjVhNDggNDggMCAwIDEgMTcuNSA2NS41QTQ4IDQ4IDAgMCAxIDU2IDEyMS41IDQ4IDQ4IDAgMCAxIDM4LjUgNTYgNDggNDggMCAwIDEgMTA0IDM4LjQiLz4NCiAgPHBhdGggZD0iTTkyIDU5LjJhMjQgMjQgMCAwIDEgOC44IDMyLjggMjQgMjQgMCAwIDEtMzIuOCA4LjhBMjQgMjQgMCAwIDEgNTkuMiA2OCAyNCAyNCAwIDAgMSA5MiA1OS4yIi8+DQo8L3N2Zz4=");
+	background-size: 100% 100%;
+    content: "";
+    display: block;
+    height: 20px;
+    width: 20px;
+    opacity: 0.45;
 }
 
-.toolbarBack{}
+.optionBar.cmsHovering .opencms-icon .opencms-icon-edit-point:before {
+	background: transparent;
+	content: "\e901";
+	opacity: 1;
+}
+
+@eval enlargedMinHeight org.opencms.ade.containerpage.client.ui.CmsSmallElementsHandler.getNecessaryHeight();
+
+.enlargeSmallElements .smallElement {
+	min-height: enlargedMinHeight; 
+}
+
+.ignoreSmallElements .smallElement .optionBar {
+	visibility: hidden; 
+}

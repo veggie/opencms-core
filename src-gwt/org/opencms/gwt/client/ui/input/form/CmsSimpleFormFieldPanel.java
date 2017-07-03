@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,7 +36,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 
 /**
  * A simple form field container widget.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsSimpleFormFieldPanel extends A_CmsFormFieldPanel {
@@ -53,7 +53,6 @@ public class CmsSimpleFormFieldPanel extends A_CmsFormFieldPanel {
     public CmsSimpleFormFieldPanel() {
 
         m_panel = new FlowPanel();
-        setBorder(m_panel);
         initWidget(m_panel);
     }
 
@@ -77,6 +76,16 @@ public class CmsSimpleFormFieldPanel extends A_CmsFormFieldPanel {
             CmsFormRow row = createRow(field);
             m_panel.add(row);
         }
+    }
+
+    /**
+     * @see org.opencms.gwt.client.ui.I_CmsTruncable#truncate(java.lang.String, int)
+     */
+    public void truncate(String textMetricsKey, int clientWidth) {
+
+        clientWidth -= 12;
+        storeTruncation(textMetricsKey, clientWidth);
+        truncatePanel(m_panel, textMetricsKey, clientWidth);
     }
 
 }

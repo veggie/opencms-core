@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,11 +43,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.lucene.document.Document;
+
 import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
-import org.apache.lucene.document.Document;
 
 /**
  * Unit test for special search features added for OpenCms 7.5.<p>
@@ -59,7 +59,7 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestCmsSearchSpecialFeatures(String arg0) {
@@ -69,7 +69,7 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -103,13 +103,13 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
 
     /**
      * Creates a new search index setup for this test.<p>
-     * 
+     *
      * @throws Exception in case the test fails
      */
     public void testSearchIndexSetup() throws Exception {
 
         CmsSearchIndex searchIndex = new CmsSearchIndex(INDEX_SPECIAL);
-        searchIndex.setProjectName("Online");
+        searchIndex.setProject("Online");
         searchIndex.setLocale(Locale.ENGLISH);
         searchIndex.setRebuildMode(CmsSearchIndex.REBUILD_MODE_AUTO);
         // available pre-configured in the test configuration files opencms-search.xml
@@ -135,7 +135,7 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
         searchBean.setIndex(INDEX_SPECIAL);
         searchBean.setQuery(">>SearchEgg1<<");
 
-        // assert one file is found in the default site     
+        // assert one file is found in the default site
         searchResult = searchBean.getSearchResult();
         assertEquals(1, searchResult.size());
         assertEquals("/sites/default/xmlcontent/article_0001.html", (searchResult.get(0)).getPath());
@@ -143,7 +143,7 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
 
     /**
      * Tests incremental index updates with the new content blob feature.<p>
-     * 
+     *
      * @throws Exception in case the test fails
      */
     public void testIncrementalIndexUpdate() throws Exception {
@@ -163,7 +163,7 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
             "org/opencms/search/extractors/test1.pdf",
             fileName,
             CmsResourceTypeBinary.getStaticTypeId(),
-            Collections.EMPTY_LIST);
+            Collections.<CmsProperty> emptyList());
 
         // create 5 siblings
         for (int i = 0; i < 5; i++) {
@@ -176,10 +176,9 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
         OpenCms.getPublishManager().waitWhileRunning();
 
         cms.lockResource(fileName);
-        cms.writePropertyObject(fileName, new CmsProperty(
-            CmsPropertyDefinition.PROPERTY_TITLE,
-            "Title of the PDF",
-            null));
+        cms.writePropertyObject(
+            fileName,
+            new CmsProperty(CmsPropertyDefinition.PROPERTY_TITLE, "Title of the PDF", null));
 
         // publish the project and update the search index
         report = new CmsShellReport(cms.getRequestContext().getLocale());
@@ -189,7 +188,7 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
 
     /**
      * Ensures the content and content blob fields are loaded lazy.<p>
-     * 
+     *
      * @throws Exception in case the test fails
      */
     public void testLazyContentFields() throws Exception {
@@ -199,12 +198,14 @@ public class TestCmsSearchSpecialFeatures extends OpenCmsTestCase {
         String fileName = "/sites/default/test/master.pdf";
 
         CmsSearchIndex searchIndex = OpenCms.getSearchManager().getIndex(INDEX_SPECIAL);
-        Document doc = searchIndex.getDocument(CmsSearchField.FIELD_PATH, fileName);
+        Document doc = (Document)searchIndex.getDocument(CmsSearchField.FIELD_PATH, fileName).getDocument();
 
         assertNotNull("Document '" + fileName + "' not found", doc);
-        assertNotNull("No 'content' field available", doc.getFieldable(CmsSearchField.FIELD_CONTENT));
-        assertTrue("Content field not lazy", doc.getFieldable(CmsSearchField.FIELD_CONTENT).isLazy());
-        assertNotNull("No 'content blob' field available", doc.getFieldable(CmsSearchField.FIELD_CONTENT_BLOB));
-        assertTrue("Content blob field not lazy", doc.getFieldable(CmsSearchField.FIELD_CONTENT_BLOB).isLazy());
+        assertNotNull("No 'title' field available", doc.getField(CmsSearchField.FIELD_TITLE));
+        // assertFalse("title must not be lazy loaded", doc.getField(CmsSearchField.FIELD_TITLE). isLazy());
+        assertNotNull("No 'content' field available", doc.getField(CmsSearchField.FIELD_CONTENT));
+        // assertTrue("Content field not lazy", doc.getField(CmsSearchField.FIELD_CONTENT).isLazy());
+        assertNotNull("No 'content blob' field available", doc.getField(CmsSearchField.FIELD_CONTENT_BLOB));
+        // assertTrue("Content blob field not lazy", doc.getField(CmsSearchField.FIELD_CONTENT_BLOB).isLazy());
     }
 }

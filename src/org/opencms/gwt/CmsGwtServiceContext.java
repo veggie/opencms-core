@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,17 +31,21 @@ import org.opencms.db.CmsDriverManager;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.main.CmsEvent;
-import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
+import org.opencms.main.CmsStaticResourceHandler;
 import org.opencms.main.I_CmsEventListener;
 import org.opencms.main.OpenCms;
 import org.opencms.util.CmsCollectionsGenericWrapper;
+import org.opencms.util.CmsStringUtil;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.List;
 
@@ -52,13 +56,13 @@ import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
 
 /**
  * This class contains the data that should be cached for a specific service class.<p>
- * 
+ *
  * We cache instances of this class rather than caching instances of {@link CmsGwtService} directly because
  * its superclass, {@link com.google.gwt.user.server.rpc.RemoteServiceServlet}, does some caching which we can't use because it doesn't
- * take the distinction between online and offline requests into account. 
- * 
+ * take the distinction between online and offline requests into account.
+ *
  * @since 8.0.0
- * 
+ *
  */
 public class CmsGwtServiceContext implements I_CmsEventListener {
 
@@ -79,24 +83,26 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
 
     /**
      * Creates a new service context object.<p>
-     * 
+     *
      * @param name an identifier which is used for debugging
      */
     public CmsGwtServiceContext(String name) {
 
         m_name = name;
 
-        // listen on VFS changes for serialization policies 
-        OpenCms.addCmsEventListener(this, new int[] {
-            I_CmsEventListener.EVENT_RESOURCE_AND_PROPERTIES_MODIFIED,
-            I_CmsEventListener.EVENT_RESOURCES_AND_PROPERTIES_MODIFIED,
-            I_CmsEventListener.EVENT_RESOURCE_MODIFIED,
-            I_CmsEventListener.EVENT_RESOURCES_MODIFIED,
-            I_CmsEventListener.EVENT_RESOURCE_DELETED,
-            I_CmsEventListener.EVENT_PUBLISH_PROJECT,
-            I_CmsEventListener.EVENT_CLEAR_CACHES,
-            I_CmsEventListener.EVENT_CLEAR_ONLINE_CACHES,
-            I_CmsEventListener.EVENT_CLEAR_OFFLINE_CACHES});
+        // listen on VFS changes for serialization policies
+        OpenCms.addCmsEventListener(
+            this,
+            new int[] {
+                I_CmsEventListener.EVENT_RESOURCE_AND_PROPERTIES_MODIFIED,
+                I_CmsEventListener.EVENT_RESOURCES_AND_PROPERTIES_MODIFIED,
+                I_CmsEventListener.EVENT_RESOURCE_MODIFIED,
+                I_CmsEventListener.EVENT_RESOURCES_MODIFIED,
+                I_CmsEventListener.EVENT_RESOURCE_DELETED,
+                I_CmsEventListener.EVENT_PUBLISH_PROJECT,
+                I_CmsEventListener.EVENT_CLEAR_CACHES,
+                I_CmsEventListener.EVENT_CLEAR_ONLINE_CACHES,
+                I_CmsEventListener.EVENT_CLEAR_OFFLINE_CACHES});
 
     }
 
@@ -116,7 +122,7 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
                     // skip lock & unlock
                     return;
                 }
-                // a resource has been modified in a way that it *IS NOT* necessary also to clear 
+                // a resource has been modified in a way that it *IS NOT* necessary also to clear
                 // lists of cached sub-resources where the specified resource might be contained inside.
                 resource = (CmsResource)event.getData().get(I_CmsEventListener.KEY_RESOURCE);
                 uncacheResource(resource);
@@ -167,31 +173,30 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
 
     /**
      * Returns the serialization policy for the service.<p>
-     * 
-     * @param cms the current CMS context 
-     * @param moduleBaseURL the module's base URL 
-     * @param strongName the strong name of the service 
-     * 
-     * @return the serialization policy for the given service  
+     *
+     * @param cms the current CMS context
+     * @param moduleBaseURL the module's base URL
+     * @param strongName the strong name of the service
+     *
+     * @return the serialization policy for the given service
      */
     protected SerializationPolicy getSerializationPolicy(CmsObject cms, String moduleBaseURL, String strongName) {
 
         if (m_serializationPolicyPath == null) {
-            m_serializationPolicyPath = getSerializationPolicyPath(cms, moduleBaseURL, strongName);
+            m_serializationPolicyPath = getSerializationPolicyPath(moduleBaseURL, strongName);
         }
         return getSerializationPolicy(cms);
     }
 
     /**
      * Finds the path of the serialization policy file.<p>
-     * 
-     * @param cms the current CMS context 
+     *
      * @param moduleBaseURL the GWT module's base url
-     * @param strongName the strong name of the service 
-     * 
+     * @param strongName the strong name of the service
+     *
      * @return the serialization policy path
      */
-    protected String getSerializationPolicyPath(CmsObject cms, String moduleBaseURL, String strongName) {
+    protected String getSerializationPolicyPath(String moduleBaseURL, String strongName) {
 
         // locate the serialization policy file in OpenCms
         String modulePath = null;
@@ -206,18 +211,15 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
             LOG.error(ex.getLocalizedMessage(), ex);
             return null;
         }
-        String serializationPolicyUrl = SerializationPolicyLoader.getSerializationPolicyFileName(modulePath
-            + strongName);
-        return OpenCms.getLinkManager().getRootPath(cms, serializationPolicyUrl);
-
+        return SerializationPolicyLoader.getSerializationPolicyFileName(modulePath + strongName);
     }
 
     /**
      * Returns the serialization policy, using lazy initialization.<p>
-     * 
-     * @param cms the current cms context 
-     * 
-     * @return the serialization policy 
+     *
+     * @param cms the current cms context
+     *
+     * @return the serialization policy
      */
     private SerializationPolicy getSerializationPolicy(CmsObject cms) {
 
@@ -231,16 +233,40 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
         SerializationPolicy serializationPolicy = null;
 
         // Open the RPC resource file and read its contents
-        InputStream is;
+        InputStream is = null;
         try {
-            is = new ByteArrayInputStream(cms.readFile(m_serializationPolicyPath).getContents());
-        } catch (CmsException ex) {
+            // check if this is a static resource request
+            if (m_serializationPolicyPath.startsWith(OpenCms.getSystemInfo().getStaticResourceContext())) {
+                URL resourceURL = CmsStaticResourceHandler.getStaticResourceURL(m_serializationPolicyPath);
+                URLConnection connection;
+                connection = resourceURL.openConnection();
+                is = connection.getInputStream();
+            } else {
+                // try reading from the RFS
+                String rfsPath = m_serializationPolicyPath;
+                if (rfsPath.startsWith(OpenCms.getSystemInfo().getContextPath())) {
+                    rfsPath = rfsPath.substring(OpenCms.getSystemInfo().getContextPath().length());
+                }
+                rfsPath = CmsStringUtil.joinPaths(OpenCms.getSystemInfo().getWebApplicationRfsPath(), rfsPath);
+                File policyFile = new File(rfsPath);
+                if (policyFile.exists() && policyFile.canRead()) {
+                    is = new FileInputStream(policyFile);
+                } else {
+                    // the file does not exist in the RFS, try the VFS
+                    String policyPath = OpenCms.getLinkManager().getRootPath(cms, m_serializationPolicyPath);
+                    is = new ByteArrayInputStream(cms.readFile(policyPath).getContents());
+                }
+            }
+        } catch (Exception ex) {
             // most likely file not found
             String message = "ERROR: The serialization policy file '"
                 + m_serializationPolicyPath
                 + "' was not found; did you forget to include it in this deployment?";
             LOG.warn(message);
             LOG.warn(ex.getLocalizedMessage(), ex);
+
+        }
+        if (is == null) {
             return new CmsDummySerializationPolicy();
         }
 
@@ -254,7 +280,7 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
         } finally {
             try {
                 is.close();
-            } catch (IOException e) {
+            } catch (@SuppressWarnings("unused") IOException e) {
                 // Ignore this error
             }
         }
@@ -269,7 +295,7 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
 
     /**
      * Removes a cached resource from the cache.<p>
-     * 
+     *
      * @param resource the resource
      */
     private void uncacheResource(CmsResource resource) {
@@ -284,9 +310,9 @@ public class CmsGwtServiceContext implements I_CmsEventListener {
 
     /**
      * Removes a bunch of cached resources from the cache.<p>
-     * 
+     *
      * @param resources a list of resources
-     * 
+     *
      * @see #uncacheResource(CmsResource)
      */
     private void uncacheResources(List<CmsResource> resources) {

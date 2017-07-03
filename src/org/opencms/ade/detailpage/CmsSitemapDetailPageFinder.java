@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,14 +32,15 @@ import org.opencms.file.CmsObject;
 import org.opencms.file.CmsResource;
 import org.opencms.main.CmsException;
 import org.opencms.main.OpenCms;
+import org.opencms.workplace.CmsWorkplace;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * This class uses information from the detail page information stored in the sitemap to find the detail page for 
+ * This class uses information from the detail page information stored in the sitemap to find the detail page for
  * a given resource.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsSitemapDetailPageFinder implements I_CmsDetailPageFinder {
@@ -57,20 +58,20 @@ public class CmsSitemapDetailPageFinder implements I_CmsDetailPageFinder {
     }
 
     /**
-     * @see org.opencms.ade.detailpage.I_CmsDetailPageFinder#getDetailPage(org.opencms.file.CmsObject, java.lang.String, java.lang.String)
+     * @see org.opencms.ade.detailpage.I_CmsDetailPageFinder#getDetailPage(org.opencms.file.CmsObject, java.lang.String, java.lang.String, java.lang.String)
      */
-    public String getDetailPage(CmsObject cms, String rootPath, String linkSource) {
+    public String getDetailPage(CmsObject cms, String rootPath, String linkSource, String targetDetailPage) {
 
         CmsADEManager manager = OpenCms.getADEManager();
         if (!manager.isInitialized()) {
             return null;
         }
 
-        if (rootPath.endsWith(".jsp") || rootPath.startsWith(CmsResource.VFS_FOLDER_SYSTEM + "/")) {
-            // exclude these for performance reasons 
+        if (rootPath.endsWith(".jsp") || rootPath.startsWith(CmsWorkplace.VFS_PATH_WORKPLACE)) {
+            // exclude these for performance reasons
             return null;
         }
-        String result = manager.getDetailPage(cms, rootPath, linkSource);
+        String result = manager.getDetailPage(cms, rootPath, linkSource, targetDetailPage);
         if (result == null) {
             return null;
         }

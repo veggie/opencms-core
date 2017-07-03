@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,10 +31,13 @@ import org.opencms.util.CmsUUID;
 
 /**
  * Bean holding data needed to open the xml content editor.<p>
- * 
+ *
  * @since 8.0.1
  */
 public class CmsEditableData implements I_CmsEditableData {
+
+    /** The context id, identifying the collector list  instance. */
+    private String m_contextId;
 
     /** The edit id. */
     private String m_editId;
@@ -45,17 +48,45 @@ public class CmsEditableData implements I_CmsEditableData {
     /** The element name. */
     private String m_elementName;
 
+    /** The main language to copy in case the element language node does not exist yet. */
+    private String m_mainLanguage;
+
     /** The new link. */
     private String m_newLink;
 
     /** The new title. */
     private String m_newTitle;
 
+    /** The no edit reason. */
+    private String m_noEditReason;
+
+    /** The optional class name of a post-create handler. */
+    private String m_postCreateHandler;
+
     /** The site path. */
     private String m_sitePath;
 
     /** The structure id. */
     private CmsUUID m_structureId;
+
+    /** The unreleased or expired flag. */
+    private boolean m_unreleaseOrExpired;
+
+    /**
+     * Default constructor.<p>
+     */
+    public CmsEditableData() {
+
+        // do nothing
+    }
+
+    /**
+     * @see org.opencms.gwt.client.I_CmsEditableData#getContextId()
+     */
+    public String getContextId() {
+
+        return m_contextId;
+    }
 
     /**
      * @see org.opencms.gwt.client.I_CmsEditableData#getEditId()
@@ -82,6 +113,16 @@ public class CmsEditableData implements I_CmsEditableData {
     }
 
     /**
+     * Returns the main language to copy in case the element language node does not exist yet.<p>
+     *
+     * @return the main language to copy in case the element language node does not exist yet
+     */
+    public String getMainLanguage() {
+
+        return m_mainLanguage;
+    }
+
+    /**
      * @see org.opencms.gwt.client.I_CmsEditableData#getNewLink()
      */
     public String getNewLink() {
@@ -98,6 +139,22 @@ public class CmsEditableData implements I_CmsEditableData {
     }
 
     /**
+     * @see org.opencms.gwt.client.I_CmsEditableData#getNoEditReason()
+     */
+    public String getNoEditReason() {
+
+        return m_noEditReason;
+    }
+
+    /**
+     * @see org.opencms.gwt.client.I_CmsEditableData#getPostCreateHandler()
+     */
+    public String getPostCreateHandler() {
+
+        return m_postCreateHandler;
+    }
+
+    /**
      * @see org.opencms.gwt.client.I_CmsEditableData#getSitePath()
      */
     public String getSitePath() {
@@ -111,6 +168,25 @@ public class CmsEditableData implements I_CmsEditableData {
     public CmsUUID getStructureId() {
 
         return m_structureId;
+    }
+
+    /**
+     * @see org.opencms.gwt.client.I_CmsEditableData#isUnreleasedOrExpired()
+     */
+    public boolean isUnreleasedOrExpired() {
+
+        return m_unreleaseOrExpired;
+    }
+
+    /**
+     * Sets  the collector context id.<p>
+     *
+     * @param id the collector context id
+     */
+    public void setContextId(String id) {
+
+        m_contextId = id;
+
     }
 
     /**
@@ -144,6 +220,16 @@ public class CmsEditableData implements I_CmsEditableData {
     }
 
     /**
+     * Sets the main language to copy in case the element language node does not exist yet.<p>
+     *
+     * @param mainLanguage the main language to copy in case the element language node does not exist yet
+     */
+    public void setMainLanguage(String mainLanguage) {
+
+        m_mainLanguage = mainLanguage;
+    }
+
+    /**
      * Sets the new link.<p>
      *
      * @param newLink the new link to set
@@ -164,6 +250,16 @@ public class CmsEditableData implements I_CmsEditableData {
     }
 
     /**
+     * Sets the no edit reason.<p>
+     *
+     * @param noEditReason the no edit reason to set
+     */
+    public void setNoEditReason(String noEditReason) {
+
+        m_noEditReason = noEditReason;
+    }
+
+    /**
      * @see org.opencms.gwt.client.I_CmsEditableData#setSitePath(java.lang.String)
      */
     public void setSitePath(String sitePath) {
@@ -180,5 +276,15 @@ public class CmsEditableData implements I_CmsEditableData {
     public void setStructureId(CmsUUID structureId) {
 
         m_structureId = structureId;
+    }
+
+    /**
+     * Sets the unreleased or expired flag.<p>
+     *
+     * @param unreleaseOrExpired the unreleased or expired flag
+     */
+    public void setUnreleaseOrExpired(boolean unreleaseOrExpired) {
+
+        m_unreleaseOrExpired = unreleaseOrExpired;
     }
 }

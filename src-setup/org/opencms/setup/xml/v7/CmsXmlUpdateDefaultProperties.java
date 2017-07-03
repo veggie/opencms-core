@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,19 +14,20 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
- * 
+ *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.opencms.setup.xml.v7;
-import org.opencms.configuration.CmsConfigurationManager;
+
+import org.opencms.configuration.CmsConfigurationManager;
 import org.opencms.configuration.CmsWorkplaceConfiguration;
 import org.opencms.configuration.I_CmsXmlConfiguration;
 import org.opencms.file.CmsPropertyDefinition;
@@ -36,7 +37,6 @@ import org.opencms.file.types.CmsResourceTypeImage;
 import org.opencms.file.types.CmsResourceTypeJsp;
 import org.opencms.file.types.CmsResourceTypePlain;
 import org.opencms.file.types.CmsResourceTypePointer;
-import org.opencms.file.types.CmsResourceTypeXmlPage;
 import org.opencms.setup.xml.A_CmsSetupXmlUpdate;
 import org.opencms.setup.xml.CmsSetupXmlHelper;
 import org.opencms.util.CmsStringUtil;
@@ -51,10 +51,9 @@ import java.util.Map;
 import org.dom4j.Document;
 import org.dom4j.Node;
 
-
 /**
  * Update the default properties, from 6.2.3 to 7.0.x.<p>
- * 
+ *
  * @since 6.9.2
  */
 public class CmsXmlUpdateDefaultProperties extends A_CmsSetupXmlUpdate {
@@ -64,12 +63,15 @@ public class CmsXmlUpdateDefaultProperties extends A_CmsSetupXmlUpdate {
      */
     private static class Pair {
 
+        /** First value. */
         private String m_first;
+
+        /** Second value. */
         private String m_second;
 
         /**
          * The constructor.<p>
-         * 
+         *
          * @param first the first member
          * @param second the second member
          */
@@ -162,7 +164,7 @@ public class CmsXmlUpdateDefaultProperties extends A_CmsSetupXmlUpdate {
 
     /**
      * Returns a list of keys for creating the new nodes.<p>
-     * 
+     *
      * @return a list of pairs (resource type, property name)
      */
     protected List<Pair> getKeys() {
@@ -175,9 +177,6 @@ public class CmsXmlUpdateDefaultProperties extends A_CmsSetupXmlUpdate {
         keys.add(new Pair("downloadgallery", CmsPropertyDefinition.PROPERTY_TITLE));
         keys.add(new Pair(CmsResourceTypeImage.getStaticTypeName(), CmsPropertyDefinition.PROPERTY_TITLE));
         keys.add(new Pair(CmsResourceTypeImage.getStaticTypeName(), CmsPropertyDefinition.PROPERTY_DESCRIPTION));
-        keys.add(new Pair(CmsResourceTypeXmlPage.getStaticTypeName(), CmsPropertyDefinition.PROPERTY_TITLE));
-        keys.add(new Pair(CmsResourceTypeXmlPage.getStaticTypeName(), CmsPropertyDefinition.PROPERTY_DESCRIPTION));
-        keys.add(new Pair(CmsResourceTypeXmlPage.getStaticTypeName(), CmsPropertyDefinition.PROPERTY_KEYWORDS));
         keys.add(new Pair("xmlcontent", CmsPropertyDefinition.PROPERTY_TITLE));
         keys.add(new Pair("xmlcontent", CmsPropertyDefinition.PROPERTY_DESCRIPTION));
         keys.add(new Pair("xmlcontent", CmsPropertyDefinition.PROPERTY_KEYWORDS));

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -51,7 +51,7 @@ import org.apache.commons.logging.Log;
 
 /**
  * Provides methods to show a configurable user agreement dialog after a successful workplace login.<p>
- * 
+ *
  * @since 8.0
  */
 public class CmsLoginUserAgreement extends CmsDialog {
@@ -115,7 +115,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * Public constructor with JSP action element.<p>
-     * 
+     *
      * @param jsp an initialized JSP action element
      */
     public CmsLoginUserAgreement(CmsJspActionElement jsp) {
@@ -125,7 +125,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * Public constructor with JSP variables.<p>
-     * 
+     *
      * @param context the JSP page context
      * @param req the JSP request
      * @param res the JSP response
@@ -167,7 +167,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * Performs the the user agreement accept action, will be called by the JSP page.<p>
-     * 
+     *
      * @throws IOException if problems while redirecting occur
      */
     public void actionAccept() throws IOException {
@@ -179,7 +179,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * Performs the user agreement declined action, will be called by the JSP page.<p>
-     * 
+     *
      * @throws IOException if problems while redirecting occur
      */
     public void actionDecline() throws IOException {
@@ -191,9 +191,9 @@ public class CmsLoginUserAgreement extends CmsDialog {
     /**
      * The standard JavaScript for submitting the dialog is overridden to show an alert in case that
      * an agreement is declined.<p>
-     * 
+     *
      * See also {@link CmsDialog#dialogScriptSubmit()}
-     * 
+     *
      * @return the standard JavaScript for submitting the dialog
      */
     @Override
@@ -250,9 +250,9 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * Returns the content value of the given path as String.<p>
-     *  
+     *
      * @param path the path to get the content value for
-     * 
+     *
      * @return the content value of the given path as String
      */
     public String getConfigurationContentStringValue(String path) {
@@ -264,6 +264,16 @@ public class CmsLoginUserAgreement extends CmsDialog {
     }
 
     /**
+     * Returns the absolute path in the OpenCms VFS to the user agreement configuration file.<p>
+     *
+     * @return the absolute path in the OpenCms VFS to the user agreement configuration file
+     */
+    public String getConfigurationVfsPath() {
+
+        return VFS_PATH_CONFIGFOLDER + getLocale().toString() + "/configuration.html";
+    }
+
+    /**
      * Returns the originally requested workplace resource path parameter.<p>
      *
      * @return the originally requested workplace resource path parameter
@@ -271,7 +281,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
     public String getParamWpres() {
 
         if (CmsStringUtil.isEmptyOrWhitespaceOnly(m_paramWpres) || "null".equals(m_paramWpres)) {
-            return CmsFrameset.JSP_WORKPLACE_URI;
+            return CmsWorkplace.JSP_WORKPLACE_URI;
         }
         return m_paramWpres;
     }
@@ -289,10 +299,11 @@ public class CmsLoginUserAgreement extends CmsDialog {
                 m_requiredVersion = Double.parseDouble(versionStr);
             } catch (Exception e) {
                 // the version number is not in the correct format
-                LOG.error(Messages.get().getBundle().key(
-                    Messages.LOG_USERAGREEMENT_WRONG_VERSION_2,
-                    versionStr,
-                    getConfigurationContent().getFile().getRootPath()));
+                LOG.error(
+                    Messages.get().getBundle().key(
+                        Messages.LOG_USERAGREEMENT_WRONG_VERSION_2,
+                        versionStr,
+                        getConfigurationContent().getFile().getRootPath()));
             }
         }
         return m_requiredVersion;
@@ -300,7 +311,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * Returns if the user agreement page should be shown for the current user.<p>
-     * 
+     *
      * @return <code>true</code> if the user agreement page should be shown for the current user, otherwise <code>false</code>
      */
     public boolean isShowUserAgreement() {
@@ -311,7 +322,10 @@ public class CmsLoginUserAgreement extends CmsDialog {
             try {
                 // first read the property that contains the information if the agreement is enabled at all
                 enabled = Boolean.valueOf(
-                    getCms().readPropertyObject(content.getFile(), CmsPropertyDefinition.PROPERTY_LOGIN_FORM, false).getValue()).booleanValue();
+                    getCms().readPropertyObject(
+                        content.getFile(),
+                        CmsPropertyDefinition.PROPERTY_LOGIN_FORM,
+                        false).getValue()).booleanValue();
                 if (enabled) {
                     // user agreement is enabled, now check version and accepted count
                     if (content.hasLocale(getLocale())) {
@@ -332,7 +346,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
             } catch (Exception e) {
                 // error when trying to determine if user agreement should be shown
                 LOG.error(Messages.get().getBundle().key(
-                    Messages.LOG_USERAGREEMENT_SHOW_1,
+                        Messages.LOG_USERAGREEMENT_SHOW_1,
                     getConfigurationContent().getFile().getRootPath()), e);
             }
 
@@ -386,9 +400,9 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * The standard "OK" and "Cancel" buttons are overridden to show other labels.<p>
-     * 
+     *
      * See also {@link CmsDialog#dialogButtonsHtml(StringBuffer, int, String)}
-     * 
+     *
      * @param result a string buffer where the rendered HTML gets appended to
      * @param button a integer key to identify the button
      * @param attribute an optional string with possible tag attributes, or null
@@ -431,7 +445,7 @@ public class CmsLoginUserAgreement extends CmsDialog {
 
     /**
      * Returns the user agreement configuration content.<p>
-     * 
+     *
      * @return the user agreement configuration content
      */
     protected CmsXmlContent getConfigurationContent() {
@@ -460,25 +474,12 @@ public class CmsLoginUserAgreement extends CmsDialog {
     }
 
     /**
+     * Initializes the 'accepted' data from the current user.<p>
      * Returns the absolute path in the OpenCms VFS to the user agreement configuration file.<p>
-     * 
-     * @return the absolute path in the OpenCms VFS to the user agreement configuration file
      */
-    public String getConfigurationVfsPath() {
+    protected void initAcceptData() {
 
-        return VFS_PATH_CONFIGFOLDER + getLocale().toString() + "/configuration.html";
-    }
-
-    /**
-     * @see org.opencms.workplace.CmsWorkplace#initWorkplaceRequestValues(org.opencms.workplace.CmsWorkplaceSettings, javax.servlet.http.HttpServletRequest)
-     */
-    @Override
-    protected void initWorkplaceRequestValues(CmsWorkplaceSettings settings, HttpServletRequest request) {
-
-        // fill the parameter values in the get/set methods
-        fillParamValues(request);
-
-        // read the current users agreement values       
+        // read the current users agreement values
         CmsUser user = getCms().getRequestContext().getCurrentUser();
         String result = (String)user.getAdditionalInfo(CmsUserSettings.LOGIN_USERAGREEMENT_ACCEPTED);
         if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(result)) {
@@ -491,17 +492,29 @@ public class CmsLoginUserAgreement extends CmsDialog {
                 LOG.error(e);
             }
         }
+    }
+
+    /**
+     * @see org.opencms.workplace.CmsWorkplace#initWorkplaceRequestValues(org.opencms.workplace.CmsWorkplaceSettings, javax.servlet.http.HttpServletRequest)
+     */
+    @Override
+    protected void initWorkplaceRequestValues(CmsWorkplaceSettings settings, HttpServletRequest request) {
+
+        // fill the parameter values in the get/set methods
+        fillParamValues(request);
+
+        initAcceptData();
 
         // set the dialog type
         setParamDialogtype(DIALOG_TYPE);
-        // set the action for the JSP switch 
+        // set the action for the JSP switch
         if (DIALOG_TYPE.equals(getParamAction())) {
             setAction(ACTION_ACCEPT);
         } else if (DIALOG_CANCEL.equals(getParamAction())) {
             setAction(ACTION_CANCEL);
         } else {
             setAction(ACTION_DEFAULT);
-            // build the title for the user agreement dialog     
+            // build the title for the user agreement dialog
             setParamTitle(getConfigurationContentStringValue(NODE_DIALOG_TITLE));
         }
     }

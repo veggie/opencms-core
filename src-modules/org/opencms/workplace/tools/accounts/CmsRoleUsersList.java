@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -60,7 +60,7 @@ import com.google.common.collect.Lists;
 
 /**
  * Role users view.<p>
- * 
+ *
  * @since 6.5.6
  */
 public class CmsRoleUsersList extends A_CmsRoleUsersList {
@@ -78,11 +78,11 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
     public static final String LIST_MACTION_REMOVE = "mr";
 
     /** a set of action id's to use for removing. */
-    protected static Set m_removeActionIds = new HashSet();
+    protected static Set<String> m_removeActionIds = new HashSet<String>();
 
     /**
      * Public constructor.<p>
-     * 
+     *
      * @param jsp an initialized JSP action element
      */
     public CmsRoleUsersList(CmsJspActionElement jsp) {
@@ -92,7 +92,7 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
 
     /**
      * Public constructor with JSP variables.<p>
-     * 
+     *
      * @param context the JSP page context
      * @param req the JSP request
      * @param res the JSP response
@@ -114,9 +114,9 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
 
     /**
      * Public constructor.<p>
-     * 
+     *
      * @param jsp an initialized JSP action element
-     * @param lazy the lazy flag 
+     * @param lazy the lazy flag
      */
     public CmsRoleUsersList(CmsJspActionElement jsp, boolean lazy) {
 
@@ -125,11 +125,11 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
 
     /**
      * Public constructor with JSP variables.<p>
-     * 
+     *
      * @param context the JSP page context
      * @param req the JSP request
      * @param res the JSP response
-     * @param lazy the lazy flag 
+     * @param lazy the lazy flag
      */
     public CmsRoleUsersList(PageContext context, HttpServletRequest req, HttpServletResponse res, boolean lazy) {
 
@@ -140,7 +140,7 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
      * Protected constructor.<p>
      * @param jsp an initialized JSP action element
      * @param listId the id of the specialized list
-     * @param lazy the lazy flag 
+     * @param lazy the lazy flag
      */
     protected CmsRoleUsersList(CmsJspActionElement jsp, String listId, boolean lazy) {
 
@@ -150,13 +150,14 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
     /**
      * @see org.opencms.workplace.list.A_CmsListDialog#executeListMultiActions()
      */
+    @Override
     public void executeListMultiActions() throws CmsRuntimeException {
 
         if (getParamListAction().equals(LIST_MACTION_REMOVE)) {
             // execute the remove multiaction
-            Iterator itItems = getSelectedItems().iterator();
+            Iterator<CmsListItem> itItems = getSelectedItems().iterator();
             while (itItems.hasNext()) {
-                CmsListItem listItem = (CmsListItem)itItems.next();
+                CmsListItem listItem = itItems.next();
                 String userName = (String)listItem.get(LIST_COLUMN_LOGIN);
                 try {
                     if (getCms().readUser(userName).getOuFqn().equals(getParamOufqn())) {
@@ -178,6 +179,7 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
     /**
      * @see org.opencms.workplace.list.A_CmsListDialog#executeListSingleActions()
      */
+    @Override
     public void executeListSingleActions() throws CmsRuntimeException {
 
         if (m_removeActionIds.contains(getParamListAction())) {
@@ -200,7 +202,8 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
     /**
      * @see org.opencms.workplace.tools.accounts.A_CmsRoleUsersList#getUsers(boolean)
      */
-    protected List getUsers(boolean withOtherOus) throws CmsException {
+    @Override
+    protected List<CmsUser> getUsers(boolean withOtherOus) throws CmsException {
 
         return OpenCms.getRoleManager().getUsersOfRole(
             getCms(),
@@ -212,6 +215,7 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
     /**
      * @see org.opencms.workplace.tools.accounts.A_CmsRoleUsersList#setColumns(org.opencms.workplace.list.CmsListMetadata)
      */
+    @Override
     protected void setColumns(CmsListMetadata metadata) {
 
         if (m_lazy) {
@@ -239,7 +243,7 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
 
     /**
      * Sets the optional login default action.<p>
-     * 
+     *
      * @param loginCol the user login column
      */
     protected void setDefaultAction(CmsListColumnDefinition loginCol) {
@@ -256,13 +260,15 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
     /**
      * @see org.opencms.workplace.list.A_CmsListDialog#setMultiActions(org.opencms.workplace.list.CmsListMetadata)
      */
+    @Override
     protected void setMultiActions(CmsListMetadata metadata) {
 
         // add remove multi action
         CmsListMultiAction removeMultiAction = new CmsListMultiAction(LIST_MACTION_REMOVE);
         removeMultiAction.setName(Messages.get().container(Messages.GUI_USERS_LIST_MACTION_REMOVE_NAME_0));
         removeMultiAction.setHelpText(Messages.get().container(Messages.GUI_USERS_LIST_MACTION_REMOVE_HELP_0));
-        removeMultiAction.setConfirmationMessage(Messages.get().container(Messages.GUI_USERS_LIST_MACTION_REMOVE_CONF_0));
+        removeMultiAction.setConfirmationMessage(
+            Messages.get().container(Messages.GUI_USERS_LIST_MACTION_REMOVE_CONF_0));
         removeMultiAction.setIconPath(ICON_MULTI_MINUS);
         metadata.addMultiAction(removeMultiAction);
     }
@@ -270,6 +276,7 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
     /**
      * @see org.opencms.workplace.tools.accounts.A_CmsRoleUsersList#validateParamaters()
      */
+    @Override
     protected void validateParamaters() throws Exception {
 
         super.validateParamaters();
@@ -300,10 +307,10 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
 
     /**
      * Gets the search parameters.<p>
-     * 
-     * @return the search parameters 
-     * 
-     * @throws CmsException if something goes wrong 
+     *
+     * @return the search parameters
+     *
+     * @throws CmsException if something goes wrong
      */
     protected CmsUserSearchParameters getSearchParams() throws CmsException {
 
@@ -329,9 +336,9 @@ public class CmsRoleUsersList extends A_CmsRoleUsersList {
 
     /**
      * Gets the sort key for a column.<p>
-     * 
-     * @param column a column 
-     * @return the sort key 
+     *
+     * @param column a column
+     * @return the sort key
      */
     protected SortKey getSortKey(String column) {
 

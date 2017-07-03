@@ -1,8 +1,12 @@
 /*
+ * File   : $Source: /home/cvs/OpenCms-v8/src/org/opencms/widgets/CmsSelectGroupWidget.java,v $
+ * Date   : $Date: 2010-07-23 08:29:34 $
+ * Version: $Revision: 1.1 $
+ *
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (C) 2002 - 2009 Alkacon Software (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +18,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -29,6 +33,8 @@ package org.opencms.widgets;
 
 import org.opencms.file.CmsGroup;
 import org.opencms.file.CmsObject;
+import org.opencms.file.CmsResource;
+import org.opencms.i18n.CmsMessages;
 import org.opencms.main.CmsException;
 import org.opencms.main.CmsLog;
 import org.opencms.main.OpenCms;
@@ -36,10 +42,12 @@ import org.opencms.security.CmsOrganizationalUnit;
 import org.opencms.util.CmsMacroResolver;
 import org.opencms.util.CmsStringUtil;
 import org.opencms.workplace.CmsWorkplace;
+import org.opencms.xml.types.A_CmsXmlContentValue;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -48,7 +56,7 @@ import org.apache.commons.logging.Log;
 
 /**
  * Provides a widget for group selection multi select boxes.<p>
- * 
+ *
  * This widget is configurable with the following options:<p>
  * <ul>
  * <li><code>groupfilter</code>: regular expression to filter available groups</li>
@@ -63,11 +71,11 @@ import org.apache.commons.logging.Log;
  * This means that the +r+v permission is written for the principal <code>GROUP</code> on the resource.
  * Additionally two permissions are written as default: for <code>ALL_OTHERS</code>, no allowed permission is set,
  * for <code>Projectmanagers</code>, "+r+v+w+c" is set.<p>
- * 
+ *
  * @author Mario Jaeger
- * 
- * @version $Revision: 1.1 $ 
- * 
+ *
+ * @version $Revision: 1.1 $
+ *
  * @since 8.0.2
  */
 public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
@@ -104,7 +112,7 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Creates a group select widget with the specified select options.<p>
-     * 
+     *
      * @param configuration the configuration (possible options) for the group select box
      */
     public CmsMultiSelectGroupWidget(String configuration) {
@@ -114,18 +122,49 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Creates a select widget with the select options specified in the given configuration List.<p>
-     * 
+     *
      * The list elements must be of type <code>{@link CmsSelectWidgetOption}</code>.<p>
-     * 
+     *
      * @param configuration the configuration (possible options) for the select widget
      * @param asCheckboxes indicates if used html code is a multi selection list or a list of checkboxes
-     * 
+     *
      * @see CmsSelectWidgetOption
      */
     public CmsMultiSelectGroupWidget(String configuration, boolean asCheckboxes) {
 
         super(configuration);
         m_asCheckBoxes = asCheckboxes;
+    }
+
+    /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getConfiguration(org.opencms.file.CmsObject, org.opencms.xml.types.A_CmsXmlContentValue, org.opencms.i18n.CmsMessages, org.opencms.file.CmsResource, java.util.Locale)
+     */
+    @Override
+    public String getConfiguration(
+        CmsObject cms,
+        A_CmsXmlContentValue schemaType,
+        CmsMessages messages,
+        CmsResource resource,
+        Locale contentLocale) {
+
+        String result = "";
+        CmsDummyWidgetDialog widgetDialog = new CmsDummyWidgetDialog(schemaType.getLocale(), messages);
+        widgetDialog.setResource(resource);
+        List<CmsSelectWidgetOption> options = parseSelectOptions(cms, widgetDialog, schemaType);
+        Iterator<CmsSelectWidgetOption> it = options.iterator();
+        int i = 0;
+        while (it.hasNext()) {
+            CmsSelectWidgetOption option = it.next();
+            if (i > 0) {
+                result += "|";
+            }
+            result += option.toString();
+            i++;
+        }
+        if (m_requiresActivation) {
+            result += "|" + CmsMultiSelectWidget.CONFIGURATION_REQUIRES_ACTIVATION;
+        }
+        return result;
     }
 
     /**
@@ -146,7 +185,7 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
         String id = param.getId();
         StringBuffer result = new StringBuffer(16);
         String height = getHeight();
-        List<CmsSelectWidgetOption> options = parseSelectOptions(cms, widgetDialog, param);
+        List<CmsSelectWidgetOption> options = parseSelectOptions(cms, widgetDialog.getMessages(), param);
         result.append("<td class=\"xmlTd\">");
         // the configured select widget height start element
         if (m_asCheckBoxes && CmsStringUtil.isNotEmptyOrWhitespaceOnly(height)) {
@@ -154,17 +193,18 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
         }
         if (!m_asCheckBoxes) {
             if (m_requiresActivation) {
-                result.append("<input style=\"vertical-align:middle;\" type=\"checkbox\" id=\"check"
-                    + id
-                    + "\" name=\"check"
-                    + id
-                    + "\""
-                    + "onclick=toggleMultiSelectWidget(this);"
-                    + " />");
+                result.append(
+                    "<input style=\"vertical-align:middle;\" type=\"checkbox\" id=\"check"
+                        + id
+                        + "\" name=\"check"
+                        + id
+                        + "\""
+                        + "onclick=toggleMultiSelectWidget(this);"
+                        + " />");
                 result.append("&nbsp;<label style=\"vertical-align:middle;\" for=\"check" + id + "\">");
                 result.append(widgetDialog.getMessages().key(Messages.GUI_MULTISELECT_ACTIVATE_0));
                 result.append("</label>&nbsp;");
-                // adding hidden input with the current value, because disabled select box value won't be submitted 
+                // adding hidden input with the current value, because disabled select box value won't be submitted
                 result.append("<input type='hidden' name='").append(id).append("' id='").append(id).append("' value='");
                 List<String> values = getSelectedValues(cms, param);
                 if (values.size() > 0) {
@@ -240,6 +280,15 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
     }
 
     /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getWidgetName()
+     */
+    @Override
+    public String getWidgetName() {
+
+        return CmsMultiSelectGroupWidget.class.getName();
+    }
+
+    /**
      * @see org.opencms.widgets.I_CmsWidget#newInstance()
      */
     @Override
@@ -258,9 +307,8 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
             int asCheckBoxesIndex = configuration.indexOf(CmsMultiSelectWidget.CONFIGURATION_ASCHECKBOXES);
             if (asCheckBoxesIndex != -1) {
                 // the height is set
-                String asCheckBoxes = configuration.substring(asCheckBoxesIndex
-                    + CmsMultiSelectWidget.CONFIGURATION_ASCHECKBOXES.length()
-                    + 1);
+                String asCheckBoxes = configuration.substring(
+                    asCheckBoxesIndex + CmsMultiSelectWidget.CONFIGURATION_ASCHECKBOXES.length() + 1);
                 if (asCheckBoxes.indexOf('|') != -1) {
                     // cut eventual following configuration values
                     asCheckBoxes = asCheckBoxes.substring(0, asCheckBoxes.indexOf('|'));
@@ -270,9 +318,8 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
             int reqiresActivationIndex = configuration.indexOf(CmsMultiSelectWidget.CONFIGURATION_REQUIRES_ACTIVATION);
             if (reqiresActivationIndex != -1) {
                 // the height is set
-                String requiresActivation = configuration.substring(reqiresActivationIndex
-                    + CmsMultiSelectWidget.CONFIGURATION_REQUIRES_ACTIVATION.length()
-                    + 1);
+                String requiresActivation = configuration.substring(
+                    reqiresActivationIndex + CmsMultiSelectWidget.CONFIGURATION_REQUIRES_ACTIVATION.length() + 1);
                 if (requiresActivation.indexOf('|') != -1) {
                     // cut eventual following configuration values
                     requiresActivation = requiresActivation.substring(0, requiresActivation.indexOf('|'));
@@ -297,20 +344,18 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
     }
 
     /**
-     * Returns the select options for the widget, generated from the configured input fields of the XML content.<p>
-     * 
-     * @see org.opencms.widgets.A_CmsSelectWidget#parseSelectOptions(org.opencms.file.CmsObject, org.opencms.widgets.I_CmsWidgetDialog, org.opencms.widgets.I_CmsWidgetParameter)
+     * @see org.opencms.widgets.CmsSelectGroupWidget#parseSelectOptions(org.opencms.file.CmsObject, org.opencms.i18n.CmsMessages, org.opencms.widgets.I_CmsWidgetParameter)
      */
     @Override
     protected List<CmsSelectWidgetOption> parseSelectOptions(
         CmsObject cms,
-        I_CmsWidgetDialog widgetDialog,
+        CmsMessages messages,
         I_CmsWidgetParameter param) {
 
         // only create options if not already done
         if (getSelectOptions() == null) {
             // parse widget configuration
-            parseConfiguration(cms, widgetDialog);
+            parseConfiguration(cms, messages);
             List<CmsSelectWidgetOption> result = new ArrayList<CmsSelectWidgetOption>();
 
             if (isUseGroupNames()) {
@@ -320,16 +365,14 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
                     try {
                         // ensure that only existing groups are available in the select box
                         CmsGroup group = cms.readGroup(getOuFqn() + groupName);
-                        result.add(new CmsSelectWidgetOption(
-                            group.getName(),
-                            m_defaultAllAvailable,
-                            group.getSimpleName()));
+                        result.add(
+                            new CmsSelectWidgetOption(group.getName(), m_defaultAllAvailable, group.getSimpleName()));
                     } catch (CmsException e) {
                         // error reading the group by name, simply skip it
                     }
                 }
             } else {
-                // read the groups from an optionally configured OU and filter them if configured 
+                // read the groups from an optionally configured OU and filter them if configured
                 try {
                     List<CmsGroup> groups = OpenCms.getOrgUnitManager().getGroups(cms, getOuFqn(), isIncludeSubOus());
                     for (Iterator<CmsGroup> i = groups.iterator(); i.hasNext();) {
@@ -340,10 +383,8 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
                                 continue;
                             }
                         }
-                        result.add(new CmsSelectWidgetOption(
-                            group.getName(),
-                            m_defaultAllAvailable,
-                            group.getSimpleName()));
+                        result.add(
+                            new CmsSelectWidgetOption(group.getName(), m_defaultAllAvailable, group.getSimpleName()));
                     }
                 } catch (CmsException e) {
                     // error reading the groups
@@ -356,8 +397,20 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
     }
 
     /**
+     * @see org.opencms.widgets.A_CmsSelectWidget#parseSelectOptions(org.opencms.file.CmsObject, org.opencms.widgets.I_CmsWidgetDialog, org.opencms.widgets.I_CmsWidgetParameter)
+     */
+    @Override
+    protected List<CmsSelectWidgetOption> parseSelectOptions(
+        CmsObject cms,
+        I_CmsWidgetDialog widgetDialog,
+        I_CmsWidgetParameter param) {
+
+        return parseSelectOptions(cms, widgetDialog.getMessages(), param);
+    }
+
+    /**
      * Returns the configured group filter to match groups to show in the select box.<p>
-     * 
+     *
      * @return the configured group filter to match groups to show in the select box
      */
     private Pattern getGroupFilter() {
@@ -367,7 +420,7 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Returns the configured group names to show in the select box.<p>
-     * 
+     *
      * @return configured group names to show in the select box
      */
     private List<String> getGroupNames() {
@@ -377,7 +430,7 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Returns the fully qualified name of the OU to read the groups from.<p>
-     * 
+     *
      * @return the fully qualified name of the OU to read the groups from
      */
     private String getOuFqn() {
@@ -387,7 +440,7 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Returns if sub OUs should be considered when filtering the groups.<p>
-     * 
+     *
      * @return <code>true</code> if sub OUs should be considered, otherwise <code>false</code>
      */
     private boolean isIncludeSubOus() {
@@ -397,7 +450,7 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Returns if a group filter is configured to match groups to show in the select box.<p>
-     * 
+     *
      * @return <code>true</code> if a group filter is configured, otherwise <code>false</code>
      */
     private boolean isUseGroupFilter() {
@@ -407,7 +460,7 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Returns if group names are configured to show in the select box.<p>
-     * 
+     *
      * @return <code>true</code> if group names are configured, otherwise <code>false</code>
      */
     private boolean isUseGroupNames() {
@@ -417,13 +470,13 @@ public class CmsMultiSelectGroupWidget extends CmsSelectGroupWidget {
 
     /**
      * Parses the widget configuration string.<p>
-     * 
+     *
      * @param cms the current users OpenCms context
      * @param widgetDialog the dialog of this widget
      */
-    private void parseConfiguration(CmsObject cms, I_CmsWidgetDialog widgetDialog) {
+    private void parseConfiguration(CmsObject cms, CmsMessages widgetDialog) {
 
-        String configString = CmsMacroResolver.resolveMacros(getConfiguration(), cms, widgetDialog.getMessages());
+        String configString = CmsMacroResolver.resolveMacros(getConfiguration(), cms, widgetDialog);
         Map<String, String> config = CmsStringUtil.splitAsMap(configString, "|", "=");
         // get the list of group names to show
         String groups = config.get(CONFIGURATION_GROUPS);

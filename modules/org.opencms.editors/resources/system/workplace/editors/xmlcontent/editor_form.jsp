@@ -41,7 +41,8 @@ case CmsXmlContentEditor.ACTION_CONFIRMCORRECTION:
 //////////////////// ACTION: show confirm dialog to correct the XML structure
 
 	// XML content not valid, create necessary html to show correction confirmation
-	%><html>
+	%><!DOCTYPE html>
+	<html>
 	<head>
 	<script type="text/javascript" src="<%= wp.getEditorResourceUri() %>edit.js"></script>
 	<script type="text/javascript">
@@ -83,7 +84,8 @@ case CmsEditor.ACTION_SAVEEXIT:
 	wp.actionSave();
 	if (! wp.hasValidationErrors()) {
 		// successfully saved content, close the editor by creating necessary html to submit
-		%><html>
+		%><!DOCTYPE html>
+		<html>
 		<head>
 		<script type="text/javascript" src="<%= wp.getEditorResourceUri() %>edit.js"></script>
 		<script type="text/javascript">
@@ -159,12 +161,13 @@ default:
 
 wp.setParamAction(null);
 
- %><html>
+ %> <!DOCTYPE html>
+ <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=<%= wp.getEncoding() %>">
 <title>Input form</title>
 
-<link rel=stylesheet type="text/css" href="<%= wp.getStyleUri("workplace.css") %>">
+<link rel="stylesheet" type="text/css" href="<%= wp.getStyleUri("workplace.css") %>">
 
 <script type="text/javascript" src="<%= wp.getEditorResourceUri() %>edit.js"></script>
 <script type="text/javascript" src="<%= wp.getEditorResourceUri() %>help.js"></script>
@@ -321,6 +324,7 @@ function httpStateDummy() {
 <input type="hidden" name="<%= CmsEditor.PARAM_DIRECTEDIT %>" value="<%= wp.getParamDirectedit() %>"/>
 <input type="hidden" name="<%= CmsEditor.PARAM_BACKLINK %>" value="<%= wp.getParamBacklink() %>"/>
 <input type="hidden" name="<%= CmsEditor.PARAM_MODIFIED %>" value="<%= wp.getParamModified() %>"/>
+<input type="hidden" name="<%= CmsXmlContentEditor.PARAM_EDITCONTEXT%>" value="<%=wp.getParamEditContext()%>" %>
 <input type="hidden" name="<%= CmsXmlContentEditor.PARAM_ELEMENTINDEX %>" value=""/>
 <input type="hidden" name="<%= CmsXmlContentEditor.PARAM_ELEMENTNAME %>" value=""/>
 <input type="hidden" name="<%= CmsXmlContentEditor.PARAM_CHOICEELEMENT %>" value=""/>

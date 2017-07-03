@@ -2,24 +2,24 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,7 +36,6 @@ import org.opencms.file.types.CmsResourceTypeImage;
 import org.opencms.file.types.CmsResourceTypeJsp;
 import org.opencms.file.types.CmsResourceTypePlain;
 import org.opencms.file.types.CmsResourceTypePointer;
-import org.opencms.file.types.CmsResourceTypeXmlPage;
 import org.opencms.setup.xml.A_CmsXmlWorkplace;
 import org.opencms.setup.xml.CmsSetupXmlHelper;
 import org.opencms.util.CmsStringUtil;
@@ -53,8 +52,8 @@ import org.dom4j.Node;
 
 /**
  * Adds new context menu item nodes.<p>
- * 
- * @since 6.1.8 
+ *
+ * @since 6.1.8
  */
 public class CmsXmlAddContextMenuItems extends A_CmsXmlWorkplace {
 
@@ -86,7 +85,7 @@ public class CmsXmlAddContextMenuItems extends A_CmsXmlWorkplace {
                     xpath + "/@" + I_CmsXmlConfiguration.A_KEY,
                     org.opencms.workplace.commons.Messages.GUI_EXPLORER_CONTEXT_MULTIFILE_PROPERTY_0);
                 CmsSetupXmlHelper.setValue(document, xpath + "/@" + CmsWorkplaceConfiguration.A_RULE, "nondeleted");
-                // insert separator 
+                // insert separator
                 CmsSetupXmlHelper.setValue(document, xpath, null, CmsWorkplaceConfiguration.N_SEPARATOR);
             } else if (xpath.indexOf("publishscheduledresource") > 0) {
                 // insert after /opencms/workplace/explorertypes/explorertype[@name='${etype}']/editoptions/contextmenu/entry[@uri='commons/publishresource.jsp']
@@ -174,8 +173,6 @@ public class CmsXmlAddContextMenuItems extends A_CmsXmlWorkplace {
             subs.put("${res}", "publishscheduledresource");
             subs.put("${etype}", "xmlcontent");
             m_xpaths.add(CmsStringUtil.substitute(xp.toString(), subs));
-            subs.put("${etype}", CmsResourceTypeXmlPage.getStaticTypeName());
-            m_xpaths.add(CmsStringUtil.substitute(xp.toString(), subs));
             subs.put("${etype}", CmsResourceTypePlain.getStaticTypeName());
             m_xpaths.add(CmsStringUtil.substitute(xp.toString(), subs));
             subs.put("${etype}", CmsResourceTypeImage.getStaticTypeName());
@@ -211,10 +208,10 @@ public class CmsXmlAddContextMenuItems extends A_CmsXmlWorkplace {
 
     /**
      * Checks whether the explorer type referenced by an xpath exists in the document.<p>
-     * 
-     * @param doc the document  
-     * @param xpath the xpath, potentially referencing an explorertype 
-     * @return true if the xpath references no explorertype, or the referenced explorertype is contained in the document 
+     *
+     * @param doc the document
+     * @param xpath the xpath, potentially referencing an explorertype
+     * @return true if the xpath references no explorertype, or the referenced explorertype is contained in the document
      */
     protected boolean checkExplorerType(Document doc, String xpath) {
 
@@ -229,15 +226,16 @@ public class CmsXmlAddContextMenuItems extends A_CmsXmlWorkplace {
 
     /**
      * Checks whether a given explorertype exists in the document.<p>
-     * 
-     * @param doc the XML document 
+     *
+     * @param doc the XML document
      * @param explorertype the explorertype to check
-     *  
-     * @return true if the explorertype exists 
+     *
+     * @return true if the explorertype exists
      */
     protected boolean existsExplorerType(Document doc, String explorertype) {
 
-        Node etype = doc.selectSingleNode("/opencms/workplace/explorertypes/explorertype[@name='" + explorertype + "']");
+        Node etype = doc.selectSingleNode(
+            "/opencms/workplace/explorertypes/explorertype[@name='" + explorertype + "']");
         return etype != null;
     }
 
@@ -249,6 +247,7 @@ public class CmsXmlAddContextMenuItems extends A_CmsXmlWorkplace {
 
         // /opencms/workplace/explorertypes
         return new StringBuffer("/").append(CmsConfigurationManager.N_ROOT).append("/").append(
-            CmsWorkplaceConfiguration.N_WORKPLACE).append("/").append(CmsWorkplaceConfiguration.N_EXPLORERTYPES).toString();
+            CmsWorkplaceConfiguration.N_WORKPLACE).append("/").append(
+                CmsWorkplaceConfiguration.N_EXPLORERTYPES).toString();
     }
 }

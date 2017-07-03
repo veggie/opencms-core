@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,6 +28,7 @@
 package org.opencms.repository;
 
 import org.opencms.configuration.CmsConfigurationException;
+import org.opencms.configuration.CmsParameterConfiguration;
 import org.opencms.db.CmsUserSettings;
 import org.opencms.file.CmsObject;
 import org.opencms.file.wrapper.CmsObjectWrapper;
@@ -44,18 +45,18 @@ import org.apache.commons.logging.Log;
 
 /**
  * Creates a repository session to access OpenCms.<p>
- * 
+ *
  * The configuration of the used {@link I_CmsResourceWrapper} is done here.
- * This is the main class to get access to the resources in the VFS of 
+ * This is the main class to get access to the resources in the VFS of
  * OpenCms. The method {@link #login(String, String)} logs in to OpenCms
  * and returns a {@link CmsRepositorySession} to use for basic file and
  * folder operations.<p>
- * 
+ *
  * The project and the site to use for the access to OpenCms is read out
  * of the user settings.<p>
- * 
+ *
  * @see CmsObjectWrapper
- * 
+ *
  * @since 6.5.6
  */
 public class CmsRepository extends A_CmsRepository {
@@ -67,7 +68,7 @@ public class CmsRepository extends A_CmsRepository {
     private static final String PARAM_WRAPPER = "wrapper";
 
     /** The list of configured wrappers of the repository. */
-    private List m_wrappers;
+    private List<I_CmsResourceWrapper> m_wrappers;
 
     /**
      * Empty default constructor.<p>
@@ -75,7 +76,7 @@ public class CmsRepository extends A_CmsRepository {
     public CmsRepository() {
 
         super();
-        m_wrappers = new ArrayList();
+        m_wrappers = new ArrayList<I_CmsResourceWrapper>();
     }
 
     /**
@@ -84,57 +85,27 @@ public class CmsRepository extends A_CmsRepository {
     @Override
     public void initConfiguration() throws CmsConfigurationException {
 
-        if (getConfiguration().containsKey(PARAM_WRAPPER)) {
-            List<String> wrappers = getConfiguration().getList(PARAM_WRAPPER);
-
-            for (String classname : wrappers) {
-
-                classname = classname.trim();
-                Class nameClazz;
-
-                // init class for wrapper
-                try {
-                    nameClazz = Class.forName(classname);
-                } catch (ClassNotFoundException e) {
-                    LOG.error(Messages.get().getBundle().key(Messages.LOG_WRAPPER_CLASS_NOT_FOUND_1, classname), e);
-                    return;
-                }
-
-                I_CmsResourceWrapper wrapper;
-                try {
-                    wrapper = (I_CmsResourceWrapper)nameClazz.newInstance();
-                } catch (InstantiationException e) {
-                    throw new CmsConfigurationException(Messages.get().container(
-                        Messages.ERR_INVALID_WRAPPER_NAME_1,
-                        classname));
-                } catch (IllegalAccessException e) {
-                    throw new CmsConfigurationException(Messages.get().container(
-                        Messages.ERR_INVALID_WRAPPER_NAME_1,
-                        classname));
-                } catch (ClassCastException e) {
-                    throw new CmsConfigurationException(Messages.get().container(
-                        Messages.ERR_INVALID_WRAPPER_NAME_1,
-                        classname));
-                }
-
-                m_wrappers.add(wrapper);
-
-                if (CmsLog.INIT.isInfoEnabled()) {
-                    CmsLog.INIT.info(Messages.get().getBundle().key(
-                        Messages.INIT_ADD_WRAPPER_1,
-                        wrapper.getClass().getName()));
-                }
-            }
-        }
-
-        m_wrappers = Collections.unmodifiableList(m_wrappers);
-
+        CmsParameterConfiguration config = getConfiguration();
+        List<I_CmsResourceWrapper> wrapperObjects = CmsRepositoryManager.createResourceWrappersFromConfiguration(
+            config,
+            PARAM_WRAPPER,
+            LOG);
+        m_wrappers = Collections.unmodifiableList(wrapperObjects);
         super.initConfiguration();
     }
 
     /**
-     * @see org.opencms.repository.I_CmsRepository#login(java.lang.String, java.lang.String)
+     * @see org.opencms.repository.I_CmsRepository#initializeCms(org.opencms.file.CmsObject)
      */
+    public void initializeCms(CmsObject cms) {
+
+        // do nothing
+    }
+
+    /**
+     * @see org.opencms.repository.A_CmsRepository#login(java.lang.String, java.lang.String)
+     */
+    @Override
     public I_CmsRepositorySession login(String userName, String password) throws CmsException {
 
         CmsObject cms;

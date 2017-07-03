@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,16 +33,16 @@ import java.io.Serializable;
 
 /**
  * A bean representing a resource type for use in the detail page creation menu.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsNewResourceInfo implements Serializable {
 
-    /** ID for serialization. */
-    private static final long serialVersionUID = -4731814848380350682L;
-
     /** The navigation level create parameter. */
     public static final String NAVIGATION_LEVEL_PARAMETER = "new_navigation_level";
+
+    /** ID for serialization. */
+    private static final long serialVersionUID = -4731814848380350682L;
 
     /** The structure id of the copy resource. */
     private CmsUUID m_copyResourceId;
@@ -61,6 +61,9 @@ public class CmsNewResourceInfo implements Serializable {
 
     /** The id. */
     private int m_id;
+
+    /** If the default flag is set. */
+    private boolean m_isDefault;
 
     /** The flag which determines whether this bean is for a function page or for a normal detail page. */
     private boolean m_isFunction;
@@ -88,7 +91,7 @@ public class CmsNewResourceInfo implements Serializable {
      * @param title the title
      * @param description the description
      * @param copyResourceId the structure id of the copy resource
-     * @param editable true if the model resource is editable 
+     * @param editable true if the model resource is editable
      * @param subTitle the subtitle to display
      */
     public CmsNewResourceInfo(
@@ -129,8 +132,8 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Gets the additional parameter for creating new resources.<p>
-     * 
-     * @return the additional parameter for creating new resources 
+     *
+     * @return the additional parameter for creating new resources
      */
     public String getCreateParameter() {
 
@@ -139,7 +142,7 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Returns the date to display.<p>
-     * 
+     *
      * @return the date to display
      */
     public String getDate() {
@@ -169,8 +172,8 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Gets the navigation position (used for ordering).<p>
-     * 
-     * @return the navigation position 
+     *
+     * @return the navigation position
      */
     public Float getNavPos() {
 
@@ -179,8 +182,8 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Gets the subtitle.<p>
-     * 
-     * @return the subtitle 
+     *
+     * @return the subtitle
      */
     public String getSubTitle() {
 
@@ -209,18 +212,28 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Gets the VFS path.<p>
-     * 
-     * @return the VFS path  
+     *
+     * @return the VFS path
      */
     public String getVfsPath() {
 
         return m_vfsPath;
     }
 
-    /** 
+    /**
+     * Returns the default flag.<p>
+     *
+     * @return the default flag
+     */
+    public boolean isDefault() {
+
+        return m_isDefault;
+    }
+
+    /**
      * Returns true if the model resource is editable.<p>
-     * 
-     * @return true if the model resource is editable 
+     *
+     * @return true if the model resource is editable
      */
     public boolean isEditable() {
 
@@ -229,8 +242,8 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Returns true if this is a resource info bean for a function page.<p>
-     * 
-     * @return true if this is a resource info bean for a function page 
+     *
+     * @return true if this is a resource info bean for a function page
      */
     public boolean isFunction() {
 
@@ -239,18 +252,18 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Sets the create parameter used for new pages.<p>
-     * 
-     * @param createParameter the create parameter used for new pages 
+     *
+     * @param createParameter the create parameter used for new pages
      */
     public void setCreateParameter(String createParameter) {
 
         m_createParameter = createParameter;
     }
 
-    /** 
+    /**
      * Sets the modification date string.<p>
-     * 
-     * @param date the modification date string 
+     *
+     * @param date the modification date string
      */
     public void setDate(String date) {
 
@@ -258,9 +271,19 @@ public class CmsNewResourceInfo implements Serializable {
     }
 
     /**
+     * Sets the default flag.<p>
+     *
+     * @param isDefault the default flag to set
+     */
+    public void setDefault(boolean isDefault) {
+
+        m_isDefault = isDefault;
+    }
+
+    /**
      * Sets the "function page" flag.<p>
-     * 
-     * @param isFunction the new value for the function page flag 
+     *
+     * @param isFunction the new value for the function page flag
      */
     public void setIsFunction(boolean isFunction) {
 
@@ -269,8 +292,8 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Sets the navigation position.<p>
-     * 
-     * @param navPos the navigation position 
+     *
+     * @param navPos the navigation position
      */
     public void setNavPos(Float navPos) {
 
@@ -279,8 +302,8 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Sets the subtitle.<p>
-     * 
-     * @param subtitle the subtitle 
+     *
+     * @param subtitle the subtitle
      */
     public void setSubTitle(String subtitle) {
 
@@ -289,7 +312,7 @@ public class CmsNewResourceInfo implements Serializable {
 
     /**
      * Sets the VFS path.<p>
-     * 
+     *
      * @param vfsPath the VFS path
      */
     public void setVfsPath(String vfsPath) {

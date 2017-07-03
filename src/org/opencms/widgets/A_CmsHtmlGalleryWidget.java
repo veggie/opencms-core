@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,14 +33,14 @@ import org.opencms.workplace.galleries.A_CmsAjaxGallery;
 
 /**
  * Base class for non-editable "HTML display only" widget implementations.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public abstract class A_CmsHtmlGalleryWidget extends A_CmsGalleryWidget {
 
     /**
      * Creates a html gallery widget with the specified combo options.<p>
-     * 
+     *
      * @param configuration the configuration (possible options) for the combo box
      */
     public A_CmsHtmlGalleryWidget(String configuration) {
@@ -83,7 +83,7 @@ public abstract class A_CmsHtmlGalleryWidget extends A_CmsGalleryWidget {
         result.append(id);
         result.append("\">");
         result.append("<tr><td style=\"width: 100%;\">");
-        // note that using "xmlHtmlGallery" here is ok since this is the formatting display area which is identical 
+        // note that using "xmlHtmlGallery" here is ok since this is the formatting display area which is identical
         // for all widgets based on this class
         result.append("<div class=\"xmlHtmlGallery\" unselectable=\"on\" id=\"");
         result.append(getNameLower());
@@ -92,28 +92,31 @@ public abstract class A_CmsHtmlGalleryWidget extends A_CmsGalleryWidget {
         result.append("\"><div>");
         result.append("</td>");
         result.append(widgetDialog.dialogHorizontalSpacer(10));
-        result.append("<td><table class=\"editorbuttonbackground\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>");
-        result.append(widgetDialog.button(
-            "javascript:open"
-                + getNameUpper()
-                + "Gallery('"
-                + A_CmsAjaxGallery.MODE_WIDGET
-                + "',  '"
-                + id
-                + "' , '"
-                + idHash
-                + "');",
-            null,
-            getNameLower() + "gallery",
-            Messages.getButtonName(this.getNameLower()),
-            widgetDialog.getButtonStyle()));
-        // reset button 
-        result.append(widgetDialog.button(
-            "javascript:reset" + getNameUpper() + "Gallery('" + id + "');",
-            null,
-            "erase",
-            Messages.GUI_BUTTON_ERASE_0,
-            widgetDialog.getButtonStyle()));
+        result.append(
+            "<td><table class=\"editorbuttonbackground\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>");
+        result.append(
+            widgetDialog.button(
+                "javascript:open"
+                    + getNameUpper()
+                    + "Gallery('"
+                    + A_CmsAjaxGallery.MODE_WIDGET
+                    + "',  '"
+                    + id
+                    + "' , '"
+                    + idHash
+                    + "');",
+                null,
+                getNameLower() + "gallery",
+                Messages.getButtonName(getNameLower()),
+                widgetDialog.getButtonStyle()));
+        // reset button
+        result.append(
+            widgetDialog.button(
+                "javascript:reset" + getNameUpper() + "Gallery('" + id + "');",
+                null,
+                "erase",
+                Messages.GUI_BUTTON_ERASE_0,
+                widgetDialog.getButtonStyle()));
         result.append("</tr></table>");
         result.append("</td></tr>");
         result.append("<script type=\"text/javascript\">check");
@@ -128,7 +131,7 @@ public abstract class A_CmsHtmlGalleryWidget extends A_CmsGalleryWidget {
         // reads the configuration String for this widget
         CmsGalleryWidgetConfiguration configuration = new CmsGalleryWidgetConfiguration(
             cms,
-            widgetDialog,
+            widgetDialog.getMessages(),
             param,
             getConfiguration());
 
@@ -142,6 +145,15 @@ public abstract class A_CmsHtmlGalleryWidget extends A_CmsGalleryWidget {
     }
 
     /**
+     * @see org.opencms.widgets.I_CmsADEWidget#getWidgetName()
+     */
+    @Override
+    public String getWidgetName() {
+
+        return A_CmsHtmlGalleryWidget.class.getName();
+    }
+
+    /**
      * @see org.opencms.widgets.A_CmsGalleryWidget#showPreview(java.lang.String)
      */
     @Override
@@ -150,4 +162,5 @@ public abstract class A_CmsHtmlGalleryWidget extends A_CmsGalleryWidget {
         // not required for HTML display galleries
         return false;
     }
+
 }

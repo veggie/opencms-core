@@ -19,23 +19,41 @@
 	editorpreconditions?,
 	directeditprovider?, 
 	exportpoints, 
-	autolock?, 
+	autolock?,
+	acacia-unlock?, 
 	xmlcontentautocorrection?,	
 	enableusermanagement?, 	
 	defaultpropertiesonstructure,
 	enableadvancedpropertytabs,
+	categoryfolder?,
 	group-translation?,
 	maxfileuploadsize?, 
 	labeledfolders?,
+	repositoryfolder?,
 	workflow?,
 	rfsfileviewsettings?,
 	explorertypes+,
 	user-infos?,
+	account-infos?,
 	default-preferences,
 	workplace-customfoot?,
 	tool-manager?,
-	user-lists?
+	user-lists?,
+	synchronization?,
+	keep-alive?,
+	gallery-default-scope?,
+	element-delete-mode?
 	)>
+
+<!--
+# Configuration for the RFS synchronization
+-->
+<!ELEMENT synchronization (exclude-pattern+) >
+
+<!--
+# A string pattern to exclude when synchronizing
+-->
+<!ELEMENT exclude-pattern (#PCDATA) >
 
 <!--
 # The user additional information configuration.
@@ -57,6 +75,12 @@
 		  			widget CDATA #IMPLIED
 		  			params CDATA #IMPLIED
 		  			optional (true|TRUE|false|FALSE) #IMPLIED >
+		  			
+<!ELEMENT account-infos (account-info+) >
+<!ELEMENT account-info EMPTY >
+<!ATTLIST account-info  field (lastname|firstname|email|institution|address|zipcode|city|country|addinfo) #REQUIRED
+                        addinfo-key CDATA #IMPLIED
+						editable (true|TRUE|false|FALSE) #IMPLIED >
 
 <!--
 # The workplace foot is customizable, color and background-color can be changed to have a better overview when
@@ -210,6 +234,12 @@
 -->
 <!ELEMENT autolock (#PCDATA)>
 
+
+<!--
+# Enables or disables automatic unlocking of resources by the Acacia editor.
+-->
+<!ELEMENT acacia-unlock (#PCDATA)>
+
 <!--
 # Enables or disables the auto correction of XML content resources in the editor if the XML Schema Definition has changed.
 # If this is set to "true" (the default) the XML content editor corrects automatically the edited content
@@ -266,6 +296,19 @@
 # contains sensitive data.
 -->
 <!ELEMENT labeledfolders (resource*)>
+
+<!--
+# The repository folder handler class.
+# class: the class of the handler replacing the default implementation
+# needs to implement the interface org.opencms.workplace.I_CmsRepositoryFolderHandler
+-->
+<!ELEMENT repositoryfolder EMPTY>
+<!ATTLIST repositoryfolder class CDATA #REQUIRED>
+
+<!--
+# name of the decentralized category folder. If not set, "/.categories/ is used.
+-->
+<!ELEMENT categoryfolder (#PCDATA)>
 
 <!--
 # Rfs file view settings:
@@ -451,16 +494,31 @@
 
 <!--
 # The default user preferences of the OpenCms workplace contains the default data 
-# for the user workplace preferences. The xml data is subdifeded into four major knots,
+# for the user workplace preferences. The xml data is sub-divided into four major nodes,
 # representing the different tabs in the preferences screen in the workplace. 
-# The knot for start setting of the galleries is optional.
+# The node for start setting of the galleries is optional.
 -->
-<!ELEMENT default-preferences (workplace-preferences,
-				explorer-preferences,
-				dialogs-preferences,
-				editors-preferences,
+<!ELEMENT default-preferences (workplace-preferences?,
+				explorer-preferences?,
+				dialogs-preferences?,
+				editors-preferences?,
 				galleries-preferences?,
-				workflow-preferences?)>
+				workflow-preferences?, preference-tab*)>
+				
+				
+<!ELEMENT preference-tab (preference*)>
+<!ATTLIST preference-tab name (basic|extended|hidden) #REQUIRED>
+				
+<!ELEMENT preference EMPTY>
+<!ATTLIST preference 	name CDATA #REQUIRED
+						value CDATA #IMPLIED
+						widget CDATA #IMPLIED
+						widget-config CDATA #IMPLIED
+						nice-name CDATA #IMPLIED
+						description CDATA #IMPLIED
+						rule-regex CDATA #IMPLIED
+						error CDATA #IMPLIED
+>
 
 <!--
 # The workplace preferences define the preferences of the workplace itself.
@@ -483,7 +541,8 @@
 									publishrelatedresources?,
 									newfolder-editproperties?, 
 									newfolder-createindexpage?,
-									show-uploadtypedialog?)>
+									show-uploadtypedialog?, 
+									subsitemap-creation-mode?)>
 <!--
 # The buttonstyle controls the appearence of the buttons on the workplace.
 # Possible values are [image|textimage|text].
@@ -498,15 +557,10 @@
 
 <!--
 # By setting this element, the file upload variant can be choosen
-# Possible values are [applet|basic|gwt|true|false]
+# Possible values are [basic|gwt]
 #
-# applet: use the java based upload applet
 # basic:  use the default html upload
 # gwt:    use the gwt based upload
-# true:   use the java based upload applet
-# false:  use the default html upload
-#
-# true and false are possible vaules for backward compatibility.
 -->	
 <!ELEMENT uploadapplet (#PCDATA)>
 
@@ -558,6 +612,8 @@
 <!ELEMENT newfolder-createindexpage (#PCDATA)>
 
 <!ELEMENT show-uploadtypedialog (#PCDATA)>
+
+<!ELEMENT subsitemap-creation-mode (#PCDATA)>
 
 <!ELEMENT newfolder-editproperties (#PCDATA)>
 								
@@ -787,6 +843,7 @@
 <!ATTLIST startgallery type CDATA #REQUIRED>
 <!ATTLIST startgallery path CDATA #REQUIRED>
 
+
 <!--
 # The workflow preferences define the default workflow options.
 -->		
@@ -829,6 +886,18 @@
 
 <!ELEMENT user-lists EMPTY>
 <!ATTLIST user-lists mode CDATA #REQUIRED>
+
+<!ELEMENT keep-alive (#PCDATA)>
+
+<!--
+# The default search scope for gallery dialogs. Values allowed: [everything|shared|site|siteShared|subSite|subSiteShared]
+-->
+<!ELEMENT gallery-default-scope (#PCDATA)>
+
+<!--
+# The element delete mode sets the behavior of the element remove dialog in the container page editor. Values allowed: [alwaysDelete|alwaysKeep|askDelete|askKeep]
+-->
+<!ELEMENT element-delete-mode (#PCDATA)>
 
 <!--
 # Include the explorer types DTD.

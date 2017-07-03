@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,17 +32,17 @@ import com.google.gwt.user.client.ui.PopupPanel;
 
 /**
  * The results tab handler.<p>
- * 
- * This class receives event information from the results tab and 
+ *
+ * This class receives event information from the results tab and
  * delegates it to the gallery controller.
- * 
+ *
  * @since 8.0.0
  */
 public class CmsResultsTabHandler extends A_CmsTabHandler {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param controller the gallery controller
      */
     public CmsResultsTabHandler(CmsGalleryController controller) {
@@ -61,7 +61,7 @@ public class CmsResultsTabHandler extends A_CmsTabHandler {
 
     /**
      * Deletes the given resource.<p>
-     * 
+     *
      * @param resourcePath the resource path of the resource to delete
      */
     public void deleteResource(String resourcePath) {
@@ -70,18 +70,40 @@ public class CmsResultsTabHandler extends A_CmsTabHandler {
     }
 
     /**
+     * Returns the result view type.<p>
+     *
+     * @return the result view type
+     */
+    public String getResultViewType() {
+
+        return m_controller.getResultViewType();
+    }
+
+    /**
+     * Returns if a preview is available for the given resource type.<p>
+     *
+     * @param resourceType the requested resource type
+     *
+     * @return <code>true</code> if a preview is available for the given resource type
+     */
+    public boolean hasPreview(String resourceType) {
+
+        return m_controller.hasPreview(resourceType);
+    }
+
+    /**
      * Returns if resource entries in the search result are selectable.<p>
-     * 
+     *
      * @return if resource entries in the search result are selectable
      */
     public boolean hasSelectResource() {
 
-        return m_controller.hasSelectResource();
+        return m_controller.hasSelectResource() && m_controller.hasResultsSelectable();
     }
 
     /**
      * Returns if a load results request is currently running.<p>
-     * 
+     *
      * @return <code>true</code> if a load results request is currently running
      */
     public boolean isLoading() {
@@ -130,9 +152,9 @@ public class CmsResultsTabHandler extends A_CmsTabHandler {
 
     /**
      * Will be triggered when the result item is clicked.<p>
-     * 
+     *
      * @param resourcePath the resource path of the result
-     * @param resourceType 
+     * @param resourceType the resource type
      */
     public void openPreview(String resourcePath, String resourceType) {
 
@@ -141,14 +163,29 @@ public class CmsResultsTabHandler extends A_CmsTabHandler {
     }
 
     /**
-     * Selects the given resource and sets its path into the xml-content field or editor link.<p>
-     * 
-     * @param resourcePath the item resource path 
-     * @param title the resource title
-     * @param resourceType the item resource type
+     * @see org.opencms.ade.galleries.client.A_CmsTabHandler#removeParam(java.lang.String)
      */
-    public void selectResource(String resourcePath, String title, String resourceType) {
+    @Override
+    public void removeParam(String paramKey) {
 
-        m_controller.selectResource(resourcePath, title, resourceType);
+        // nothing to do
+    }
+
+    /**
+     * Stores the result view type.<p>
+     *
+     * @param resultViewType the result view type
+     */
+    public void setResultViewType(String resultViewType) {
+
+        m_controller.setResultViewType(resultViewType);
+    }
+
+    /**
+     * Updates the result tab.<p>
+     */
+    public void updateResult() {
+
+        m_controller.updateResultsTab(false);
     }
 }

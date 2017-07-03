@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -49,8 +49,8 @@ import org.dom4j.Element;
  * Describes the XML content type "OpenCmsVfsFile".<p>
  *
  * This type allows links to internal VFS resources only.<p>
- * 
- * @since 7.0.0 
+ *
+ * @since 7.0.0
  */
 public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
 
@@ -79,7 +79,7 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
 
     /**
      * Creates a new XML content value of type "OpenCmsVfsFile".<p>
-     * 
+     *
      * @param document the XML content instance this value belongs to
      * @param element the XML element that contains this value
      * @param locale the locale this value is created for
@@ -92,7 +92,7 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
 
     /**
      * Creates a new schema type descriptor for the type "OpenCmsVfsFile".<p>
-     * 
+     *
      * @param name the name of the XML node containing the value according to the XML schema
      * @param minOccurs minimum number of occurrences of this type according to the XML schema
      * @param maxOccurs maximum number of occurrences of this type according to the XML schema
@@ -104,7 +104,7 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
 
     /**
      * Fills the given element with a {@link CmsXmlVfsFileValue} for the given data.<p>
-     * 
+     *
      * @param element the element to fill
      * @param id the id to use
      * @param rootPath the path to use
@@ -150,10 +150,10 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
 
     /**
      * Returns the link object represented by this XML content value.<p>
-     * 
+     *
      * @param cms the cms context, can be <code>null</code> but in this case no link check is performed
-     * 
-     * @return the link object represented by this XML content value
+     *
+     * @return the link object represented by this XML content value (will return null for an empty link)
      */
     public CmsLink getLink(CmsObject cms) {
 
@@ -168,7 +168,7 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
                 return null;
             }
         }
-        CmsLinkUpdateUtil.updateType(linkElement, getContentDefinition().getContentHandler().getRelationType(getPath()));
+        CmsLinkUpdateUtil.updateType(linkElement, getRelationType(getPath()));
         CmsLink link = new CmsLink(linkElement);
         link.checkConsistency(cms);
         if (CmsStringUtil.isEmptyOrWhitespaceOnly(link.getTarget())) {
@@ -237,13 +237,13 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
 
     /**
      * Sets the value as a structure id.<p>
-     * 
-     * @param cms the current CMS context 
-     * @param id the structure id which should be stored in the file value  
+     *
+     * @param cms the current CMS context
+     * @param id the structure id which should be stored in the file value
      */
     public void setIdValue(CmsObject cms, CmsUUID id) {
 
-        CmsRelationType type = getContentDefinition().getContentHandler().getRelationType(getPath());
+        CmsRelationType type = getRelationType(getPath());
         CmsLink link = new CmsLink(TYPE_VFS_LINK, type, id, "@", true);
         // link management check
         link.checkConsistency(cms);
@@ -274,6 +274,9 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
                     cms.getRequestContext().setSiteRoot(siteRoot);
                     // remove the site root, because the link manager call will append it anyway
                     path = cms.getRequestContext().removeSiteRoot(value);
+                    if (CmsStringUtil.isEmptyOrWhitespaceOnly(path)) {
+                        path = "/";
+                    }
                 }
                 // remove parameters, if not the link manager call might fail
                 String query = "";
@@ -303,7 +306,7 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
         if (CmsStringUtil.isEmptyOrWhitespaceOnly(path)) {
             return;
         }
-        CmsRelationType type = getContentDefinition().getContentHandler().getRelationType(getPath());
+        CmsRelationType type = getRelationType(getPath());
         CmsLink link = new CmsLink(TYPE_VFS_LINK, type, path, true);
         // link management check
         link.checkConsistency(cms);
@@ -313,9 +316,9 @@ public class CmsXmlVfsFileValue extends A_CmsXmlContentValue {
 
     /**
      * Creates the String value for this vfs file value element.<p>
-     * 
+     *
      * @param cms the cms context
-     * 
+     *
      * @return the String value for this vfs file value element
      */
     private String createStringValue(CmsObject cms) {

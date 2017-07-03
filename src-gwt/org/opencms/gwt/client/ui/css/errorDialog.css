@@ -1,17 +1,23 @@
+@external gwt-HTML;
+
 .details {
 	clear: both;
 	margin: 15px 0px 5px 0px;
 }
 
-.details > div{
-	overflow: auto;
-	white-space: nowrap;
+.details  div.gwt-HTML{
+	padding: 4px 2px;
+	overflow: hidden;
+}	
+.details div.gwt-HTML > pre{
+	white-space: pre-wrap;
 }
-@sprite table tr td.errorIcon, div.errorIcon, span.errorIcon{
-	gwt-image: "gwtImages.errorImage";
-	margin: 0px 0px 0px 3px;
-	display: block;
-	float: left;
+span.errorIcon{
+	display: inline-block;
+	width:32px;
+	height: 32px;
+	font-size:32px;
+	color: value("constants.css.textColorImportant");
 }
 .message{
 	margin: 5px 0px 5px 45px;

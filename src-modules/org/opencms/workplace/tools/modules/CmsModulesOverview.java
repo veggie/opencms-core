@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -45,8 +45,8 @@ import javax.servlet.jsp.PageContext;
 
 /**
  * Class to show the module overview.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsModulesOverview extends CmsWidgetDialog {
 
@@ -64,7 +64,7 @@ public class CmsModulesOverview extends CmsWidgetDialog {
 
     /**
      * Public constructor with JSP action element.<p>
-     * 
+     *
      * @param jsp an initialized JSP action element
      */
     public CmsModulesOverview(CmsJspActionElement jsp) {
@@ -74,7 +74,7 @@ public class CmsModulesOverview extends CmsWidgetDialog {
 
     /**
      * Public constructor with JSP variables.<p>
-     * 
+     *
      * @param context the JSP page context
      * @param req the JSP request
      * @param res the JSP response
@@ -84,7 +84,7 @@ public class CmsModulesOverview extends CmsWidgetDialog {
         this(new CmsJspActionElement(context, req, res));
     }
 
-    /** 
+    /**
      * Commits the edited module.<p>
      */
     @Override
@@ -95,7 +95,7 @@ public class CmsModulesOverview extends CmsWidgetDialog {
 
     /**
      * Builds the HTML for the dialog form.<p>
-     * 
+     *
      * @return the HTML for the dialog form
      */
     @Override
@@ -128,7 +128,7 @@ public class CmsModulesOverview extends CmsWidgetDialog {
 
     /**
      * Gets the module parameter.<p>
-     * 
+     *
      * @return the module parameter
      */
     public String getParamModule() {
@@ -136,7 +136,7 @@ public class CmsModulesOverview extends CmsWidgetDialog {
         return m_paramModule;
     }
 
-    /** 
+    /**
      * Sets the module parameter.<p>
      * @param paramModule the module parameter
      */
@@ -146,8 +146,8 @@ public class CmsModulesOverview extends CmsWidgetDialog {
     }
 
     /**
-     * Creates the dialog HTML for all defined widgets of the named dialog (page).<p>  
-     * 
+     * Creates the dialog HTML for all defined widgets of the named dialog (page).<p>
+     *
      * @param dialog the dialog (page) to get the HTML for
      * @return the dialog HTML for all defined widgets of the named dialog (page)
      */

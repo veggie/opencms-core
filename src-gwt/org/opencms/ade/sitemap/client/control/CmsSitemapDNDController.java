@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -51,7 +51,9 @@ import org.opencms.gwt.shared.property.CmsPropertyModification;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Element;
@@ -59,7 +61,7 @@ import com.google.gwt.dom.client.Style.Unit;
 
 /**
  * The sitemap drag and drop controller.<p>
- * 
+ *
  * @since 8.0.0
  */
 public class CmsSitemapDNDController implements I_CmsDNDController {
@@ -84,7 +86,7 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
 
     /**
      * Constructor.<p>
-     * 
+     *
      * @param controller the sitemap controller
      * @param toolbar the sitemap toolbar
      */
@@ -240,7 +242,7 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
 
     /**
      * Adjust the original position indicator by styling the draggable element for this purpose.<p>
-     * 
+     *
      * @param draggable the draggable
      * @param target the current drop target
      * @param handler the drag and drop handler
@@ -266,9 +268,9 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
 
     /**
      * Handles a dropped detail page.<p>
-     * 
-     * @param createItem the detail page which was dropped into the sitemap 
-     * @param parent the parent sitemap entry  
+     *
+     * @param createItem the detail page which was dropped into the sitemap
+     * @param parent the parent sitemap entry
      */
     private void handleDropNewEntry(CmsCreatableListItem createItem, CmsClientSitemapEntry parent) {
 
@@ -278,7 +280,8 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
         entry.setVfsPath(null);
         entry.setPosition(m_insertIndex);
         entry.setInNavigation(true);
-        entry.setDefaultFileProperties(Collections.<String, CmsClientProperty> emptyMap());
+        Map<String, CmsClientProperty> defaultFileProps = Maps.newHashMap();
+        entry.setDefaultFileProperties(defaultFileProps);
         String uniqueName = null;
         switch (createItem.getNewEntryType()) {
             case detailpage:
@@ -288,6 +291,20 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
                 entry.setName(uniqueName);
                 entry.setSitePath(m_insertPath + uniqueName + "/");
                 entry.setDetailpageTypeName(typeInfo.getTypeName());
+                if (typeInfo.isFunction()) {
+
+                    CmsClientProperty titleProp = new CmsClientProperty(
+                        CmsClientProperty.PROPERTY_TITLE,
+                        typeInfo.getTitle(),
+                        null);
+                    CmsClientProperty navtextProp = new CmsClientProperty(
+                        CmsClientProperty.PROPERTY_NAVTEXT,
+                        typeInfo.getTitle(),
+                        null);
+                    entry.getOwnProperties().put(titleProp.getName(), titleProp);
+                    entry.getDefaultFileProperties().put(titleProp.getName(), titleProp);
+                    entry.getOwnProperties().put(navtextProp.getName(), navtextProp);
+                }
                 entry.setResourceTypeName("folder");
                 break;
             case redirect:
@@ -300,12 +317,6 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
             default:
                 uniqueName = m_controller.ensureUniqueName(parent, CmsSitemapController.NEW_ENTRY_NAME);
                 entry.setName(uniqueName);
-                entry.getOwnProperties().put(
-                    CmsClientProperty.PROPERTY_TITLE,
-                    new CmsClientProperty(
-                        CmsClientProperty.PROPERTY_TITLE,
-                        CmsSitemapController.NEW_ENTRY_NAME,
-                        CmsSitemapController.NEW_ENTRY_NAME));
                 entry.setSitePath(m_insertPath + uniqueName + "/");
                 entry.setResourceTypeName("folder");
         }
@@ -314,14 +325,15 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
             parent.getId(),
             typeInfo.getId(),
             typeInfo.getCopyResourceId(),
-            typeInfo.getCreateParameter());
+            typeInfo.getCreateParameter(),
+            false);
     }
 
     /**
      * Handles the drop for a sitemap item which was dragged to a different position.<p>
-     * 
-     * @param sitemapEntry the dropped item  
-     * @param target the drop target 
+     *
+     * @param sitemapEntry the dropped item
+     * @param target the drop target
      * @param parent the parent sitemap entry
      */
     private void handleDropSitemapEntry(
@@ -353,7 +365,7 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
 
     /**
      * Hides the content of list items by setting a specific css class.<p>
-     * 
+     *
      * @param element the list item element
      */
     private void hideItemContent(Element element) {
@@ -368,11 +380,11 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
 
     /**
      * Checks whether the current placeholder position represents a change to the original draggable position within the tree.<p>
-     * 
+     *
      * @param draggable the draggable
      * @param target the current drop target
      * @param strict if <code>false</code> only the parent path is considered, the index position will be ignored
-     * 
+     *
      * @return <code>true</code> if the position changed
      */
     private boolean isChangedPosition(I_CmsDraggable draggable, I_CmsDropTarget target, boolean strict) {
@@ -392,8 +404,8 @@ public class CmsSitemapDNDController implements I_CmsDNDController {
             return true;
         }
         // if the new index is not next to the old one, the position has changed
-        if (!((target.getPlaceholderIndex() == (m_originalIndex + 1)) || (target.getPlaceholderIndex() == m_originalIndex))
-            && strict) {
+        if (!((target.getPlaceholderIndex() == (m_originalIndex + 1))
+            || (target.getPlaceholderIndex() == m_originalIndex)) && strict) {
             return true;
         }
         return false;

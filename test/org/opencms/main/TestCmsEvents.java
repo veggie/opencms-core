@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,7 +43,7 @@ public class TestCmsEvents extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestCmsEvents(String arg0) {
@@ -53,7 +53,7 @@ public class TestCmsEvents extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -85,7 +85,7 @@ public class TestCmsEvents extends OpenCmsTestCase {
 
     /**
      * Test the before and after publish event.<p>
-     * 
+     *
      * @throws Throwable if the test fails
      */
     public void testBeforeAfterPublishEvent() throws Throwable {
@@ -103,7 +103,7 @@ public class TestCmsEvents extends OpenCmsTestCase {
                 projectName,
                 "Unit test project for publish events",
                 OpenCms.getDefaultUsers().getGroupUsers(),
-                OpenCms.getDefaultUsers().getGroupProjectmanagers(),
+                OpenCms.getDefaultUsers().getGroupAdministrators(),
                 CmsProject.PROJECT_TYPE_NORMAL);
             cms.getRequestContext().setCurrentProject(project);
             cms.copyResourceToProject("/sites/default/");
@@ -113,9 +113,9 @@ public class TestCmsEvents extends OpenCmsTestCase {
 
         // create and register the event listener
         CmsTestEventListener handler = new CmsTestEventListener();
-        OpenCms.addCmsEventListener(handler, new int[] {
-            I_CmsEventListener.EVENT_BEFORE_PUBLISH_PROJECT,
-            I_CmsEventListener.EVENT_PUBLISH_PROJECT});
+        OpenCms.addCmsEventListener(
+            handler,
+            new int[] {I_CmsEventListener.EVENT_BEFORE_PUBLISH_PROJECT, I_CmsEventListener.EVENT_PUBLISH_PROJECT});
 
         CmsProject current = cms.readProject(projectName);
         cms.getRequestContext().setCurrentProject(current);

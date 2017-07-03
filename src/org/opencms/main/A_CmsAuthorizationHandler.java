@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -40,8 +40,8 @@ import org.apache.commons.logging.Log;
 
 /**
  * Abstract class to grant the needed access to the session manager.<p>
- * 
- * @since 6.5.4 
+ *
+ * @since 6.5.4
  */
 public abstract class A_CmsAuthorizationHandler implements I_CmsAuthorizationHandler {
 
@@ -52,14 +52,22 @@ public abstract class A_CmsAuthorizationHandler implements I_CmsAuthorizationHan
     protected Map<String, String> m_parameters;
 
     /**
+     * @see org.opencms.security.I_CmsAuthorizationHandler#setParameters(java.util.Map)
+     */
+    public void setParameters(Map<String, String> parameters) {
+
+        m_parameters = parameters;
+    }
+
+    /**
      * Initializes a new cms object from the session data of the request.<p>
-     * 
+     *
      * If no session data is found, <code>null</code> is returned.<p>
-     * 
+     *
      * @param request the request
-     * 
+     *
      * @return the new initialized cms object
-     * 
+     *
      * @throws CmsException if something goes wrong
      */
     protected CmsObject initCmsObjectFromSession(HttpServletRequest request) throws CmsException {
@@ -70,13 +78,13 @@ public abstract class A_CmsAuthorizationHandler implements I_CmsAuthorizationHan
 
     /**
      * Registers the current session with OpenCms.<p>
-     * 
+     *
      * @param request the current request
      * @param cms the cms object to register
-     * 
+     *
      * @return the updated cms context
-     * 
-     * @throws CmsException if something goes wrong 
+     *
+     * @throws CmsException if something goes wrong
      */
     protected CmsObject registerSession(HttpServletRequest request, CmsObject cms) throws CmsException {
 
@@ -95,13 +103,5 @@ public abstract class A_CmsAuthorizationHandler implements I_CmsAuthorizationHan
         }
         // return the updated cms object
         return cms;
-    }
-
-    /**
-     * @see org.opencms.security.I_CmsAuthorizationHandler#setParameters(java.util.Map)
-     */
-    public void setParameters(Map<String, String> parameters) {
-
-        m_parameters = parameters;
     }
 }

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -53,7 +53,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Advanced image tag properties form, use in editor mode only.<p>
- * 
+ *
  * @since 8.0.
  */
 public class CmsImageAdvancedForm extends Composite {
@@ -169,6 +169,7 @@ public class CmsImageAdvancedForm extends Composite {
         m_selectTextDirection.addOption("rtl", Messages.get().key(Messages.GUI_ADVANCED_TAB_VALUE_RIGHT_TO_LEFT_0));
         m_inputUrl.setButtonSize(Size.small);
         m_inputUrl.addInputStyleName(I_CmsLayoutBundle.INSTANCE.imageAdvancedFormCss().input());
+        m_inputUrl.addStyleName(I_CmsLayoutBundle.INSTANCE.imageAdvancedFormCss().linkWidget());
         m_fields = new HashMap<Attribute, I_CmsFormWidget>();
         m_fields.put(Attribute.linkTarget, m_selectTarget);
         m_fields.put(Attribute.dir, m_selectTextDirection);
@@ -182,10 +183,10 @@ public class CmsImageAdvancedForm extends Composite {
 
     /**
      * Displays the provided image information.<p>
-     * 
+     *
      * @param imageInfo the image information
      * @param imageAttributes the image attributes
-     * @param initialFill flag to indicate that a new image has been selected 
+     * @param initialFill flag to indicate that a new image has been selected
      */
     public void fillContent(CmsImageInfoBean imageInfo, CmsJSONMap imageAttributes, boolean initialFill) {
 
@@ -203,7 +204,7 @@ public class CmsImageAdvancedForm extends Composite {
 
     /**
      * Adds necessary attributes to the map.<p>
-     * 
+     *
      * @param attributes the attribute map
      * @return the attribute map
      */

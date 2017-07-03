@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,11 +32,11 @@ import org.opencms.ade.galleries.shared.CmsResourceInfoBean;
 
 /**
  * Preview dialog handler interface.<p>
- * 
+ *
  * Delegates the actions of the preview controller to the preview dialog.<p>
- * 
+ *
  * @param <T> the resource info bean type
- * 
+ *
  * @since 8.0.0
  */
 public interface I_CmsPreviewHandler<T extends CmsResourceInfoBean> extends I_CmsPropertiesHandler {
@@ -46,7 +46,7 @@ public interface I_CmsPreviewHandler<T extends CmsResourceInfoBean> extends I_Cm
      *
      * @return the gallery dialog
      */
-    public CmsGalleryDialog getGalleryDialog();
+    CmsGalleryDialog getGalleryDialog();
 
     /**
      * Closes the preview.<p>
@@ -55,14 +55,14 @@ public interface I_CmsPreviewHandler<T extends CmsResourceInfoBean> extends I_Cm
 
     /**
      * Returns false, if the dialog may not be closed due to unsaved properties.<p>
-     * 
+     *
      * @return <code>true</code> if the dialog may be closed
      */
     boolean setDataInEditor();
 
     /**
      * Displays the given resource info data.<p>
-     * 
+     *
      * @param resourceInfo the resource info data
      */
     void showData(T resourceInfo);

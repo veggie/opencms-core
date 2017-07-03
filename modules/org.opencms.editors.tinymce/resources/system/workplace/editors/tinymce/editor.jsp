@@ -1,5 +1,4 @@
-<%@page import="java.io.UnsupportedEncodingException"%>
-<%@ page taglibs="cms" import="
+<%@page import="java.io.UnsupportedEncodingException,
 	org.opencms.i18n.CmsEncoder,
 	org.opencms.editors.tinymce.*,
 	org.opencms.util.*,
@@ -9,7 +8,8 @@
 	org.opencms.main.*,
 	org.apache.commons.lang.StringUtils,
 	java.util.*
-"%><%
+"%><%@ 
+	taglib prefix="cms" uri="http://www.opencms.org/taglib/cms"%><%
 
 CmsJspActionElement cms = new CmsJspActionElement(pageContext, request, response);
 CmsTinyMCE wp = new CmsTinyMCE(cms);
@@ -61,7 +61,7 @@ if(grp.length() > 0){
 
 //Group
 grp = new StringBuilder() ;
-grp.append(",search,replace");
+grp.append(",searchreplace");
 
 if(grp.length() > 0){
 	toolbar.append(grp.toString() + "," + CmsTinyMCE.GROUP_SEPARATOR);
@@ -70,12 +70,6 @@ if(grp.length() > 0){
 
 //Group
 grp = new StringBuilder() ;
-
-if (options.showElement("button.hr", displayOptions)) {
-	grp.append(",hr");
-}
-
-grp.append(",selectall") ;
 
 if (options.showElement("button.removeformat", displayOptions)) {
 	grp.append(",removeformat");
@@ -91,7 +85,7 @@ if(grp.length() > 0){
 
 //Group
 grp = new StringBuilder() ;
-grp.append(",cut,copy,paste,pastetext,pasteword");
+grp.append(",cut,copy,paste,pastetext");
 
 if(grp.length() > 0){
 	toolbar.append(grp.toString() + "," + CmsTinyMCE.GROUP_SEPARATOR);
@@ -120,12 +114,7 @@ grp = new StringBuilder() ;
 if (options.showElement("option.links", displayOptions)) {
 
 	// determine if the local link button should be shown
-	if (options.showElement("option.link", displayOptions)) {
-		grp.append(",oc-link");
-	}
-
-	// determine if the external link button should be shown
-	if (options.showElement("option.extlink", displayOptions)) {
+	if (options.showElement("option.link", displayOptions)||options.showElement("option.extlink", displayOptions)) {
 		grp.append(",link");
 	}
 
@@ -177,9 +166,6 @@ if(grp.length() > 0){
 //Group
 grp = new StringBuilder() ;
 
-if (options.showElement("button.advhr", displayOptions)) {
-	grp.append(",advhr");
-}
 
 
 if (options.showElement("option.specialchars", displayOptions)) {
@@ -187,7 +173,7 @@ if (options.showElement("option.specialchars", displayOptions)) {
 }
 
 if (options.showElement("option.spellcheck", displayOptions)) {
-	grp.append(",iespell");
+	grp.append(",spellchecker");
 }
 
 
@@ -282,10 +268,10 @@ if (options.showElement("font.decoration", displayOptions)) {
 	}
 
 	if (options.showElement("button.sub", CmsStringUtil.TRUE, displayOptions)) {
-		grp.append(",sub");
+		grp.append(",subscript");
 	}
 	if (options.showElement("button.super", CmsStringUtil.TRUE, displayOptions)) {
-		grp.append(",sup");
+		grp.append(",superscript");
 	}
 }
 
@@ -299,16 +285,16 @@ grp = new StringBuilder() ;
 //determine if the text alignment buttons should be shown
 if (options.showElement("text.align", displayOptions)) {
 	if (options.showElement("button.alignleft", CmsStringUtil.TRUE, displayOptions)) {
-		grp.append(",justifyleft");
+		grp.append(",alignleft");
 	}
 	if (options.showElement("button.aligncenter", CmsStringUtil.TRUE, displayOptions)) {
-		grp.append(",justifycenter");
+		grp.append(",aligncenter");
 	}
 	if (options.showElement("button.alignright", CmsStringUtil.TRUE, displayOptions)) {
-		grp.append(",justifyright");
+		grp.append(",alignright");
 	}
 	if (options.showElement("button.justify", CmsStringUtil.TRUE, displayOptions)) {
-		grp.append(",justifyfull");
+		grp.append(",alignjustify");
 	}
 }
 
@@ -354,6 +340,12 @@ if (options.showElement("button.blockquote", CmsStringUtil.TRUE, displayOptions)
 	grp.append(",blockquote");
 }
 
+if (options.showElement("button.hr", CmsStringUtil.TRUE, displayOptions)) {
+	grp.append(",hr");
+}
+
+
+
 if(grp.length() > 0){
 	toolbar.append(grp.toString() + "," + CmsTinyMCE.GROUP_SEPARATOR);
 }
@@ -383,19 +375,12 @@ if (options.showElement("button.image", displayOptions)) {
 	grp.append(",image");
 }
 
-if (options.showElement("option.cleanup", displayOptions)) {
-	grp.append(",cleanup");
-}
 
 //determine if the help button should be shown
 if (wp.isHelpEnabled()) {
 	if (options.showElement("option.help", displayOptions)) {
 		grp.append(",oc-help");
 	}
-}
-
-if (options.showElement("option.sourcecode", displayOptions)) {
-	grp.append(",code");
 }
 
 if(grp.length() > 0){
@@ -439,21 +424,8 @@ if(grp.length() > 0){
 //Group
 grp = new StringBuilder() ;
 
-if (options.showElement("button.insertlayer", displayOptions)) {
-	grp.append(",insertlayer");
-}
 
-if (options.showElement("button.moveforward", displayOptions)) {
-	grp.append(",moveforward");
-}
 
-if (options.showElement("button.movebackward", displayOptions)) {
-	grp.append(",movebackward");
-}
-
-if (options.showElement("button.absolute", displayOptions)) {
-	grp.append(",absolute");
-}
 
 if(grp.length() > 0){
 	toolbar.append(grp.toString() + "," + CmsTinyMCE.GROUP_SEPARATOR);
@@ -462,44 +434,11 @@ if(grp.length() > 0){
 //Group
 grp = new StringBuilder() ;
 
-if (options.showElement("button.styleprops", displayOptions)) {
-	grp.append(",styleprops");
-}
 
 if(grp.length() > 0){
 	toolbar.append(grp.toString() + "," + CmsTinyMCE.GROUP_SEPARATOR);
 }
 
-//Group
-grp = new StringBuilder() ;
-
-if (options.showElement("button.cite", displayOptions)) {
-	grp.append(",cite");
-}
-
-if (options.showElement("button.abbr", displayOptions)) {
-	grp.append(",abbr");
-}
-
-if (options.showElement("button.acronym", displayOptions)) {
-	grp.append(",acronym");
-}
-
-if (options.showElement("button.del", displayOptions)) {
-	grp.append(",del");
-}
-
-if (options.showElement("button.ins", displayOptions)) {
-	grp.append(",ins");
-}
-
-if (options.showElement("button.attribs", displayOptions)) {
-	grp.append(",attribs");
-}
-
-if(grp.length() > 0){
-	toolbar.append(grp.toString() + "," + CmsTinyMCE.GROUP_SEPARATOR);
-}
 
 //Group
 grp = new StringBuilder() ;
@@ -559,13 +498,13 @@ case CmsEditor.ACTION_DELETELOCALE:
 	if (wp.getAction() == CmsEditor.ACTION_DELETELOCALE) {
 		wp.actionDeleteElementLocale();
     }
-
+	//$FALL-THROUGH$
 case CmsEditor.ACTION_SAVE:
 //////////////////// ACTION: save the modified content
 	if (wp.getAction() == CmsEditor.ACTION_SAVE) {
 		wp.actionSave();
 	}
-
+	//$FALL-THROUGH$
 case CmsDialog.ACTION_DEFAULT:
 case CmsEditor.ACTION_SHOW:
 default:
@@ -575,17 +514,15 @@ default:
 	wp.escapeParams();
 	wp.setParamAction(null);
 
-%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+%><!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=<%= wp.getEncoding() %>">
 <title>(<%= wp.getSettings().getUser().getName() %>) - <%= wp.getParamResource() %></title>
 
-<link rel=stylesheet type="text/css" href="<%= wp.getStyleUri("workplace.css") %>">
-<link rel=stylesheet type="text/css" href="<%= cms.link("tinymce_xmlpage.css") %>">
-<!-- <script type="text/javascript" src="<cms:link>/system/workplace/editors/tinymce/gallery.js</cms:link>"></script>
-<script type="text/javascript" src="<cms:link>/system/workplace/editors/tinymce/link.js</cms:link>"></script>-->
-<script type="text/javascript" src="<%= CmsWorkplace.getSkinUri() + "editors/tinymce/jscripts/tiny_mce/" %>tiny_mce_src.js"></script>
+<link rel="stylesheet" type="text/css" href="<%= wp.getStyleUri("workplace.css") %>">
+<link rel="stylesheet" type="text/css" href="<%= cms.link("/system/workplace/editors/tinymce/tinymce_xmlpage.css") %>">
+<script type="text/javascript" src="<%= CmsWorkplace.getStaticResourceUri("editors/tinymce/jscripts/tinymce/tinymce.min.js") %>"></script>
 <script type="text/javascript" src="<%= CmsWorkplace.getSkinUri() + "jquery/packed/" %>jquery.js"></script>
 <script type="text/javascript">
 
@@ -620,6 +557,14 @@ function confirmDeleteLocale() {
 function buttonAction(para) {
 	var _form = document.EDITOR;
 	_form.action.value = "";
+	var isWp = false;
+    try { 
+        if (top.document.querySelector(".o-editor-frame")) {
+            isWp = true; 
+        } else { 
+            isWp = false; 
+        }
+    } catch (e) {}
     switch (para) {
     case 1:
         // reload the editor
@@ -744,28 +689,49 @@ function popupCloseAction(closeObj) {
 <script type="text/javascript" src="<cms:link>/system/workplace/editors/tinymce/opencms_plugin.js</cms:link>"></script>
 <script type="text/javascript">
 <!--
-<%=CmsTinyMCEConfiguration.get(cms.getCmsObject()).generateOptionPreprocessor("cms_preprocess_options")%>
-tinyMCE.init(cms_preprocess_options({
+var toolbarButtons="<%= CmsTinyMCE.buildToolbar(toolbar.toString())%>";
+var contextmenu="";
+if (toolbarButtons.indexOf("link")>0)
+    contextmenu+="link";
+if (toolbarButtons.indexOf("OcmsDownloadGallery")>0)
+    contextmenu+=" OcmsDownloadGallery";
+if (toolbarButtons.indexOf("OcmsImageGallery")>0)
+    contextmenu+=" OcmsImageGallery";
+if (toolbarButtons.indexOf("table")>0)
+    contextmenu+=" inserttable | cell row column deletetable"
+
+var plugins = "anchor,charmap,codemirror,importcss,textcolor,autolink,lists,pagebreak,layer,table,save,hr,image,link,emoticons,insertdatetime,preview,media,searchreplace,print,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,template,wordcount,advlist,-opencms";
+if (contextmenu!="")
+    plugins+=",contextmenu"
+
+tinyMCE.init({
     // General options
+    codemirror: {
+      indentOnInit: true, // whether or not to indent code on init.
+      path: "<%= CmsStringUtil.joinPaths(OpenCms.getSystemInfo().getStaticResourceContext() , "editors/codemirror/dist/") %>", // path to CodeMirror distribution
+      config: {           // CodeMirror config object
+         lineNumbers: true
+      }
+    },
+    toolbar_items_size: 'small',
     mode : "exact",
     elements : "tinymce_content",
-    theme : "advanced",
-    plugins : "autolink,lists,spellchecker,pagebreak,style,layer,table,save,advhr,advimage,advlink,emotions,iespell,inlinepopups,insertdatetime,preview,media,searchreplace,print,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,wordcount,-opencms",
-    file_browser_callback : 'cmsTinyMceFileBrowser',
-
-    // Theme options
-    <%= CmsTinyMCE.buildToolbar(toolbar.toString())%>
-    theme_advanced_toolbar_location : "top",
-    theme_advanced_toolbar_align : "left",
-    theme_advanced_statusbar_location : "bottom",
-    theme_advanced_resizing : false,
+    theme : "modern",
+    plugins : plugins,
+    importcss_append: true,
+    contextmenu: contextmenu,
+    file_browser_callback : cmsTinyMceFileBrowser,
+	toolbar: toolbarButtons,
+	toolbar_items_size: 'small',
+    menubar:false,
+    resize : false,
+    entity_encoding: "named",
+    entities: '160,nbsp',
+    paste_as_text: <%=""+Boolean.valueOf(OpenCms.getWorkplaceManager().getWorkplaceEditorManager().getEditorConfiguration("tinymce").getParameters().get("paste_text"))%>,
     cmsGalleryEnhancedOptions : <%= options.showElement("gallery.enhancedoptions", displayOptions)%>,
     cmsGalleryUseThickbox : <%= options.showElement("gallery.usethickbox", displayOptions)%>,
     language : "<%= wp.getLocale().getLanguage() %>",
-
-    // Skin options
-    skin_variant : "ocms",
-    relative_urls: false,
+	relative_urls: false,
     remove_script_host: false,
 
     // Example content CSS (should be your site CSS)
@@ -776,14 +742,24 @@ tinyMCE.init(cms_preprocess_options({
     height: "100%",
     valid_children : "+body[style]",
     //element options
-    extended_valid_elements : "style[dir<ltr?rtl|lang|media|title|type],link[charset|class|dir<ltr?rtl|href|hreflang|id|lang|media|onclick|ondblclick|onkeydown|onkeypress|onkeyup|onmousedown|onmousemove|onmouseout|onmouseover|onmouseup|rel|rev|style|title|target|type]",
+    valid_elements: "*[*]",
+    allow_script_urls: true,
     <%
     if(formatSelectOption){
     	String format = options.getOptionValue("formatselect.options", "", displayOptions);
-    	format = StringUtils.replace(format, ";", ",");
-    	%>
-    	theme_advanced_blockformats : "<%=format%>",
-    	<%
+    	if (CmsStringUtil.isNotEmptyOrWhitespaceOnly(format)){
+	    	String[] formats=format.split(";");
+	    	format="";
+	    	for (int i=0; i < formats.length; i++){
+	    	    format+=formats[i].toUpperCase()+"="+formats[i];
+	    	    if (i<formats.length-1){
+	    	        format+=";";
+	    	    }
+	    	}
+	    	%>
+	    	block_formats : "<%=format%>",
+	    	<%
+    	}
     }
     %>
     
@@ -807,16 +783,16 @@ tinyMCE.init(cms_preprocess_options({
     
     // events
     setup : function(ed) {
-		  ed.onInit.add(function(ed) {
-		      ed.setContent(decodeURIComponent('<%= wp.getParamContent() %>'));
-		      ed.undoManager.clear();
-		      addCustomShortcuts(ed);
+		  ed.on("init",function(event) {
+		      event.target.setContent(decodeURIComponent('<%= wp.getParamContent() %>'));
+		      event.target.undoManager.clear();
+		      addCustomShortcuts(event.target);
 		  });
-		  setupTinyMCE(ed);
+		//  setupTinyMCE(ed);
 		// Add Publisg button
 	    ed.addButton('oc-publish', {
 	    	title : '<%= CmsEncoder.encodeJavaEntities(wp.key(org.opencms.workplace.editors.Messages.GUI_EXPLORER_CONTEXT_PUBLISH_0), encoding)  %>',
-	        image : '<%=cms.link("/system/workplace/resources/editors/tinymce/toolbar/oc-publish.gif")%>',
+	        image : '<%=CmsWorkplace.getStaticResourceUri("editors/tinymce/toolbar/oc-publish.gif")%>',
 	        onclick : function() {
 	        	var exitTarget='_top';
 	        	//the editors exit frame target, may be !='_top' if in advanced direct edit!
@@ -830,25 +806,25 @@ tinyMCE.init(cms_preprocess_options({
 	 	// Add Save & Exit button
 	    ed.addButton('oc-save-exit', {
 	    	title : '<%= CmsEncoder.encodeJavaEntities(wp.key(org.opencms.workplace.editors.Messages.GUI_BUTTON_SAVECLOSE_0), encoding) %>',
-	        image : '<%=cms.link("/system/workplace/resources/editors/tinymce/toolbar/oc-save-exit.gif")%>',
+	        image : '<%=CmsWorkplace.getStaticResourceUri("editors/tinymce/toolbar/oc-save-exit.gif")%>',
 	        onclick : ocmsSaveExit
 	   });
 	   
 	 	// Add Save button
 	    ed.addButton('oc-save', {
 	    	title : '<%= CmsEncoder.encodeJavaEntities(wp.key(org.opencms.workplace.editors.Messages.GUI_BUTTON_SAVE_0), encoding) %>',
-	        image : '<%=cms.link("/system/workplace/resources/editors/tinymce/toolbar/oc-save.gif")%>',
+	        image : '<%=CmsWorkplace.getStaticResourceUri("/editors/tinymce/toolbar/oc-save.gif")%>',
 	        onclick : ocmsSave
 	   });
 
 	 	// Add Exit button
 	    ed.addButton('oc-exit', {
 	    	title : '<%= CmsEncoder.encodeJavaEntities(wp.key(org.opencms.workplace.editors.Messages.GUI_BUTTON_CLOSE_0), encoding) %>',
-	        image : '<%=cms.link("/system/workplace/resources/editors/tinymce/toolbar/oc-exit.gif")%>',
+	        image : '<%=CmsWorkplace.getStaticResourceUri("editors/tinymce/toolbar/oc-exit.gif")%>',
 	        onclick : ocmsExit
 	   });
 	}
-}));
+});
 
 function setupTinyMCE(editor) {
    if (tinyMCE.isWebKit) {
@@ -888,10 +864,21 @@ function addCustomShortcuts(editor){
 
 //sets field values and submits the editor form
 function execAction(editor, action, target) {
+    var isWp = false;
+    try { 
+        if (top.document.querySelector(".o-editor-frame")) {
+            isWp = true; 
+        } else { 
+            isWp = false; 
+        }
+    } catch (e) {}
 	var form = document.forms["EDITOR"];
 	form.content.value = encodeURIComponent(editor.getContent());
 	form.action.value = action;
 	form.target = target;
+	  if (isWp) {
+         form.target="_self";
+      }
 	form.submit(); 
 }
 // JavaScript resize editor stuff
@@ -910,7 +897,7 @@ function getEditorHeight(){
 
 <body class="buttons-head" unselectable="on" onunload="closeDialog();">
 
-<form style="width:100%; height:100%; margin:0px; padding:0px; " name="EDITOR" id="EDITOR" method="post" action="<%= wp.getDialogRealUri() %>">
+<form style="position:fixed; top:0; left:0; right:0; bottom:0; margin:0px; padding:0px;" name="EDITOR" id="EDITOR" method="post" action="<%= wp.getDialogRealUri() %>">
 <input type="hidden" name="<%= CmsDialog.PARAM_ACTION %>" value="<%= wp.getParamAction() %>">
 <input type="hidden" name="<%= CmsDialog.PARAM_RESOURCE %>" value="<%= wp.getParamResource() %>">
 <input type="hidden" name="<%= CmsEditor.PARAM_TEMPFILE %>" value="<%= wp.getParamTempfile() %>">
@@ -922,7 +909,7 @@ function getEditorHeight(){
 <input type="hidden" name="<%= CmsEditor.PARAM_MODIFIED %>" value="<%= wp.getParamModified() %>">
 <input type="hidden" name="content" id="content" >
 
-<table cellspacing="0" cellpadding="0" border="0" style="width:100%; height:100%;">
+<table cellspacing="0" cellpadding="0" border="0" style="width:100%; height:100%; table-layout:fixed;">
 
 <tr><td>
 <%= wp.buttonBar(CmsWorkplace.HTML_START) %>
@@ -969,7 +956,7 @@ if (options.showElement("option.cleanup", displayOptions)) {
 
 <tr>
 <td style="width:100%; height:100%;">
-<div id="textarea-container" class="cmsTinyMCE" style="width:100%; height:100%; background-color: Window;">
+<div id="textarea-container" class="cmsTinyMCE" style="width:100%; height:100%; background-color: /*begin-color Window*/#ffffff/*end-color*/;">
 <script language="javascript">
 document.write ('<textarea id="tinymce_content" name="tinymce_content" style="height:'+getEditorHeight()+'px; width:100%;"></textarea>');
 </script>

@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -38,6 +38,7 @@ import org.opencms.db.CmsResourceState;
 import org.opencms.db.I_CmsDriver;
 import org.opencms.db.I_CmsHistoryDriver;
 import org.opencms.db.I_CmsVfsDriver;
+import org.opencms.db.generic.Messages;
 import org.opencms.db.jpa.persistence.CmsDAOContents;
 import org.opencms.db.jpa.persistence.CmsDAOHistoryPrincipals;
 import org.opencms.db.jpa.persistence.CmsDAOHistoryProjectResources;
@@ -83,8 +84,8 @@ import org.apache.commons.logging.Log;
 
 /**
  * JPA database server implementation of the history driver methods.<p>
- * 
- * @since 8.0.0 
+ *
+ * @since 8.0.0
  */
 public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
@@ -214,7 +215,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
     /** The SQL manager instance. */
     protected CmsSqlManager m_sqlManager;
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#createPropertyDefinition(org.opencms.db.CmsDbContext, java.lang.String, org.opencms.file.CmsPropertyDefinition.CmsPropertyType)
      */
     public CmsPropertyDefinition createPropertyDefinition(CmsDbContext dbc, String name, CmsPropertyType type)
@@ -227,12 +228,12 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             chpd.setPropertyDefType(type.getMode());
             m_sqlManager.persist(dbc, chpd);
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1), e);
         }
         return readPropertyDefinition(dbc, name);
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#deleteEntries(org.opencms.db.CmsDbContext, org.opencms.file.history.I_CmsHistoryResource, int, long)
      */
     public int deleteEntries(CmsDbContext dbc, I_CmsHistoryResource resource, int versionsToKeep, long time)
@@ -321,7 +322,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 structureVersions++;
             }
 
-            // get the minimal resource publish tag to keep, 
+            // get the minimal resource publish tag to keep,
             // all entries with publish tag less than this will be deleted
             int minResPublishTagToKeep = -1;
             q = m_sqlManager.createQuery(dbc, C_HISTORY_READ_MIN_USED_TAG);
@@ -365,22 +366,22 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
             return Math.max(structureVersions, resourceVersions);
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1), e);
         }
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#deletePropertyDefinition(org.opencms.db.CmsDbContext, org.opencms.file.CmsPropertyDefinition)
      */
-    public void deletePropertyDefinition(CmsDbContext dbc, CmsPropertyDefinition metadef) throws CmsDataAccessException {
+    public void deletePropertyDefinition(CmsDbContext dbc, CmsPropertyDefinition metadef)
+    throws CmsDataAccessException {
 
         try {
             if ((internalCountProperties(dbc, metadef, CmsProject.ONLINE_PROJECT_ID) != 0)
                 || (internalCountProperties(dbc, metadef, CmsUUID.getOpenCmsUUID()) != 0)) { // HACK: to get an offline project
 
-                throw new CmsDbConsistencyException(Messages.get().container(
-                    Messages.ERR_ERROR_DELETING_PROPERTYDEF_1,
-                    metadef.getName()));
+                throw new CmsDbConsistencyException(
+                    Messages.get().container(Messages.ERR_ERROR_DELETING_PROPERTYDEF_1, metadef.getName()));
             }
 
             // delete the historical property definition
@@ -392,13 +393,13 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 m_sqlManager.remove(dbc, hpd);
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(
-                Messages.ERR_GENERIC_SQL_1,
-                Messages.ERR_JPA_PERSITENCE), e);
+            throw new CmsDataAccessException(
+                Messages.get().container(Messages.ERR_GENERIC_SQL_1, Messages.ERR_JPA_PERSITENCE_1),
+                e);
         }
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#destroy()
      */
     public void destroy() throws Throwable {
@@ -411,7 +412,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
         }
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#getAllDeletedEntries(org.opencms.db.CmsDbContext)
      */
     public List<I_CmsHistoryResource> getAllDeletedEntries(CmsDbContext dbc) throws CmsDataAccessException {
@@ -429,7 +430,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 entries.add(readResource(dbc, structureId, version));
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return entries;
     }
@@ -451,12 +452,12 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 entries.add(readResource(dbc, structureId, version));
             }
         } catch (PersistenceException e) {
-            throw new CmsDbSqlException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDbSqlException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return entries;
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#getSqlManager()
      */
     public org.opencms.db.CmsSqlManager getSqlManager() {
@@ -464,7 +465,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
         return m_sqlManager;
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsDriver#init(org.opencms.db.CmsDbContext, org.opencms.configuration.CmsConfigurationManager, java.util.List, org.opencms.db.CmsDriverManager)
      */
     public void init(
@@ -488,15 +489,16 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
         if ((successiveDrivers != null) && !successiveDrivers.isEmpty()) {
             if (LOG.isWarnEnabled()) {
-                LOG.warn(Messages.get().getBundle().key(
-                    Messages.LOG_SUCCESSIVE_DRIVERS_UNSUPPORTED_1,
-                    getClass().getName()));
+                LOG.warn(
+                    Messages.get().getBundle().key(
+                        Messages.LOG_SUCCESSIVE_DRIVERS_UNSUPPORTED_1,
+                        getClass().getName()));
             }
         }
 
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#initSqlManager(java.lang.String)
      */
     public CmsSqlManager initSqlManager(String classname) {
@@ -561,7 +563,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                     // this is one older direct version than histRes (histRes.getPublishTag() > histRes2.getPublishTag())
                     I_CmsHistoryResource histRes2 = historyResources.get(i + 1);
 
-                    // look for resource changes in between of the direct versions in ascendent order                    
+                    // look for resource changes in between of the direct versions in ascendent order
                     q = m_sqlManager.createQuery(dbc, C_RESOURCES_HISTORY_READ_BTW_VERSIONS);
                     q.setParameter(1, histRes.getResourceId().toString());
                     q.setParameter(2, Integer.valueOf(histRes2.getPublishTag())); // lower limit
@@ -621,7 +623,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 }
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return result;
     }
@@ -645,7 +647,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 // do nothing
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return content;
     }
@@ -674,14 +676,17 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             List<Object[]> res = q.getResultList();
             for (Object[] o : res) {
                 I_CmsHistoryResource histRes = internalCreateResource(o);
-                if (vfsDriver.validateStructureIdExists(dbc, dbc.currentProject().getUuid(), histRes.getStructureId())) {
+                if (vfsDriver.validateStructureIdExists(
+                    dbc,
+                    dbc.currentProject().getUuid(),
+                    histRes.getStructureId())) {
                     // only add resources that are really deleted
                     continue;
                 }
                 result.add(histRes);
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         if (!result.isEmpty()
             || (dbc.getRequestContext() == null)
@@ -704,30 +709,33 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             List<Object[]> res = q.getResultList();
             for (Object[] o : res) {
                 I_CmsHistoryResource histRes = internalCreateResource(o);
-                if (vfsDriver.validateStructureIdExists(dbc, dbc.currentProject().getUuid(), histRes.getStructureId())) {
+                if (vfsDriver.validateStructureIdExists(
+                    dbc,
+                    dbc.currentProject().getUuid(),
+                    histRes.getStructureId())) {
                     // only add resources that are really deleted
                     continue;
                 }
                 result.add(histRes);
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return result;
     }
 
     /**
      * Possibly there is no need for this method.<p>
-     * 
+     *
      * TODO: check if this method is used somewhere
      * TODO: remove this method
-     * 
-     * @param dbc the db context 
+     *
+     * @param dbc the db context
      * @param structureId the structure id
      * @param tagId the tag id
-     * 
+     *
      * @return the historical resource
-     *  
+     *
      * @throws CmsDataAccessException if something goes wrong
      */
     @Deprecated
@@ -743,11 +751,10 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             Object[] res = (Object[])q.getSingleResult();
             file = internalCreateResource(res);
         } catch (NoResultException e) {
-            throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                Messages.ERR_HISTORY_FILE_NOT_FOUND_1,
-                structureId));
+            throw new CmsVfsResourceNotFoundException(
+                Messages.get().container(Messages.ERR_HISTORY_FILE_NOT_FOUND_1, structureId));
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         ((CmsFile)file).setContents(readContent(dbc, file.getResourceId(), file.getPublishTag()));
@@ -772,7 +779,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 lastVersion = 0;
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return lastVersion;
@@ -795,7 +802,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             }
 
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return result;
@@ -811,7 +818,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
         Query q;
 
         try {
-            // get the max publish tag from project history 
+            // get the max publish tag from project history
             q = m_sqlManager.createQuery(dbc, C_PROJECTS_HISTORY_MAXTAG);
             try {
                 projectPublishTag = CmsDataTypeUtil.numberToInt((Number)q.getSingleResult()) + 1;
@@ -820,11 +827,11 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             }
 
         } catch (PersistenceException e) {
-            LOG.error(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            LOG.error(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         try {
-            // get the max publish tag from resource history 
+            // get the max publish tag from resource history
             q = m_sqlManager.createQuery(dbc, C_RESOURCES_HISTORY_MAXTAG);
             try {
                 resourcePublishTag = CmsDataTypeUtil.numberToInt((Number)q.getSingleResult()) + 1;
@@ -832,16 +839,16 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 // do nothing
             }
         } catch (PersistenceException e) {
-            LOG.error(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            LOG.error(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
-        // keep the biggest 
+        // keep the biggest
         if (resourcePublishTag > projectPublishTag) {
             projectPublishTag = resourcePublishTag;
         }
 
         try {
-            // get the max publish tag from contents 
+            // get the max publish tag from contents
             q = m_sqlManager.createQuery(dbc, C_CONTENT_PUBLISH_MAXTAG);
             try {
                 resourcePublishTag = CmsDataTypeUtil.numberToInt((Number)q.getSingleResult()) + 1;
@@ -851,7 +858,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
         } catch (PersistenceException e) {
             // do nothing
         }
-        // return the biggest 
+        // return the biggest
         if (resourcePublishTag > projectPublishTag) {
             projectPublishTag = resourcePublishTag;
         }
@@ -882,12 +889,11 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                     new CmsUUID(hp.getPrincipalUserDeleted()),
                     hp.getPrincipalDateDeleted());
             } catch (NoResultException e) {
-                throw new CmsDbEntryNotFoundException(Messages.get().container(
-                    Messages.ERR_HISTORY_PRINCIPAL_NOT_FOUND_1,
-                    principalId));
+                throw new CmsDbEntryNotFoundException(
+                    Messages.get().container(Messages.ERR_HISTORY_PRINCIPAL_NOT_FOUND_1, principalId));
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return historyPrincipal;
@@ -909,12 +915,11 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 List<String> projectresources = readProjectResources(dbc, tag);
                 project = internalCreateProject(hp, projectresources);
             } catch (NoResultException e) {
-                throw new CmsDbEntryNotFoundException(Messages.get().container(
-                    Messages.ERR_NO_HISTORY_PROJECT_WITH_ID_1,
-                    projectId));
+                throw new CmsDbEntryNotFoundException(
+                    Messages.get().container(Messages.ERR_NO_HISTORY_PROJECT_WITH_ID_1, projectId));
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return project;
     }
@@ -935,13 +940,12 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 List<String> projectresources = readProjectResources(dbc, publishTag);
                 project = internalCreateProject(hp, projectresources);
             } catch (NoResultException e) {
-                throw new CmsDbEntryNotFoundException(Messages.get().container(
-                    Messages.ERR_NO_HISTORY_PROJECT_WITH_TAG_ID_1,
-                    new Integer(publishTag)));
+                throw new CmsDbEntryNotFoundException(
+                    Messages.get().container(Messages.ERR_NO_HISTORY_PROJECT_WITH_TAG_ID_1, new Integer(publishTag)));
             }
 
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return project;
@@ -962,7 +966,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 projectResources.add(s);
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return projectResources;
     }
@@ -985,13 +989,13 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 projects.add(internalCreateProject(hp, resources));
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return (projects);
     }
 
-    /** 
+    /**
      * @see org.opencms.db.I_CmsHistoryDriver#readProperties(org.opencms.db.CmsDbContext, org.opencms.file.history.I_CmsHistoryResource)
      */
     public List<CmsProperty> readProperties(CmsDbContext dbc, I_CmsHistoryResource resource)
@@ -1045,7 +1049,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 }
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return new ArrayList<CmsProperty>(propertyMap.values());
@@ -1068,13 +1072,12 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                     hpd.getPropertyDefName(),
                     CmsPropertyDefinition.CmsPropertyType.valueOf(hpd.getPropertyDefType()));
             } catch (NoResultException e) {
-                throw new CmsDbEntryNotFoundException(Messages.get().container(
-                    Messages.ERR_NO_PROPERTYDEF_WITH_NAME_1,
-                    name));
+                throw new CmsDbEntryNotFoundException(
+                    Messages.get().container(Messages.ERR_NO_PROPERTYDEF_WITH_NAME_1, name));
             }
 
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return propDef;
@@ -1096,7 +1099,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 // do nothing
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return maxVersion;
     }
@@ -1116,19 +1119,18 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             try {
                 resource = internalCreateResource((Object[])q.getSingleResult());
             } catch (NoResultException e) {
-                throw new CmsVfsResourceNotFoundException(Messages.get().container(
-                    Messages.ERR_HISTORY_FILE_NOT_FOUND_1,
-                    structureId));
+                throw new CmsVfsResourceNotFoundException(
+                    Messages.get().container(Messages.ERR_HISTORY_FILE_NOT_FOUND_1, structureId));
             }
 
         } catch (PersistenceException e) {
-            throw new CmsDbSqlException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDbSqlException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return resource;
     }
 
     /**
-     * @see org.opencms.db.I_CmsHistoryDriver#setDriverManager(org.opencms.db.CmsDriverManager) 
+     * @see org.opencms.db.I_CmsHistoryDriver#setDriverManager(org.opencms.db.CmsDriverManager)
      */
     public void setDriverManager(CmsDriverManager driverManager) {
 
@@ -1136,7 +1138,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
     }
 
     /**
-     * @see org.opencms.db.I_CmsHistoryDriver#setSqlManager(org.opencms.db.CmsSqlManager) 
+     * @see org.opencms.db.I_CmsHistoryDriver#setSqlManager(org.opencms.db.CmsSqlManager)
      */
     public void setSqlManager(org.opencms.db.CmsSqlManager sqlManager) {
 
@@ -1176,7 +1178,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             hp.setPrincipalDateDeleted(System.currentTimeMillis());
             m_sqlManager.persist(dbc, hp);
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
     }
 
@@ -1219,7 +1221,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 m_sqlManager.persist(dbc, hpr);
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
     }
 
@@ -1278,7 +1280,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 }
             }
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
     }
 
@@ -1310,7 +1312,8 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                                 true);
                         } else {
                             @SuppressWarnings("unchecked")
-                            Set<CmsUUID> changedAndDeleted = (Set<CmsUUID>)dbc.getAttribute(CmsDriverManager.KEY_CHANGED_AND_DELETED);
+                            Set<CmsUUID> changedAndDeleted = (Set<CmsUUID>)dbc.getAttribute(
+                                CmsDriverManager.KEY_CHANGED_AND_DELETED);
                             if ((changedAndDeleted == null) || !changedAndDeleted.contains(resource.getResourceId())) {
 
                                 // put the content definitively in the history if no sibling is left
@@ -1384,7 +1387,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
             m_sqlManager.persist(dbc, hstr);
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         writeProperties(dbc, resource, properties, publishTag);
@@ -1392,13 +1395,13 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
     /**
      * Updates the property map for the given resource with the given property data.<p>
-     * 
+     *
      * @param propertyMap the map to update
      * @param resource the resource the properties belong to
      * @param propertyKey the property key
      * @param propertyValue the property value
      * @param mappingType the mapping type
-     * 
+     *
      * @throws CmsDbConsistencyException if the mapping type is wrong
      */
     protected void internalAddToPropMap(
@@ -1421,11 +1424,12 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                     property.setResourceValue(propertyValue);
                     break;
                 default:
-                    throw new CmsDbConsistencyException(Messages.get().container(
-                        Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
-                        resource.getRootPath(),
-                        new Integer(mappingType),
-                        propertyKey));
+                    throw new CmsDbConsistencyException(
+                        Messages.get().container(
+                            Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
+                            resource.getRootPath(),
+                            new Integer(mappingType),
+                            propertyKey));
             }
         } else {
             // there doesn't exist a property for this key yet
@@ -1444,11 +1448,12 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                     property.setResourceValue(propertyValue);
                     break;
                 default:
-                    throw new CmsDbConsistencyException(Messages.get().container(
-                        Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
-                        resource.getRootPath(),
-                        new Integer(mappingType),
-                        propertyKey));
+                    throw new CmsDbConsistencyException(
+                        Messages.get().container(
+                            Messages.ERR_UNKNOWN_PROPERTY_VALUE_MAPPING_3,
+                            resource.getRootPath(),
+                            new Integer(mappingType),
+                            propertyKey));
             }
             propertyMap.put(propertyKey, property);
         }
@@ -1456,10 +1461,10 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
     /**
      * Deletes all historical entries of subresources of a folder without any historical netry left.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param resource the resource to check
-     * 
+     *
      * @throws CmsDataAccessException if something goes wrong
      */
     protected void internalCleanup(CmsDbContext dbc, I_CmsHistoryResource resource) throws CmsDataAccessException {
@@ -1470,7 +1475,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
         if (isFolder) {
             // and if no versions left
             if (readLastVersion(dbc, resource.getStructureId()) == 0) {
-                // get all direct subresources                    
+                // get all direct subresources
 
                 try {
                     Query q = m_sqlManager.createQuery(dbc, C_STRUCTURE_HISTORY_READ_SUBRESOURCES);
@@ -1483,9 +1488,9 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                         subResources.add(readResource(dbc, structureId, version));
                     }
                 } catch (PersistenceException e) {
-                    throw new CmsDbSqlException(Messages.get().container(
-                        Messages.ERR_GENERIC_SQL_1,
-                        Messages.ERR_JPA_PERSITENCE), e);
+                    throw new CmsDbSqlException(
+                        Messages.get().container(Messages.ERR_GENERIC_SQL_1, Messages.ERR_JPA_PERSITENCE_1),
+                        e);
                 }
             }
         }
@@ -1498,11 +1503,11 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
     /**
      * Returns the amount of properties for a propertydefinition.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param metadef the propertydefinition to test
      * @param projectId the ID of the current project
-     * 
+     *
      * @return the amount of properties for a propertydefinition
      * @throws CmsDataAccessException if something goes wrong
      */
@@ -1517,13 +1522,12 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
             try {
                 returnValue = CmsDataTypeUtil.numberToInt((Number)q.getSingleResult());
             } catch (NoResultException e) {
-                throw new CmsDbConsistencyException(Messages.get().container(
-                    Messages.ERR_NO_PROPERTIES_FOR_PROPERTYDEF_1,
-                    metadef.getName()));
+                throw new CmsDbConsistencyException(
+                    Messages.get().container(Messages.ERR_NO_PROPERTIES_FOR_PROPERTYDEF_1, metadef.getName()));
             }
 
         } catch (PersistenceException e) {
-            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDataAccessException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
         return returnValue;
     }
@@ -1532,9 +1536,9 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
      * Creates a historical project from the given result set and resources.<p>
      * @param hp the CmsDAOHistoryProjects instance
      * @param resources the historical resources
-     * 
+     *
      * @return the historical project
-     *  
+     *
      * @throws PersistenceException if something goes wrong
      */
     protected CmsHistoryProject internalCreateProject(CmsDAOHistoryProjects hp, List<String> resources)
@@ -1560,11 +1564,11 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
     /**
      * Creates a valid {@link I_CmsHistoryResource} instance from a JDBC ResultSet.<p>
-     * 
+     *
      * @param res the JDBC result set
-     * 
+     *
      * @return the new historical resource instance
-     * 
+     *
      */
     protected I_CmsHistoryResource internalCreateResource(Object[] res) {
 
@@ -1641,13 +1645,13 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
     /**
      * Merges an historical entry for a sibling, based on the structure data from the given historical resource
      * and result set for the resource entry.<p>
-     * 
+     *
      * @param histRes the original historical entry
      * @param hr the CmsDAOHistoryResources instance of the resource entry
      * @param versionOffset the offset for the structure version
-     * 
+     *
      * @return a merged historical entry for the sibling
-     * 
+     *
      */
     protected I_CmsHistoryResource internalMergeResource(
         I_CmsHistoryResource histRes,
@@ -1723,13 +1727,13 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
 
     /**
      * Tests if a history resource does exist.<p>
-     * 
+     *
      * @param dbc the current database context
      * @param resource the resource to test
      * @param publishTag the publish tag of the resource to test
-     * 
+     *
      * @return <code>true</code> if the resource already exists, <code>false</code> otherwise
-     * 
+     *
      * @throws CmsDataAccessException if something goes wrong
      */
     protected boolean internalValidateResource(CmsDbContext dbc, CmsResource resource, int publishTag)
@@ -1748,7 +1752,7 @@ public class CmsHistoryDriver implements I_CmsDriver, I_CmsHistoryDriver {
                 //do nothing
             }
         } catch (PersistenceException e) {
-            throw new CmsDbSqlException(Messages.get().container(Messages.ERR_JPA_PERSITENCE, e), e);
+            throw new CmsDbSqlException(Messages.get().container(Messages.ERR_JPA_PERSITENCE_1, e), e);
         }
 
         return exists;

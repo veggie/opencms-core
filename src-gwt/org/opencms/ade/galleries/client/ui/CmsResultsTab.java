@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,24 +27,39 @@
 
 package org.opencms.ade.galleries.client.ui;
 
+import org.opencms.ade.galleries.client.CmsResultContextMenuHandler;
 import org.opencms.ade.galleries.client.CmsResultsTabHandler;
+import org.opencms.ade.galleries.client.I_CmsGalleryHandler;
 import org.opencms.ade.galleries.client.Messages;
 import org.opencms.ade.galleries.client.ui.css.I_CmsLayoutBundle;
+import org.opencms.ade.galleries.shared.CmsGalleryFolderBean;
 import org.opencms.ade.galleries.shared.CmsGallerySearchBean;
 import org.opencms.ade.galleries.shared.CmsResultItemBean;
 import org.opencms.ade.galleries.shared.I_CmsGalleryProviderConstants.GalleryTabId;
 import org.opencms.ade.galleries.shared.I_CmsGalleryProviderConstants.SortParams;
-import org.opencms.ade.upload.client.ui.CmsUploadButton;
+import org.opencms.ade.upload.client.ui.CmsDialogUploadButtonHandler;
 import org.opencms.gwt.client.dnd.CmsDNDHandler;
 import org.opencms.gwt.client.ui.CmsList;
+import org.opencms.gwt.client.ui.CmsListItemWidget;
+import org.opencms.gwt.client.ui.CmsPushButton;
 import org.opencms.gwt.client.ui.I_CmsListItem;
+import org.opencms.gwt.client.ui.contextmenu.CmsContextMenuButton;
+import org.opencms.gwt.client.ui.contextmenu.CmsContextMenuHandler;
+import org.opencms.gwt.client.ui.externallink.CmsEditExternalLinkDialog;
+import org.opencms.gwt.client.ui.input.CmsSelectBox;
+import org.opencms.gwt.client.ui.input.upload.CmsUploadButton;
+import org.opencms.gwt.client.ui.input.upload.I_CmsUploadButtonHandler;
 import org.opencms.gwt.client.util.CmsDebugLog;
 import org.opencms.gwt.client.util.CmsDomUtil;
-import org.opencms.util.CmsPair;
+import org.opencms.gwt.shared.CmsGwtConstants;
+import org.opencms.util.CmsStringUtil;
+import org.opencms.util.CmsUUID;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
@@ -58,6 +73,10 @@ import com.google.gwt.event.dom.client.DoubleClickEvent;
 import com.google.gwt.event.dom.client.DoubleClickHandler;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
+import com.google.gwt.event.logical.shared.OpenEvent;
+import com.google.gwt.event.logical.shared.OpenHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -66,10 +85,10 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Provides the widget for the results tab.<p>
- * 
+ *
  * It displays the selected search parameter, the sort order and
  * the search results for the current search.
- * 
+ *
  * @since 8.0.
  */
 public class CmsResultsTab extends A_CmsListTab {
@@ -84,8 +103,8 @@ public class CmsResultsTab extends A_CmsListTab {
 
         /**
          * Constructor.<p>
-         * 
-         * @param resourcePath the item resource path 
+         *
+         * @param resourcePath the item resource path
          */
         protected DeleteHandler(String resourcePath) {
 
@@ -104,7 +123,7 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * Scroll handler which executes an action when the user has scrolled to the bottom.<p>
-     * 
+     *
      * @since 8.0.0
      */
     protected class CmsAsynchronousScrollToBottomHandler implements ScrollHandler {
@@ -113,15 +132,15 @@ public class CmsResultsTab extends A_CmsListTab {
          * If the lower edge of the content being scrolled is at most this many pixels below the lower
          * edge of the scrolling viewport, the action is triggered.
          */
-        public static final int DEFAULT_SCROLL_THRESHOLD = 20;
+        public static final int DEFAULT_SCROLL_THRESHOLD = 200;
 
         /**
          * Constructs a new scroll handler with a custom scroll threshold.
-         * 
+         *
          * The scroll threshold is the distance from the bottom edge of the scrolled content
          * such that when the distance from the bottom edge of the scroll viewport to the bottom
          * edge of the scrolled content becomes lower than the distance, the scroll action is triggered.
-         * 
+         *
          */
         public CmsAsynchronousScrollToBottomHandler() {
 
@@ -162,8 +181,8 @@ public class CmsResultsTab extends A_CmsListTab {
 
         /**
          * Constructor.<p>
-         * 
-         * @param resourcePath the item resource path 
+         *
+         * @param resourcePath the item resource path
          * @param resourceType the item resource type
          */
         public PreviewHandler(String resourcePath, String resourceType) {
@@ -193,19 +212,24 @@ public class CmsResultsTab extends A_CmsListTab {
         /** The resource type of the selected item. */
         private String m_resourceType;
 
+        /** The structure id. */
+        private CmsUUID m_structureId;
+
         /** The resource title. */
         private String m_title;
 
         /**
          * Constructor.<p>
-         * 
-         * @param resourcePath the item resource path 
+         *
+         * @param resourcePath the item resource path
+         * @param structureId the structure id
          * @param title the resource title
          * @param resourceType the item resource type
          */
-        public SelectHandler(String resourcePath, String title, String resourceType) {
+        public SelectHandler(String resourcePath, CmsUUID structureId, String title, String resourceType) {
 
             m_resourcePath = resourcePath;
+            m_structureId = structureId;
             m_resourceType = resourceType;
             m_title = title;
         }
@@ -215,7 +239,7 @@ public class CmsResultsTab extends A_CmsListTab {
          */
         public void onClick(ClickEvent event) {
 
-            getTabHandler().selectResource(m_resourcePath, m_title, m_resourceType);
+            getTabHandler().selectResource(m_resourcePath, m_structureId, m_title, m_resourceType);
         }
 
         /**
@@ -223,12 +247,18 @@ public class CmsResultsTab extends A_CmsListTab {
          */
         public void onDoubleClick(DoubleClickEvent event) {
 
-            getTabHandler().selectResource(m_resourcePath, m_title, m_resourceType);
+            getTabHandler().selectResource(m_resourcePath, m_structureId, m_title, m_resourceType);
         }
     }
 
-    /** Text metrics key. */
-    private static final String TM_RESULT_TAB = "ResultTab";
+    /** The big thumbnails view name. */
+    static final String BIG = "big";
+
+    /** The details view name. */
+    static final String DETAILS = "details";
+
+    /** The small thumbnails view name. */
+    static final String SMALL = "small";
 
     /** The handler for scrolling to the top of the scroll panel. */
     protected CmsResultsBackwardsScrollHandler m_backwardScrollHandler = new CmsResultsBackwardsScrollHandler(this);
@@ -239,6 +269,15 @@ public class CmsResultsTab extends A_CmsListTab {
     /** The result list item which corresponds to a preset value in the editor. */
     protected CmsResultListItem m_preset;
 
+    /** The gallery handler. */
+    I_CmsGalleryHandler m_galleryHandler;
+
+    /** The context menu handler. */
+    private CmsContextMenuHandler m_contextMenuHandler;
+
+    /** The button to create new external link resources. */
+    private CmsPushButton m_createNewButton;
+
     /** The optional dnd manager. */
     private CmsDNDHandler m_dndHandler;
 
@@ -247,6 +286,9 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /** The panel showing the search parameters. */
     private FlowPanel m_params;
+
+    /** The view select box. */
+    private CmsSelectBox m_selectView;
 
     /** The reference to the handler of this tab. */
     private CmsResultsTabHandler m_tabHandler;
@@ -259,23 +301,64 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * The constructor.<p>
-     * 
-     * @param tabHandler the tab handler 
+     *
+     * @param tabHandler the tab handler
      * @param dndHandler the dnd manager
-     */
-    public CmsResultsTab(CmsResultsTabHandler tabHandler, CmsDNDHandler dndHandler) {
+     * @param galleryHandler the gallery handler
+     **/
+    public CmsResultsTab(
+        CmsResultsTabHandler tabHandler,
+        CmsDNDHandler dndHandler,
+        I_CmsGalleryHandler galleryHandler) {
 
         super(GalleryTabId.cms_tab_results);
+        m_galleryHandler = galleryHandler;
+
+        m_contextMenuHandler = new CmsResultContextMenuHandler(tabHandler);
         m_types = new HashSet<String>();
         m_hasMoreResults = false;
         m_dndHandler = dndHandler;
         m_tabHandler = tabHandler;
-        m_scrollList.truncate(TM_RESULT_TAB, CmsGalleryDialog.DIALOG_WIDTH);
         m_params = new FlowPanel();
         m_params.setStyleName(I_CmsLayoutBundle.INSTANCE.galleryDialogCss().tabParamsPanel());
         m_tab.insert(m_params, 0);
         getList().addScrollHandler(new CmsAsynchronousScrollToBottomHandler());
         getList().addScrollHandler(m_backwardScrollHandler);
+        init();
+        Map<String, String> views = new LinkedHashMap<String, String>();
+        views.put(DETAILS, Messages.get().key(Messages.GUI_VIEW_LABEL_DETAILS_0));
+        views.put(SMALL, Messages.get().key(Messages.GUI_VIEW_LABEL_SMALL_ICONS_0));
+        views.put(BIG, Messages.get().key(Messages.GUI_VIEW_LABEL_BIG_ICONS_0));
+        String resultViewType = m_tabHandler.getResultViewType();
+        if (!views.containsKey(resultViewType)) {
+            resultViewType = SMALL;
+        }
+        m_selectView = new CmsSelectBox(views);
+        m_selectView.addStyleName(DIALOG_CSS.selectboxWidth());
+        m_selectView.selectValue(resultViewType);
+        selectView(resultViewType);
+        addWidgetToOptions(m_selectView);
+        m_selectView.addValueChangeHandler(new ValueChangeHandler<String>() {
+
+            public void onValueChange(ValueChangeEvent<String> event) {
+
+                selectView(event.getValue());
+                setScrollPosition(0);
+                onContentChange();
+                getTabHandler().setResultViewType(event.getValue());
+            }
+        });
+    }
+
+    /**
+     * Checks if the type is viewable as an image in the gallery result tab.<p>
+     *
+     * @param typeName the type to check
+     * @return true if the type can be viewed as an image in the result tab
+     */
+    public static boolean isImagelikeType(String typeName) {
+
+        return CmsGwtConstants.TYPE_IMAGE.equals(typeName);
     }
 
     /**
@@ -289,24 +372,35 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * Fill the content of the results tab.<p>
-     * 
+     *
      * @param searchObj the current search object containing search results
      * @param paramPanels list of search parameter panels to show
      */
     public void fillContent(final CmsGallerySearchBean searchObj, List<CmsSearchParamPanel> paramPanels) {
 
         removeNoParamMessage();
+
+        // in case there is a single type selected and the current sort order is not by type,
+        // hide the type ascending and type descending sort order options
+        SortParams currentSorting = SortParams.valueOf(searchObj.getSortOrder());
+        if ((searchObj.getTypes().size() == 1)
+            && !((currentSorting == SortParams.type_asc) || (currentSorting == SortParams.type_desc))) {
+            m_sortSelectBox.setItems(getSortList(false));
+        } else {
+            m_sortSelectBox.setItems(getSortList(true));
+        }
+        m_sortSelectBox.selectValue(searchObj.getSortOrder());
         displayResultCount(getResultsDisplayed(searchObj), searchObj.getResultCount());
         m_hasMoreResults = searchObj.hasMore();
         if (searchObj.getPage() == 1) {
             m_preset = null;
             getList().scrollToTop();
-            getList().getElement().getStyle().setDisplay(Display.NONE);
             clearList();
             showParams(paramPanels);
             m_backwardScrollHandler.updateSearchBean(searchObj);
             getList().getElement().getStyle().clearDisplay();
             scrollToPreset();
+
         } else {
             showParams(paramPanels);
             addContent(searchObj);
@@ -316,7 +410,7 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * Returns the drag and drop handler.<p>
-     * 
+     *
      * @return the drag and drop handler
      */
     public CmsDNDHandler getDNDHandler() {
@@ -325,20 +419,29 @@ public class CmsResultsTab extends A_CmsListTab {
     }
 
     /**
-     * @see org.opencms.ade.galleries.client.ui.A_CmsTab#getParamPanel(org.opencms.ade.galleries.shared.CmsGallerySearchBean)
+     * @see org.opencms.ade.galleries.client.ui.A_CmsTab#getParamPanels(org.opencms.ade.galleries.shared.CmsGallerySearchBean)
      */
     @Override
-    public CmsSearchParamPanel getParamPanel(CmsGallerySearchBean searchObj) {
+    public List<CmsSearchParamPanel> getParamPanels(CmsGallerySearchBean searchObj) {
 
         // not available for this tab
-        return null;
+        return Collections.emptyList();
+    }
+
+    /**
+     * @see org.opencms.ade.galleries.client.ui.A_CmsListTab#getRequiredHeight()
+     */
+    @Override
+    public int getRequiredHeight() {
+
+        return super.getRequiredHeight() + (m_params.isVisible() ? m_params.getOffsetHeight() + 5 : 21);
     }
 
     /**
      * Returns the delete handler.<p>
-     * 
+     *
      * @param resourcePath the resource path of the resource
-     * 
+     *
      * @return the delete handler
      */
     public DeleteHandler makeDeleteHandler(String resourcePath) {
@@ -347,7 +450,22 @@ public class CmsResultsTab extends A_CmsListTab {
     }
 
     /**
-     * Removes the no params message.<p> 
+     * @see org.opencms.ade.galleries.client.ui.A_CmsListTab#onResize()
+     */
+    @Override
+    public void onResize() {
+
+        super.onResize();
+        // check if more result items should be loaded to fill the available height
+        if (m_hasMoreResults
+            && !getTabHandler().isLoading()
+            && (m_list.getOffsetHeight() > (m_scrollList.getOffsetHeight() - 100))) {
+            getTabHandler().onScrollToBottom();
+        }
+    }
+
+    /**
+     * Removes the no params message.<p>
      */
     public void removeNoParamMessage() {
 
@@ -357,114 +475,105 @@ public class CmsResultsTab extends A_CmsListTab {
     }
 
     /**
-     * Shows the message if no search params were selected.<p> 
-     */
-    public void showNoParamsMessage() {
-
-        if (m_noParamsMessage == null) {
-            StringBuffer buf = new StringBuffer();
-            buf.append("<div class=\"");
-            buf.append(I_CmsLayoutBundle.INSTANCE.galleryDialogCss().noParamsMessage());
-            buf.append(" ");
-            buf.append(I_CmsLayoutBundle.INSTANCE.generalCss().cornerAll());
-            buf.append("\">");
-            buf.append("<table cellpadding=\"0\" cellspacing=\"0\">");
-            buf.append("<tr><td></td><td>");
-            buf.append("Please select at least one search parameter!");
-            buf.append("</td></tr>");
-            buf.append("</table>");
-            buf.append("</div>");
-            m_noParamsMessage = new HTML(buf.toString());
-        }
-        m_tab.add(m_noParamsMessage);
-    }
-
-    /**
-     * Updates the height (with border) of the result list panel according to the search parameter panels shown.<p>    
+     * Updates the height (with border) of the result list panel according to the search parameter panels shown.<p>
      */
     public void updateListSize() {
 
-        int tabHeight = m_tab.getElement().getClientHeight() - 13;
-        // sanity check on tab height
-        tabHeight = tabHeight > 0 ? tabHeight : 421;
-        int paramsHeight = m_params.isVisible() ? m_params.getOffsetHeight()
-            + CmsDomUtil.getCurrentStyleInt(m_params.getElement(), CmsDomUtil.Style.marginBottom) : 21;
+        int paramsHeight = m_params.isVisible()
+        ? m_params.getOffsetHeight()
+            + CmsDomUtil.getCurrentStyleInt(m_params.getElement(), CmsDomUtil.Style.marginBottom)
+        : 21;
         int optionsHeight = m_options.getOffsetHeight()
             + CmsDomUtil.getCurrentStyleInt(m_options.getElement(), CmsDomUtil.Style.marginBottom);
-        // 3 is some offset, because of the list border
-        int newListSize = tabHeight - paramsHeight - optionsHeight - 1;
-        // another sanity check, don't set any negative height 
-        if (newListSize > 0) {
-            m_list.getElement().getStyle().setHeight(newListSize, Unit.PX);
+        int listTop = paramsHeight + optionsHeight + 5;
+        // another sanity check, don't set any top value below 35
+        if (listTop > 35) {
+            m_list.getElement().getStyle().setTop(listTop, Unit.PX);
         }
     }
 
     /**
      * Appends the list items for the search results from a search bean.<p>
-     * 
-     * @param searchBean a search bean containing results 
+     *
+     * @param searchBean a search bean containing results
      */
     protected void addContent(CmsGallerySearchBean searchBean) {
 
         if (searchBean.getResults() != null) {
-            addContentItems(searchBean.getResults(), false);
+            boolean showPath = SortParams.path_asc.name().equals(searchBean.getSortOrder())
+                || SortParams.path_desc.name().equals(searchBean.getSortOrder());
+            addContentItems(searchBean.getResults(), false, showPath);
         }
     }
 
     /**
      * Adds list items for a list of search results.<p>
-     * 
+     *
      * @param list the list of search results
-     *  
-     * @param front if true, list items will be added to the front of the list, else at the back 
+     * @param front if true, list items will be added to the front of the list, else at the back
+     * @param showPath <code>true</code> to show the resource path in sub title
      */
-    protected void addContentItems(List<CmsResultItemBean> list, boolean front) {
+    protected void addContentItems(List<CmsResultItemBean> list, boolean front, boolean showPath) {
 
         if (front) {
             list = Lists.reverse(list);
         }
         for (CmsResultItemBean resultItem : list) {
-            addSingleResult(resultItem, front);
+            addSingleResult(resultItem, front, showPath);
         }
-        String selectValue = m_sortSelectBox.getFormValueAsString();
-        if (m_types.size() == 1) {
-            getList().addStyleName(I_CmsLayoutBundle.INSTANCE.galleryResultItemCss().tilingList());
-            if (SortParams.valueOf(selectValue) == SortParams.title_asc) {
-                m_sortSelectBox.setItems(getSortList(false));
-            }
+        if (isTilingViewAllowed()) {
+            m_selectView.getElement().getStyle().clearDisplay();
+            selectView(m_selectView.getFormValueAsString());
         } else {
-            getList().removeStyleName(I_CmsLayoutBundle.INSTANCE.galleryResultItemCss().tilingList());
-            if (SortParams.valueOf(selectValue) == SortParams.title_asc) {
-                m_sortSelectBox.setItems(getSortList(true));
-            }
+            m_selectView.getElement().getStyle().setDisplay(Display.NONE);
+            selectView(DETAILS);
         }
+        onContentChange();
     }
 
     /**
      * Adds a list item for a single search result.<p>
-     * 
-     * @param resultItem the search result 
-     * @param front if true, adds the list item to the front of the list, else at the back 
+     *
+     * @param resultItem the search result
+     * @param front if true, adds the list item to the front of the list, else at the back
+     * @param showPath <code>true</code> to show the resource path in sub title
      */
-    protected void addSingleResult(CmsResultItemBean resultItem, boolean front) {
+    protected void addSingleResult(CmsResultItemBean resultItem, boolean front, boolean showPath) {
 
         m_types.add(resultItem.getType());
-        CmsResultListItem listItem = new CmsResultListItem(resultItem, m_dndHandler);
+        boolean hasPreview = m_tabHandler.hasPreview(resultItem.getType());
+        CmsDNDHandler dndHandler = m_dndHandler;
+        if (!m_galleryHandler.filterDnd(resultItem)) {
+            dndHandler = null;
+        }
+        CmsResultListItem listItem = new CmsResultListItem(resultItem, hasPreview, showPath, dndHandler);
         if (resultItem.isPreset()) {
             m_preset = listItem;
         }
-        listItem.addPreviewClickHandler(new PreviewHandler(resultItem.getPath(), resultItem.getType()));
-        listItem.addDeleteClickHandler(new DeleteHandler(resultItem.getPath()));
+        if (hasPreview) {
+            listItem.addPreviewClickHandler(new PreviewHandler(resultItem.getPath(), resultItem.getType()));
+        }
+        CmsUUID structureId = new CmsUUID(resultItem.getClientId());
+        listItem.getListItemWidget().addButton(new CmsContextMenuButton(structureId, m_contextMenuHandler));
+        listItem.getListItemWidget().addOpenHandler(new OpenHandler<CmsListItemWidget>() {
+
+            public void onOpen(OpenEvent<CmsListItemWidget> event) {
+
+                onContentChange();
+            }
+        });
         if (m_tabHandler.hasSelectResource()) {
             SelectHandler selectHandler = new SelectHandler(
                 resultItem.getPath(),
-                resultItem.getTitle(),
+                structureId,
+                resultItem.getRawTitle(),
                 resultItem.getType());
             listItem.addSelectClickHandler(selectHandler);
 
-            // this affects both tiled and non-tiled result lists. 
+            // this affects both tiled and non-tiled result lists.
             listItem.addDoubleClickHandler(selectHandler);
         }
+        m_galleryHandler.processResultItem(listItem);
         if (front) {
             addWidgetToFrontOfList(listItem);
         } else {
@@ -486,7 +595,7 @@ public class CmsResultsTab extends A_CmsListTab {
      * @see org.opencms.ade.galleries.client.ui.A_CmsListTab#getSortList()
      */
     @Override
-    protected ArrayList<CmsPair<String, String>> getSortList() {
+    protected LinkedHashMap<String, String> getSortList() {
 
         return getSortList(true);
     }
@@ -534,7 +643,7 @@ public class CmsResultsTab extends A_CmsListTab {
                             if (offset >= 0) {
                                 scrollPanel.setVerticalScrollPosition(offset);
                             } else {
-                                // something is seriously wrong with the positioning if this case occurs   
+                                // something is seriously wrong with the positioning if this case occurs
                                 scrollPanel.scrollToBottom();
                             }
                         }
@@ -547,7 +656,7 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * Helper for setting the scroll position of the scroll panel.<p>
-     * 
+     *
      * @param pos the scroll position
      */
     protected void setScrollPosition(final int pos) {
@@ -570,8 +679,26 @@ public class CmsResultsTab extends A_CmsListTab {
     }
 
     /**
+     * Selects the view with the given name.<p>
+     *
+     * @param viewName the view name
+     */
+    void selectView(String viewName) {
+
+        if (DETAILS.equals(viewName)) {
+            getList().removeStyleName(I_CmsLayoutBundle.INSTANCE.galleryResultItemCss().tilingList());
+        } else if (SMALL.equals(viewName)) {
+            getList().addStyleName(I_CmsLayoutBundle.INSTANCE.galleryResultItemCss().tilingList());
+            getList().addStyleName(I_CmsLayoutBundle.INSTANCE.galleryResultItemCss().smallThumbnails());
+        } else if (BIG.equals(viewName)) {
+            getList().addStyleName(I_CmsLayoutBundle.INSTANCE.galleryResultItemCss().tilingList());
+            getList().removeStyleName(I_CmsLayoutBundle.INSTANCE.galleryResultItemCss().smallThumbnails());
+        }
+    }
+
+    /**
      * Displays the result count.<p>
-     * 
+     *
      * @param displayed the displayed result items
      * @param total the total of result items
      */
@@ -586,9 +713,9 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * Returns the count of the currently displayed results.<p>
-     * 
+     *
      * @param searchObj the search bean
-     * 
+     *
      * @return the count of the currently displayed results
      */
     private int getResultsDisplayed(CmsGallerySearchBean searchObj) {
@@ -599,40 +726,55 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * Returns the list of properties to sort the results according to.<p>
-     * 
+     *
      * @param includeType <code>true</code> to include sort according to type
-     * 
+     *
      * @return the sort list
      */
-    private ArrayList<CmsPair<String, String>> getSortList(boolean includeType) {
+    private LinkedHashMap<String, String> getSortList(boolean includeType) {
 
-        ArrayList<CmsPair<String, String>> list = new ArrayList<CmsPair<String, String>>();
-        list.add(new CmsPair<String, String>(SortParams.title_asc.name(), Messages.get().key(
-            Messages.GUI_SORT_LABEL_TITLE_ASC_0)));
-        list.add(new CmsPair<String, String>(SortParams.title_desc.name(), Messages.get().key(
-            Messages.GUI_SORT_LABEL_TITLE_DECS_0)));
-        list.add(new CmsPair<String, String>(SortParams.dateLastModified_asc.name(), Messages.get().key(
-            Messages.GUI_SORT_LABEL_DATELASTMODIFIED_ASC_0)));
-        list.add(new CmsPair<String, String>(SortParams.dateLastModified_desc.name(), Messages.get().key(
-            Messages.GUI_SORT_LABEL_DATELASTMODIFIED_DESC_0)));
-        list.add(new CmsPair<String, String>(SortParams.path_asc.name(), Messages.get().key(
-            Messages.GUI_SORT_LABEL_PATH_ASC_0)));
-        list.add(new CmsPair<String, String>(SortParams.path_desc.name(), Messages.get().key(
-            Messages.GUI_SORT_LABEL_PATH_DESC_0)));
+        LinkedHashMap<String, String> list = new LinkedHashMap<String, String>();
+        list.put(SortParams.title_asc.name(), Messages.get().key(Messages.GUI_SORT_LABEL_TITLE_ASC_0));
+        list.put(SortParams.title_desc.name(), Messages.get().key(Messages.GUI_SORT_LABEL_TITLE_DECS_0));
+        list.put(
+            SortParams.dateLastModified_asc.name(),
+            Messages.get().key(Messages.GUI_SORT_LABEL_DATELASTMODIFIED_ASC_0));
+        list.put(
+            SortParams.dateLastModified_desc.name(),
+            Messages.get().key(Messages.GUI_SORT_LABEL_DATELASTMODIFIED_DESC_0));
+        list.put(SortParams.path_asc.name(), Messages.get().key(Messages.GUI_SORT_LABEL_PATH_ASC_0));
+        list.put(SortParams.path_desc.name(), Messages.get().key(Messages.GUI_SORT_LABEL_PATH_DESC_0));
         if (includeType) {
-            list.add(new CmsPair<String, String>(SortParams.type_asc.name(), Messages.get().key(
-                Messages.GUI_SORT_LABEL_TYPE_ASC_0)));
-            list.add(new CmsPair<String, String>(SortParams.type_desc.name(), Messages.get().key(
-                Messages.GUI_SORT_LABEL_TYPE_DESC_0)));
+            list.put(SortParams.type_asc.name(), Messages.get().key(Messages.GUI_SORT_LABEL_TYPE_ASC_0));
+            list.put(SortParams.type_desc.name(), Messages.get().key(Messages.GUI_SORT_LABEL_TYPE_DESC_0));
         }
         return list;
     }
 
     /**
+     * Checks if the thumbnail tiling view is allowed for the given result items.<p>
+     *
+     * @return <code>true</code> if the thumbnail tiling view is allowed for the given result items
+     */
+    private boolean isTilingViewAllowed() {
+
+        if (m_types.size() == 0) {
+            return false;
+        }
+        for (String typeName : m_types) {
+            if (!isImagelikeType(typeName)) {
+                return false;
+            }
+        }
+        return true;
+
+    }
+
+    /**
      * Displays the selected search parameters in the result tab.<p>
-     * 
-     * @param paramPanels the list of search parameter panels to show 
-     * 
+     *
+     * @param paramPanels the list of search parameter panels to show
+     *
      */
     private void showParams(List<CmsSearchParamPanel> paramPanels) {
 
@@ -651,7 +793,7 @@ public class CmsResultsTab extends A_CmsListTab {
 
     /**
      * Shows the upload button if appropriate.<p>
-     * 
+     *
      * @param searchObj the current search object
      */
     private void showUpload(CmsGallerySearchBean searchObj) {
@@ -664,17 +806,48 @@ public class CmsResultsTab extends A_CmsListTab {
         if (searchObj.getFolders() != null) {
             targets.addAll(searchObj.getFolders());
         }
+        if (m_createNewButton != null) {
+            m_createNewButton.removeFromParent();
+            m_createNewButton = null;
+        }
         if (m_uploadButton == null) {
-            m_uploadButton = createUploadButtonForTarget("");
+            m_uploadButton = createUploadButtonForTarget("", false);
             m_uploadButton.addStyleName(I_CmsLayoutBundle.INSTANCE.galleryDialogCss().resultTabUpload());
             m_tab.insert(m_uploadButton, 0);
+        } else {
+            m_uploadButton.getElement().getStyle().clearDisplay();
         }
-        String uploadTarget = null;
         if (targets.size() == 1) {
-            uploadTarget = targets.iterator().next();
-            m_uploadButton.setTargetFolder(uploadTarget);
-            m_uploadButton.enable();
-            m_uploadButton.setTitle(Messages.get().key(Messages.GUI_GALLERY_UPLOAD_TITLE_1, uploadTarget));
+            CmsGalleryFolderBean galleryFolder = getTabHandler().getGalleryInfo(targets.iterator().next());
+            if ((galleryFolder != null)
+                && CmsEditExternalLinkDialog.LINK_GALLERY_RESOURCE_TYPE_NAME.equals(galleryFolder.getType())) {
+                m_createNewButton = createNewExternalLinkButton(targets.iterator().next());
+                if (m_createNewButton != null) {
+                    m_createNewButton.addStyleName(I_CmsLayoutBundle.INSTANCE.galleryDialogCss().resultTabUpload());
+                    m_tab.insert(m_createNewButton, 0);
+                    if (CmsStringUtil.isEmptyOrWhitespaceOnly(searchObj.getNoUploadReason())) {
+                        m_createNewButton.enable();
+                    } else {
+                        m_createNewButton.disable(searchObj.getNoUploadReason());
+                    }
+                }
+
+                m_uploadButton.getElement().getStyle().setDisplay(Display.NONE);
+            } else {
+                String uploadTarget = targets.iterator().next();
+                I_CmsUploadButtonHandler handler = m_uploadButton.getButtonHandler();
+                if (handler instanceof CmsDialogUploadButtonHandler) {
+                    ((CmsDialogUploadButtonHandler)handler).setTargetFolder(uploadTarget);
+                    // in case the upload target is a folder the root path is used
+                    ((CmsDialogUploadButtonHandler)handler).setIsTargetRootPath(searchObj.getFolders().size() == 1);
+                }
+                if (CmsStringUtil.isEmptyOrWhitespaceOnly(searchObj.getNoUploadReason())) {
+                    m_uploadButton.enable();
+                    m_uploadButton.setTitle(Messages.get().key(Messages.GUI_GALLERY_UPLOAD_TITLE_1, uploadTarget));
+                } else {
+                    m_uploadButton.disable(searchObj.getNoUploadReason());
+                }
+            }
         } else {
             m_uploadButton.disable(Messages.get().key(Messages.GUI_GALLERY_UPLOAD_TARGET_UNSPECIFIC_0));
         }

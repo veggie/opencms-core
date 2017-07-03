@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -43,7 +43,7 @@ import java.util.Map;
 
 /**
  * This manager controls the update of the database from OpenCms 6 to OpenCms 7.<p>
- * 
+ *
  * @since 7.0.0
  */
 public class CmsUpdateDBManager {
@@ -55,7 +55,7 @@ public class CmsUpdateDBManager {
     private Map<String, Map<String, String>> m_dbPools = new HashMap<String, Map<String, String>>();
 
     /** The detected mayor version, based on DB structure. */
-    private int m_detectedVersion;
+    private double m_detectedVersion;
 
     /** List of xml update plugins. */
     private List<I_CmsUpdateDBPart> m_plugins;
@@ -70,9 +70,9 @@ public class CmsUpdateDBManager {
 
     /**
      * Returns the configured jdbc driver for the given pool.<p>
-     * 
+     *
      * @param pool the db pool to get the driver for
-     * 
+     *
      * @return the driver class name
      */
     public String getDbDriver(String pool) {
@@ -92,9 +92,9 @@ public class CmsUpdateDBManager {
 
     /**
      * Returns the configured jdbc url parameters for the given pool.<p>
-     * 
+     *
      * @param pool the db pool to get the params for
-     * 
+     *
      * @return the jdbc url parameters
      */
     public String getDbParams(String pool) {
@@ -104,9 +104,9 @@ public class CmsUpdateDBManager {
 
     /**
      * Returns the configured jdbc connection url for the given pool.<p>
-     * 
+     *
      * @param pool the db pool to get the url for
-     * 
+     *
      * @return the jdbc connection url
      */
     public String getDbUrl(String pool) {
@@ -116,9 +116,9 @@ public class CmsUpdateDBManager {
 
     /**
      * Returns the configured database user for the given pool.<p>
-     * 
+     *
      * @param pool the db pool to get the user for
-     * 
+     *
      * @return the database user
      */
     public String getDbUser(String pool) {
@@ -128,10 +128,10 @@ public class CmsUpdateDBManager {
 
     /**
      * Returns the detected mayor version, based on DB structure.<p>
-     * 
+     *
      * @return the detected mayor version
      */
-    public int getDetectedVersion() {
+    public double getDetectedVersion() {
 
         if (m_detectedVersion == 0) {
             needUpdate();
@@ -141,7 +141,7 @@ public class CmsUpdateDBManager {
 
     /**
      * Returns all configured database pools.<p>
-     * 
+     *
      * @return a list of {@link String} objects
      */
     public List<String> getPools() {
@@ -151,11 +151,11 @@ public class CmsUpdateDBManager {
 
     /**
      * Generates html code for the given db pool.<p>
-     * 
+     *
      * @param pool the db pool to generate html for
-     * 
+     *
      * @return html code
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     public String htmlPool(String pool) throws Exception {
@@ -178,10 +178,10 @@ public class CmsUpdateDBManager {
 
     /**
      * Initializes the Update Manager object with the updateBean to get the database connection.<p>
-     * 
+     *
      * @param updateBean the update bean with the database connection
-     * 
-     * @throws Exception if the setup bean is not initialized 
+     *
+     * @throws Exception if the setup bean is not initialized
      */
     public void initialize(CmsUpdateBean updateBean) throws Exception {
 
@@ -194,8 +194,7 @@ public class CmsUpdateDBManager {
             m_dbName = props.get("db.name");
 
             List<String> pools = CmsStringUtil.splitAsList(props.get("db.pools"), ',');
-            for (Iterator<String> it = pools.iterator(); it.hasNext();) {
-                String pool = it.next();
+            for (String pool : pools) {
                 Map<String, String> data = new HashMap<String, String>();
                 data.put("driver", props.get("db.pool." + pool + ".jdbcDriver"));
                 data.put("url", props.get("db.pool." + pool + ".jdbcUrl"));
@@ -212,32 +211,38 @@ public class CmsUpdateDBManager {
 
     /**
      * Checks if an update is needed.<p>
-     * 
+     *
      * @return if an update is needed
      */
     public boolean needUpdate() {
 
         String pool = "default";
 
-        int currentVersion = 8;
-        m_detectedVersion = 8;
+        double currentVersion = 8.5;
+        m_detectedVersion = 8.5;
 
         CmsSetupDb setupDb = new CmsSetupDb(null);
 
         try {
-            setupDb.setConnection(getDbDriver(pool), getDbUrl(pool), getDbParams(pool), getDbUser(pool), m_dbPools.get(
-                pool).get("pwd"));
+            setupDb.setConnection(
+                getDbDriver(pool),
+                getDbUrl(pool),
+                getDbParams(pool),
+                getDbUser(pool),
+                m_dbPools.get(pool).get("pwd"));
 
             if (!setupDb.hasTableOrColumn("CMS_USERS", "USER_OU")) {
                 m_detectedVersion = 6;
-            } else if (!setupDb.hasTableOrColumn("CMS_LOG", null)) {
+            } else if (!setupDb.hasTableOrColumn("CMS_ONLINE_URLNAME_MAPPINGS", null)) {
                 m_detectedVersion = 7;
+            } else if (!setupDb.hasTableOrColumn("CMS_USER_PUBLISH_LIST", null)) {
+                m_detectedVersion = 8;
             }
         } finally {
             setupDb.closeConnection();
         }
 
-        return (currentVersion > m_detectedVersion);
+        return true;
     }
 
     /**
@@ -247,7 +252,7 @@ public class CmsUpdateDBManager {
 
         try {
             // add a list of plugins to execute
-            // be sure to use the right order 
+            // be sure to use the right order
             m_plugins = new ArrayList<I_CmsUpdateDBPart>();
 
             if (getDetectedVersion() < 7) {
@@ -263,9 +268,9 @@ public class CmsUpdateDBManager {
                 m_plugins.add(new org.opencms.setup.db.update6to7.CmsUpdateDBAlterTables());
                 m_plugins.add(new org.opencms.setup.db.update6to7.CmsUpdateDBDropBackupTables());
                 m_plugins.add(new org.opencms.setup.db.update6to7.CmsUpdateDBCreateIndexes7());
-            }
-            if (getDetectedVersion() < 8) {
+            } else {
                 m_plugins.add(new org.opencms.setup.db.update7to8.CmsUpdateDBNewTables());
+                m_plugins.add(new org.opencms.setup.db.update7to8.CmsUpdatePasswordColumn());
             }
         } catch (Throwable t) {
             t.printStackTrace();
@@ -289,7 +294,7 @@ public class CmsUpdateDBManager {
 
     /**
      * Updates the database.<p>
-     * 
+     *
      * @param pool the database pool to update
      */
     public void updateDatabase(String pool) {
@@ -332,10 +337,10 @@ public class CmsUpdateDBManager {
 
     /**
      * Creates a new instance for the given database and setting the db pool data.<p>
-     * 
+     *
      * @param dbUpdater the generic updater part
      * @param dbName the database to get a new instance for
-     * 
+     *
      * @return right instance instance for the given database
      */
     protected I_CmsUpdateDBPart getInstanceForDb(I_CmsUpdateDBPart dbUpdater, String dbName) {
@@ -353,7 +358,7 @@ public class CmsUpdateDBManager {
 
     /**
      * Retrieves the mysql engine name.<p>
-     * 
+     *
      * @param dbPoolData the database pool data
      */
     protected void getMySqlEngine(Map<String, String> dbPoolData) {
@@ -388,7 +393,7 @@ public class CmsUpdateDBManager {
 
     /**
      * Retrieves the oracle tablespace names.<p>
-     * 
+     *
      * @param dbPoolData the database pool data
      */
     protected void getOracleTablespaces(Map<String, String> dbPoolData) {
@@ -443,7 +448,7 @@ public class CmsUpdateDBManager {
 
     /**
      * Retrieves the postgresql tablespace names.<p>
-     * 
+     *
      * @param dbPoolData the database pool data
      */
     protected void getPostgreSqlTablespaces(Map<String, String> dbPoolData) {

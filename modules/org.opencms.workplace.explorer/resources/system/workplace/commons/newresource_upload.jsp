@@ -1,4 +1,4 @@
-<%@ page import="java.util.*,org.opencms.workplace.explorer.*,org.opencms.ade.upload.shared.I_CmsUploadConstants" %><%	
+<%@ page import="java.util.*,org.opencms.workplace.explorer.*,org.opencms.gwt.shared.I_CmsUploadConstants" %><%	
 
 	// initialize the workplace class
 	CmsNewResourceUpload wp = new CmsNewResourceUpload(pageContext, request, response);
@@ -11,7 +11,7 @@ case CmsNewResourceUpload.ACTION_GWT:
 ////////////////////ACTION: use the gwt upload
     request.setAttribute(I_CmsUploadConstants.ATTR_CLOSE_LINK, wp.getCloseLink());
 	request.setAttribute(I_CmsUploadConstants.ATTR_CURRENT_FOLDER, wp.getParamCurrentFolder());
-    wp.sendForward(I_CmsUploadConstants.UPLOAD_JSP_URI, new HashMap<String, String>());
+    wp.sendForward(I_CmsUploadConstants.UPLOAD_JSP_URI, new HashMap<String, String[]>());
 break;   
     
 case CmsNewResourceUpload.ACTION_APPLET:
@@ -73,10 +73,16 @@ break;
 
 
 case CmsNewResourceUpload.ACTION_SUBMITFORM:
+
 //////////////////// ACTION: upload name specified and form submitted
 	wp.actionUpload();
+    // insert uploaded file data as a comment, which can then be parsed by the upload applet
+	out.println(wp.getUploadedFiles());
+    out.println(wp.getUploadHook());
+    
 	if (wp.unzipUpload()) {
 		if (wp.getAction() != CmsNewResourceUpload.ACTION_SHOWERROR) {
+		    wp.setClosingAfterUnzip(true); 
 			wp.actionCloseDialog();
 		}
 		break;
@@ -143,7 +149,7 @@ case CmsNewResourceUpload.ACTION_NEWFORM2:
 <table border="0" width="100%">
 <tr>
 	<td style="white-space: nowrap;" unselectable="on"><%= wp.key(Messages.GUI_RESOURCE_NAME_0) %></td>
-	<td class="maxwidth"><input name="<%= wp.PARAM_NEWRESOURCENAME %>" id="newresfield" type="text" value="<%= wp.getParamNewResourceName() %>" class="maxwidth" onkeyup="checkValue();"></td>
+	<td class="maxwidth"><input name="<%= wp.PARAM_NEWRESOURCENAME %>" id="newresfield" type="text" value="<%= wp.getParamNewResourceName() %>" class="maxwidth" onkeyup="checkValue();" onchange="checkValue();" onpaste="setTimeout(checkValue,4);"></td>
 </tr>
 <% 
 if (wp.getParamCloseLink() != null) { %>
@@ -246,7 +252,7 @@ default:
 <table border="0" width="100%">
 <tr>
 	<td style="white-space: nowrap;" unselectable="on"><%= wp.key(Messages.GUI_RESOURCE_NAME_0) %></td>
-	<td class="maxwidth"><input name="<%= wp.PARAM_UPLOADFILE %>" id="newresfield" type="file" value="" size="60" class="maxwidth" onchange="checkValue();"></td>
+	<td class="maxwidth"><input name="<%= wp.PARAM_UPLOADFILE %>" id="newresfield" type="file" value="" size="60" class="maxwidth" onchange="checkValue();" onchange="checkValue();" onpaste="setTimeout(checkValue,4);"></td>
 </tr> 
 <tr>
 	<td>&nbsp;</td>

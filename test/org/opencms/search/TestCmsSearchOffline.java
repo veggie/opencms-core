@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -56,7 +56,7 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
 
     /**
      * Default JUnit constructor.<p>
-     * 
+     *
      * @param arg0 JUnit parameters
      */
     public TestCmsSearchOffline(String arg0) {
@@ -66,7 +66,7 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
 
     /**
      * Test suite for this test class.<p>
-     * 
+     *
      * @return the test suite
      */
     public static Test suite() {
@@ -100,13 +100,13 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
 
     /**
      * Creates a new search index setup for this test.<p>
-     * 
+     *
      * @throws Exception in case the test fails
      */
     public void testSearchIndexSetup() throws Exception {
 
         CmsSearchIndex searchIndex = new CmsSearchIndex(INDEX_SPECIAL);
-        searchIndex.setProjectName("Offline");
+        searchIndex.setProject("Offline");
         searchIndex.setLocale(Locale.ENGLISH);
         searchIndex.setRebuildMode(CmsSearchIndex.REBUILD_MODE_OFFLINE);
         // available pre-configured in the test configuration files opencms-search.xml
@@ -130,12 +130,17 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
         searchBean.setIndex(INDEX_SPECIAL);
         searchBean.setQuery(">>SearchEgg1<<");
 
-        // assert one file is found in the default site     
+        // assert one file is found in the default site
         searchResult = searchBean.getSearchResult();
         assertEquals(1, searchResult.size());
         assertEquals("/sites/default/xmlcontent/article_0001.html", searchResult.get(0).getPath());
     }
 
+    /**
+     * Delays execution.<p>
+     *
+     * @throws InterruptedException if sth. goes wrong
+     */
     protected void waitForUpdate() throws InterruptedException {
 
         // wait for the offline index
@@ -144,7 +149,7 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
 
     /**
      * Tests automatic index update after modification of a resource.<p>
-     * 
+     *
      * @throws Exception in case the test fails
      */
     public void testIndexUpdateOnModification() throws Exception {
@@ -178,10 +183,9 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
         assertEquals(8, results.size());
         assertEquals("/sites/default/test/test.txt", results.get(7).getPath());
 
-        cms.writePropertyObject(fileName, new CmsProperty(
-            CmsPropertyDefinition.PROPERTY_TITLE,
-            "Alkacon OpenCms IN THE NEW FILE",
-            ""));
+        cms.writePropertyObject(
+            fileName,
+            new CmsProperty(CmsPropertyDefinition.PROPERTY_TITLE, "Alkacon OpenCms IN THE NEW FILE", ""));
 
         // wait for the offline index
         waitForUpdate();
@@ -211,6 +215,26 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
         assertEquals("/sites/default/test/test.txt", (results.get(0)).getPath());
 
         echo("Delete Test - end");
+        echo("Delete New Test - start");
+
+        OpenCms.getSearchManager().getIndex(INDEX_SPECIAL).setCheckPermissions(false);
+        String fileName222 = "/test/test222.txt";
+        String text222 = "Alkacon OpenCms is so great!";
+        cms.createResource(fileName222, CmsResourceTypePlain.getStaticTypeId(), text222.getBytes(), null);
+        // wait for the offline index
+        waitForUpdate();
+        cmsSearchBean.setQuery("+\"Alkacon OpenCms is so great!\"");
+        results = cmsSearchBean.getSearchResult();
+        assertEquals(1, results.size());
+        cms.deleteResource(fileName222, CmsResource.DELETE_PRESERVE_SIBLINGS);
+        waitForUpdate();
+        cmsSearchBean.setQuery("+\"Alkacon OpenCms is so great!\"");
+        results = cmsSearchBean.getSearchResult();
+        assertEquals(0, results.size());
+        OpenCms.getSearchManager().getIndex(INDEX_SPECIAL).setCheckPermissions(true);
+
+        echo("Delete New Test - end");
+        echo("Move Test - start");
 
         // move a resource
         String moveFileName = "/test/test_moved.txt";
@@ -225,5 +249,7 @@ public class TestCmsSearchOffline extends OpenCmsTestCase {
         TestCmsSearch.printResults(results, cms);
         assertEquals(7, results.size());
         assertEquals("/sites/default/test/test_moved.txt", (results.get(0)).getPath());
+
+        echo("Move Test - end");
     }
 }

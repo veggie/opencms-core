@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,12 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * For further information about Alkacon Software GmbH, please see the
+ * For further information about Alkacon Software GmbH & Co. KG, please see the
  * company website: http://www.alkacon.com
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,8 +30,11 @@ package org.opencms.flex;
 import org.opencms.file.CmsObject;
 import org.opencms.file.CmsRequestContext;
 import org.opencms.jsp.util.CmsJspStandardContextBean;
+import org.opencms.jsp.util.CmsJspStandardContextBean.TemplateBean;
+import org.opencms.loader.CmsTemplateContextManager;
 import org.opencms.loader.I_CmsResourceLoader;
 import org.opencms.main.CmsLog;
+import org.opencms.main.OpenCms;
 import org.opencms.util.CmsCollectionsGenericWrapper;
 import org.opencms.util.CmsRequestUtil;
 import org.opencms.util.CmsUUID;
@@ -45,8 +48,8 @@ import org.apache.commons.logging.Log;
 
 /**
  * Describes the caching behaviour (or caching options) for a Flex request.<p>
- * 
- * @since 6.0.0 
+ *
+ * @since 6.0.0
  */
 public class CmsFlexRequestKey {
 
@@ -59,6 +62,9 @@ public class CmsFlexRequestKey {
     /** The request context this request was made in. */
     private CmsRequestContext m_context;
 
+    /** The current detail view id. */
+    private CmsUUID m_detailViewId;
+
     /** Stores the device this request was made with. */
     private String m_device;
 
@@ -68,17 +74,14 @@ public class CmsFlexRequestKey {
     /** The OpenCms resource that this key is used for. */
     private String m_resource;
 
-    /** The current detail view id. */
-    private CmsUUID m_detailViewId;
-
     /**
      * This constructor is used when building a cache key from a request.<p>
-     * 
+     *
      * The request contains several data items that are neccessary to construct
      * the output. These items are e.g. the Query-String, the requested resource,
      * the current time etc. etc.
      * All required items are saved in the constructed cache - key.<p>
-     * 
+     *
      * @param req the request to construct the key for
      * @param target the requested resource in the OpenCms VFS
      * @param online must be true for an online resource, false for offline resources
@@ -98,11 +101,16 @@ public class CmsFlexRequestKey {
         m_resource = CmsFlexCacheKey.getKeyName(m_context.addSiteRoot(target), online);
 
         // calculate the device
-        m_device = CmsFlexController.getController(req).getCmsCache().getDeviceSelector().getDeviceType(req);
+        m_device = OpenCms.getSystemInfo().getDeviceSelector().getDeviceType(req);
 
         CmsJspStandardContextBean standardContext = CmsJspStandardContextBean.getInstance(req);
         // get the current container element
-        m_containerElement = standardContext.elementCachingHash();
+        String templateContextKey = "";
+        TemplateBean templateBean = (TemplateBean)(req.getAttribute(CmsTemplateContextManager.ATTR_TEMPLATE_BEAN));
+        if (templateBean != null) {
+            templateContextKey = templateBean.getName();
+        }
+        m_containerElement = standardContext.elementCachingHash() + "_tc_" + templateContextKey;
 
         // get the current detail view id
         m_detailViewId = standardContext.getDetailContentId();
@@ -114,7 +122,7 @@ public class CmsFlexRequestKey {
 
     /**
      * Returns the request attributes.<p>
-     * 
+     *
      * @return the request attributes
      */
     public Map<String, Object> getAttributes() {
@@ -232,9 +240,9 @@ public class CmsFlexRequestKey {
     }
 
     /**
-     * Returns the the current users session, or <code>null</code> if the current user 
+     * Returns the the current users session, or <code>null</code> if the current user
      * has no session.<p>
-     * 
+     *
      * @return the current users session, or <code>null</code> if the current user has no session
      */
     public HttpSession getSession() {

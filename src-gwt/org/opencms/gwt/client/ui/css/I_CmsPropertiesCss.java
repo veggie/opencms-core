@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -28,20 +28,40 @@
 package org.opencms.gwt.client.ui.css;
 
 import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.resources.client.CssResource.ImportedWithPrefix;
 
 /**
  * Property editor CSS.<p>
  */
+@ImportedWithPrefix("properties")
 public interface I_CmsPropertiesCss extends CssResource {
 
     /** Access method.<p>
-     * 
+     *
      * @return the CSS class name
      */
     String navModePropertiesBox();
 
     /** Access method.<p>
-     * 
+     *
+     * @return the CSS class name
+     */
+    String propertyDefinitionButton();
+
+    /** Access method.<p>
+    *
+    * @return the CSS class name
+    */
+    String propertyPanel();
+
+    /** Access method.<p>
+    *
+    * @return the CSS class name
+    */
+    String propertyParentLoading();
+
+    /** Access method.<p>
+     *
      * @return the CSS class name
      */
     String vfsModeSimplePropertiesBox();

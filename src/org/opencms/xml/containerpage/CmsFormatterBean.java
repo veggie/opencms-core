@@ -2,7 +2,7 @@
  * This library is part of OpenCms -
  * the Open Source Content Management System
  *
- * Copyright (c) Alkacon Software GmbH (http://www.alkacon.com)
+ * Copyright (c) Alkacon Software GmbH & Co. KG (http://www.alkacon.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * For further information about OpenCms, please see the
  * project website: http://www.opencms.org
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,15 +27,36 @@
 
 package org.opencms.xml.containerpage;
 
+import org.opencms.main.OpenCms;
+import org.opencms.util.CmsMacroResolver;
 import org.opencms.util.CmsStringUtil;
 import org.opencms.util.CmsUUID;
+import org.opencms.xml.content.CmsXmlContentProperty;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 /**
  * A bean containing formatter configuration data as strings.<p>
- * 
+ *
  * @since 8.0.0
  */
-public class CmsFormatterBean {
+public class CmsFormatterBean implements I_CmsFormatterBean {
+
+    /** Default rank for formatters from formatter configuration files. */
+    public static final int DEFAULT_CONFIGURATION_RANK = 1000;
+
+    /** Default rank for formatters defined in schema. */
+    public static final int DEFAULT_SCHEMA_RANK = 10000;
 
     /** Default formatter type constant. */
     public static final String PREVIEW_TYPE = "_PREVIEW_";
@@ -47,13 +68,37 @@ public class CmsFormatterBean {
     public static final String WILDCARD_TYPE = "*";
 
     /** The formatter container type. */
-    private String m_containerType;
+    private Set<String> m_containerTypes;
+
+    /** CSS Head includes. */
+    private Set<String> m_cssHeadIncludes = new LinkedHashSet<String>();
+
+    /** The id for this formatter. */
+    private String m_id;
+
+    /** Inline CSS snippets. */
+    private String m_inlineCss;
+
+    /** Inline Javascript snippets. */
+    private String m_inlineJavascript;
+
+    /** Is the formatter automatically enabled? */
+    private boolean m_isAutoEnabled;
+
+    /** True if this formatter can be used for detail views. */
+    private boolean m_isDetail;
+
+    /** True if this formatter should be used by the display tag. */
+    private boolean m_isDisplay;
+
+    /** Is the formatter from a formatter configuration file? */
+    private boolean m_isFromFormatterConfigFile;
 
     /** Indicates if this formatter is to be used as preview in the ADE gallery GUI. */
     private boolean m_isPreviewFormatter;
 
-    /** Indicates if this is a type based or width based formatter. */
-    private boolean m_isTypeFormatter;
+    /** JavaScript head includes. */
+    private List<String> m_javascriptHeadIncludes = new ArrayList<String>();
 
     /** The formatter JSP. */
     private String m_jspRootPath;
@@ -73,55 +118,162 @@ public class CmsFormatterBean {
     /** The formatter min width. */
     private int m_minWidth;
 
+    /** Indicating if this formatter has nested containers. */
+    private boolean m_nestedContainers;
+
+    /** The nice name. */
+    private String m_niceName;
+
+    /** The rank. */
+    private int m_rank;
+
+    /** The resource type name. */
+    private Collection<String> m_resourceTypeNames;
+
     /** Indicates if the content should be searchable in the online index when this formatter is used. */
     private boolean m_search;
 
+    /** The settings. */
+    private Map<String, CmsXmlContentProperty> m_settings = new LinkedHashMap<String, CmsXmlContentProperty>();
+
+    /** Indicating if this formatter will always render all nested containers. */
+    private boolean m_strictContainers;
+
     /**
      * Constructor for creating a new formatter configuration with resource structure id.<p>
-     * 
-     * @param containerType the formatter container type 
+     *
+     * @param containerTypes the formatter container types
      * @param jspRootPath the formatter JSP VFS root path
      * @param jspStructureId the structure id of the formatter JSP
      * @param minWidth the formatter min width
-     * @param maxWidth the formatter max width 
+     * @param maxWidth the formatter max width
      * @param preview indicates if this formatter is to be used for the preview in the ADE gallery GUI
      * @param searchContent indicates if the content should be searchable in the online index when this formatter is used
      * @param location the location where this formatter was defined, should be an OpenCms VFS resource path
+     * @param cssHeadIncludes the CSS head includes
+     * @param inlineCss the in-line CSS
+     * @param javascriptHeadIncludes the JavaScript headincludes
+     * @param inlineJavascript the in-line JavaScript
+     * @param niceName the configuration display name
+     * @param resourceTypeNames the resource type names
+     * @param rank the configuration rank
+     * @param id the configuration id
+     * @param settings the settings configuration
+     * @param isFromConfigFile <code>true</code> if configuration file based
+     * @param isAutoEnabled <code>true</code> if auto enabled
+     * @param isDetail <code>true</code> if detail formatter
+     * @param isDisplay the display flag
+     * @param nestedContainers <code>true</code> if this formatter has nested containers
+     * @param strictContainers <code>true</code> if this formatter will always render all nested containers
      */
     public CmsFormatterBean(
-        String containerType,
+        Set<String> containerTypes,
         String jspRootPath,
         CmsUUID jspStructureId,
         int minWidth,
         int maxWidth,
         boolean preview,
         boolean searchContent,
-        String location) {
+        String location,
+        List<String> cssHeadIncludes,
+        String inlineCss,
+        List<String> javascriptHeadIncludes,
+        String inlineJavascript,
+        String niceName,
+        Collection<String> resourceTypeNames,
+        int rank,
+        String id,
+        Map<String, CmsXmlContentProperty> settings,
+        boolean isFromConfigFile,
+        boolean isAutoEnabled,
+        boolean isDetail,
+        boolean isDisplay,
+        boolean nestedContainers,
+        boolean strictContainers) {
 
         m_jspRootPath = jspRootPath;
         m_jspStructureId = jspStructureId;
-
-        m_containerType = containerType;
-        if (CmsStringUtil.isEmptyOrWhitespaceOnly(m_containerType)) {
-            m_containerType = WILDCARD_TYPE;
-        }
-        m_isTypeFormatter = !WILDCARD_TYPE.equals(m_containerType);
-
+        m_containerTypes = containerTypes;
         m_minWidth = minWidth;
         m_maxWidth = maxWidth;
 
         m_isPreviewFormatter = preview;
         m_search = searchContent;
         m_location = location;
+
+        m_id = id;
+        m_niceName = niceName;
+        m_resourceTypeNames = resourceTypeNames;
+        m_rank = rank;
+        m_inlineCss = inlineCss;
+        m_inlineJavascript = inlineJavascript;
+        m_javascriptHeadIncludes.addAll(javascriptHeadIncludes);
+        m_cssHeadIncludes.addAll(cssHeadIncludes);
+        m_settings.putAll(settings);
+        m_isFromFormatterConfigFile = isFromConfigFile;
+        m_isAutoEnabled = isAutoEnabled;
+        m_isDetail = isDetail;
+        m_isDisplay = isDisplay;
+        m_nestedContainers = nestedContainers;
+        m_strictContainers = strictContainers;
+    }
+
+    /**
+     * Constructor for creating a new formatter configuration with resource structure id.<p>
+     *
+     * @param containerType the formatter container types
+     * @param rootPath the formatter JSP VFS root path
+     * @param structureId the structure id of the formatter JSP
+     * @param minWidth the formatter min width
+     * @param maxWidth the formatter max width
+     * @param preview indicates if this formatter is to be used for the preview in the ADE gallery GUI
+     * @param searchContent indicates if the content should be searchable in the online index when this formatter is used
+     * @param location the location where this formatter was defined, should be an OpenCms VFS resource path
+     */
+    public CmsFormatterBean(
+        String containerType,
+        String rootPath,
+        CmsUUID structureId,
+        int minWidth,
+        int maxWidth,
+        boolean preview,
+        boolean searchContent,
+        String location) {
+
+        this(
+            isWildcardType(containerType) ? Collections.<String> emptySet() : Collections.singleton(containerType),
+            rootPath,
+            structureId,
+            minWidth,
+            maxWidth,
+            preview,
+            searchContent,
+            location,
+            Collections.<String> emptyList(),
+            "",
+            Collections.<String> emptyList(),
+            "",
+            rootPath,
+            Collections.<String> emptySet(),
+            1000,
+            null,
+            Collections.<String, CmsXmlContentProperty> emptyMap(),
+            false,
+            false,
+            true,
+            false,
+            false,
+            false);
+
     }
 
     /**
      * Constructor for creating a new formatter configuration without resource structure id.<p>
-     * 
-     * @param containerType the formatter container type 
+     *
+     * @param containerType the formatter container type
      * @param jspRootPath the formatter JSP VFS root path
      * @param minWidthStr the formatter min width
-     * @param maxWidthStr the formatter max width 
+     * @param maxWidthStr the formatter max width
      * @param preview indicates if this formatter is to be used for the preview in the ADE gallery GUI
      * @param searchContent indicates if the content should be searchable in the online index when this formatter is used
      * @param location the location where this formatter was defined, should be an OpenCms VFS resource path
@@ -136,30 +288,26 @@ public class CmsFormatterBean {
         String location) {
 
         m_jspRootPath = jspRootPath;
-
-        m_containerType = containerType;
-        if (CmsStringUtil.isEmptyOrWhitespaceOnly(m_containerType)) {
-            m_containerType = WILDCARD_TYPE;
+        m_containerTypes = Collections.singleton(containerType);
+        if (isWildcardType(containerType)) {
+            m_containerTypes = Collections.emptySet();
         }
-
         m_minWidth = -1;
         m_maxWidth = Integer.MAX_VALUE;
-        m_isTypeFormatter = true;
 
-        if (WILDCARD_TYPE.equals(m_containerType)) {
+        if (m_containerTypes.isEmpty()) {
             // wildcard formatter; index by width
-            m_isTypeFormatter = false;
             // if no width available, use -1
 
             try {
                 m_minWidth = Integer.parseInt(minWidthStr);
-            } catch (NumberFormatException e) {
-                //ignore; width will be -1 
+            } catch (@SuppressWarnings("unused") NumberFormatException e) {
+                //ignore; width will be -1
             }
             try {
                 m_maxWidth = Integer.parseInt(maxWidthStr);
-            } catch (NumberFormatException e) {
-                //ignore; maxWidth will be max. integer 
+            } catch (@SuppressWarnings("unused") NumberFormatException e) {
+                //ignore; maxWidth will be max. integer
             }
         }
 
@@ -170,26 +318,51 @@ public class CmsFormatterBean {
         : Boolean.valueOf(searchContent).booleanValue();
 
         m_location = location;
+        m_rank = DEFAULT_SCHEMA_RANK;
     }
 
     /**
      * Constructor for creating a formatter bean which matches all container/width combinations.<p>
-     * 
-     * @param jspRootPath the jsp root path 
-     * @param jspStructureId the jsp structure id 
-     * @param location the formatter location 
+     *
+     * @param jspRootPath the jsp root path
+     * @param jspStructureId the jsp structure id
+     * @param location the formatter location
+     * @param preview the preview formatter flag
      */
-    CmsFormatterBean(String jspRootPath, CmsUUID jspStructureId, String location) {
+    CmsFormatterBean(String jspRootPath, CmsUUID jspStructureId, String location, boolean preview) {
 
-        this("*", jspRootPath, jspStructureId, -1, Integer.MAX_VALUE, false, false, location);
+        this(
+            Collections.<String> emptySet(),
+            jspRootPath,
+            jspStructureId,
+            -1,
+            Integer.MAX_VALUE,
+            preview,
+            false,
+            location,
+            Collections.<String> emptyList(),
+            "",
+            Collections.<String> emptyList(),
+            "",
+            jspRootPath,
+            Collections.<String> emptySet(),
+            DEFAULT_SCHEMA_RANK,
+            null,
+            Collections.<String, CmsXmlContentProperty> emptyMap(),
+            false,
+            false,
+            true,
+            false,
+            false,
+            false);
         m_matchAll = true;
     }
 
     /**
      * Checks if the given container type matches the ADE gallery preview type.<p>
-     * 
+     *
      * @param containerType the container type to check
-     * 
+     *
      * @return <code>true</code> if the given container type matches the ADE gallery preview type
      */
     public static boolean isPreviewType(String containerType) {
@@ -198,99 +371,157 @@ public class CmsFormatterBean {
     }
 
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * Checks whether the container type is a wildcard.<p>
+     *
+     * @param containerType the container type
+     *
+     * @return true if the container type is a wildcard
+     */
+    private static boolean isWildcardType(String containerType) {
+
+        return CmsStringUtil.isEmptyOrWhitespaceOnly(containerType) || WILDCARD_TYPE.equals(containerType);
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getContainerTypes()
      */
     @Override
-    public boolean equals(Object obj) {
+    public Set<String> getContainerTypes() {
 
-        if (obj == this) {
-            return true;
-        }
-        if (obj instanceof CmsFormatterBean) {
-            CmsFormatterBean other = (CmsFormatterBean)obj;
-
-            if (other.m_isTypeFormatter == m_isTypeFormatter) {
-                // not same formatter type means not equal
-                if (m_isTypeFormatter) {
-                    // this is a type formatter, we use just the type name
-                    return CmsStringUtil.isEqual(m_containerType, other.m_containerType);
-                } else {
-                    // this is a width formatter, we use both min and max width
-                    return (m_minWidth == other.m_minWidth) && (m_maxWidth == other.m_maxWidth);
-                }
-            }
-        }
-        return false;
+        return m_containerTypes == null
+        ? Collections.<String> emptySet()
+        : Collections.unmodifiableSet(m_containerTypes);
     }
 
     /**
-     * Returns the formatter container type.<p>
-     * 
-     * If this is "*", then the formatter is a width based formatter.<p>
-     * 
-     * @return the formatter container type 
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getCssHeadIncludes()
      */
-    public String getContainerType() {
+    @Override
+    public Set<String> getCssHeadIncludes() {
 
-        return m_containerType;
+        return Collections.unmodifiableSet(m_cssHeadIncludes);
     }
 
     /**
-     * Returns the root path of the formatter JSP in the OpenCms VFS.<p>
-     * 
-     * @return the root path of the formatter JSP in the OpenCms VFS.<p>
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getId()
      */
+    @Override
+    public String getId() {
+
+        return m_id;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getInlineCss()
+     */
+    @Override
+    public String getInlineCss() {
+
+        return m_inlineCss;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getInlineJavascript()
+     */
+    @Override
+    public String getInlineJavascript() {
+
+        return m_inlineJavascript;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getJavascriptHeadIncludes()
+     */
+    @Override
+    public List<String> getJavascriptHeadIncludes() {
+
+        return Collections.unmodifiableList(m_javascriptHeadIncludes);
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getJspRootPath()
+     */
+    @Override
     public String getJspRootPath() {
 
         return m_jspRootPath;
     }
 
     /**
-     * Returns the structure id of the JSP resource for this formatter.<p>
-     * 
-     * @return the structure id of the JSP resource for this formatter
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getJspStructureId()
      */
+    @Override
     public CmsUUID getJspStructureId() {
 
         return m_jspStructureId;
     }
 
     /**
-     * Returns the location this formatter was defined in.<p>
-     * 
-     * This will be an OpenCms VFS root path, either to the XML schema XSD, or the
-     * configuration file this formatter was defined in, or to the JSP that 
-     * makes up this formatter.<p>
-     * 
-     * @return the location this formatter was defined in
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getLocation()
      */
+    @Override
     public String getLocation() {
 
         return m_location;
     }
 
     /**
-     * Returns the maximum formatter width.<p>
-     * 
-     * If this is not set, then {@link Integer#MAX_VALUE} is returned.<p>
-     *  
-     * @return the maximum formatter width 
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getMaxWidth()
      */
+    @Override
     public int getMaxWidth() {
 
         return m_maxWidth;
     }
 
     /**
-     * Returns the minimum formatter width.<p>
-     * 
-     * If this is not set, then <code>-1</code> is returned.<p>
-     * 
-     * @return the minimum formatter width
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getMinWidth()
      */
+    @Override
     public int getMinWidth() {
 
         return m_minWidth;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getNiceName(Locale)
+     */
+    @Override
+    public String getNiceName(Locale locale) {
+
+        if (locale == null) {
+            return m_niceName;
+        }
+        CmsMacroResolver resolver = new CmsMacroResolver();
+        resolver.setMessages(OpenCms.getWorkplaceManager().getMessages(locale));
+        return resolver.resolveMacros(m_niceName);
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getRank()
+     */
+    @Override
+    public int getRank() {
+
+        return m_rank;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getResourceTypeNames()
+     */
+    @Override
+    public Collection<String> getResourceTypeNames() {
+
+        return m_resourceTypeNames;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#getSettings()
+     */
+    @Override
+    public Map<String, CmsXmlContentProperty> getSettings() {
+
+        return Collections.unmodifiableMap(m_settings);
     }
 
     /**
@@ -299,61 +530,116 @@ public class CmsFormatterBean {
     @Override
     public int hashCode() {
 
-        return m_containerType.hashCode() ^ ((m_minWidth * 33) ^ m_maxWidth);
-    }
-
-    /** 
-     * Returns true if this formatter should match all type/width combinations.<p>
-     * 
-     * @return true if this formatter should match all type/width combinations 
-     */
-    public boolean isMatchAll() {
-
-        return m_matchAll;
+        return getContainerTypes().hashCode() ^ ((m_minWidth * 33) ^ m_maxWidth);
     }
 
     /**
-     * Indicates if this formatter is to be used as preview in the ADE gallery GUI.
-     * 
-     * @return <code>true</code> if this formatter is to be used as preview in the ADE gallery GUI
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#hasNestedContainers()
      */
+    public boolean hasNestedContainers() {
+
+        return m_nestedContainers;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isAutoEnabled()
+     */
+    @Override
+    public boolean isAutoEnabled() {
+
+        return m_isAutoEnabled;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isDetailFormatter()
+     */
+    public boolean isDetailFormatter() {
+
+        return m_isDetail;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isDisplayFormatter()
+     */
+    public boolean isDisplayFormatter() {
+
+        return m_isDisplay;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isFromFormatterConfigFile()
+     */
+    @Override
+    public boolean isFromFormatterConfigFile() {
+
+        return m_isFromFormatterConfigFile;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isMatchAll()
+     */
+    @Override
+    public boolean isMatchAll() {
+
+        return m_matchAll || ((m_containerTypes != null) && m_containerTypes.contains(WILDCARD_TYPE));
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isPreviewFormatter()
+     */
+    @Override
     public boolean isPreviewFormatter() {
 
         return m_isPreviewFormatter;
     }
 
     /**
-     * Returns <code>true</code> in case an XML content formatted with this formatter should be included in the 
-     * online full text search.<p>
-     * 
-     * @return <code>true</code> in case an XML content formatted with this formatter should be included in the 
-     * online full text search
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isSearchContent()
      */
+    @Override
     public boolean isSearchContent() {
 
         return m_search;
     }
 
     /**
-     * Returns <code>true</code> in case this formatter is based on type information.<p>
-     * 
-     * @return <code>true</code> in case this formatter is based on type information
+     * Returns whether this formatter will always render all nested containers.<p>
+     *
+     * @return <code>true</code> if this formatter will always render all nested containers
      */
+    public boolean isStrictContainers() {
+
+        return m_strictContainers;
+    }
+
+    /**
+     * @see org.opencms.xml.containerpage.I_CmsFormatterBean#isTypeFormatter()
+     */
+    @Override
     public boolean isTypeFormatter() {
 
-        return m_isTypeFormatter;
+        return !getContainerTypes().isEmpty();
     }
 
     /**
      * Sets the structure id of the JSP for this formatter.<p>
      *
      * This is "package visible" as it should be only called from {@link CmsFormatterConfiguration#initialize(org.opencms.file.CmsObject)}.<p>
-     * 
+     *
      * @param jspStructureId the structure id of the JSP for this formatter
      */
-    void setJspStructureId(CmsUUID jspStructureId) {
+    public void setJspStructureId(CmsUUID jspStructureId) {
 
         // package visibility is wanted
         m_jspStructureId = jspStructureId;
+    }
+
+    /**
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+
+        return ToStringBuilder.reflectionToString(this);
     }
 }
